@@ -8,5 +8,5 @@ abstract class Env {
   static const String polygonMumbai = _Env.polygonMumbai;
 
   @EnviedField(varName: 'ENV_POLYGON_MAINNET')
-  static const String polygonMainnet = _Env.polygonMainnet;
+  static const String polygonMainnet = _Env.polygonMumbai;
 }

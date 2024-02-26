@@ -4,8 +4,7 @@
 // InjectableConfigGenerator
 // **************************************************************************
 
-// ignore_for_file: unnecessary_lambdas
-// ignore_for_file: lines_longer_than_80_chars
+// ignore_for_file: type=lint
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
@@ -556,13 +555,17 @@ extension GetItInjectableX on _i1.GetIt {
         databaseModule.getCodec(privateKey));
     gh.lazySingleton<_i65.StacktraceManager>(() => _i65.StacktraceManager());
     gh.factory<_i66.StateIdentifierMapper>(() => _i66.StateIdentifierMapper());
-    gh.factory<_i13.StoreRef<String, Map<String, Object?>>>(
-      () => databaseModule.profileStore,
-      instanceName: 'profilesStore',
+    gh.factory<_i13.StoreRef<String, dynamic>>(
+      () => databaseModule.keyValueStore,
+      instanceName: 'keyValueStore',
     );
     gh.factory<_i13.StoreRef<String, Map<String, Object?>>>(
       () => databaseModule.didProfileInfoStore,
       instanceName: 'didProfileInfoStore',
+    );
+    gh.factory<_i13.StoreRef<String, Map<String, Object?>>>(
+      () => databaseModule.profileStore,
+      instanceName: 'profilesStore',
     );
     gh.factory<_i13.StoreRef<String, Map<String, Object?>>>(
       () => databaseModule.interactionStore,
@@ -571,10 +574,6 @@ extension GetItInjectableX on _i1.GetIt {
     gh.factory<_i13.StoreRef<String, Map<String, Object?>>>(
       () => databaseModule.claimStore,
       instanceName: 'claimStore',
-    );
-    gh.factory<_i13.StoreRef<String, dynamic>>(
-      () => databaseModule.keyValueStore,
-      instanceName: 'keyValueStore',
     );
     gh.factory<_i13.StoreRef<String, Map<String, Object?>>>(
       () => databaseModule.identityStore,
