@@ -11,6 +11,8 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/restore_identi
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/sign/widgets/sign.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/splash/widgets/splash.dart';
 
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/bethel_home/widget/bethel_home.dart';
+
 class Routes {
   static const String initialPath = "/";
   static const String splashPath = "/splash";
@@ -49,7 +51,7 @@ class Routes {
 
   ///
   static WidgetBuilder _homeRoute() {
-    return (BuildContext context) => const HomeScreen();
+    return (BuildContext context) => const MyHomePage();
   }
 
   ///

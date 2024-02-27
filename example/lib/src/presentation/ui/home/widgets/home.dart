@@ -210,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     CustomStrings.homeIdentifierSectionPlaceHolder,
                 key: const Key('identifier'),
                 style: CustomTextStyles.descriptionTextStyle
-                    .copyWith(fontSize: 20, fontWeight: FontWeight.w700),
+                    .copyWith(fontSize: 20, fontWeight: FontWeight.w700,color: CustomColors.redError),
               );
             },
             buildWhen: (_, currentState) =>
