@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/auth/widgets/auth.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/bethel_home/widget/network.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_event.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_state.dart';
@@ -8,7 +10,6 @@ import 'package:polygonid_flutter_sdk_example/utils/custom_button_style.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_strings.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_text_styles.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_widgets_keys.dart';
-// import '..//Screens/network.dart';
 // import '../Screens/mydata.dart';
 import '../widget/bottom_nav.dart';
 import '../widget/setting.dart';
@@ -23,6 +24,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late final HomeBloc _bloc;
+  bool showFullIdentity = false;
   @override
   void initState() {
     super.initState();
@@ -63,12 +65,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     top: 8.0,
                   ),
                   child: InkWell(
-                    // onTap: () {
-                    //   Navigator.of(context).push(MaterialPageRoute(builder: (_) {
-                    //     return Network();
-                    //   }
-                    //   ));
-                    // },
+                    onTap: () {
+                      Navigator.of(context).push(MaterialPageRoute(builder: (_) {
+                        return AuthScreen();
+                      }
+                      ));
+                    },
                     child: Container(
                       width: 150,
                       height: 50,
@@ -199,41 +201,180 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _buildIdentifierSection() {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-      ),
+          // backgroundColor: Colors.white,
+          // elevation: 0,
+          ),
       body: Padding(
-        padding: const EdgeInsets.all(10.0),
+        padding: const EdgeInsets.only(left: 20.0, right: 20.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "My identity",
-              style: TextStyle(fontSize: 15),
+            const Padding(
+              padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
+              child: Text(
+                "My identity",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
+              ),
             ),
             Container(
               padding: const EdgeInsets.all(8.0),
               width: double.infinity,
-              height: 70,
+              height: 100,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(10),
                 color: Colors.grey.shade200,
               ),
               child: BlocBuilder(
                 bloc: _bloc,
                 builder: (BuildContext context, HomeState state) {
+                  final String identityText = state.identifier ??
+                      CustomStrings.homeIdentifierSectionPlaceHolder;
                   return Padding(
                     padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                    child: Text(
-                      state.identifier ??
-                          CustomStrings.homeIdentifierSectionPlaceHolder,
-                      key: const Key('identifier'),
-                      style: CustomTextStyles.descriptionTextStyle
-                          .copyWith(fontSize: 15, color: Colors.black54),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text("identifier"),
+                        Row(
+                          children: [
+                            Container(
+                              height: 20,
+                              width: 20,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.grey.shade100,
+                                border: Border.all(
+                                  color: Colors.black,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.done, size: 15,
+                                // color: iconColor,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 15.0, right: 15.0),
+                              child: Text(
+                                state.identifier != null
+                                    ? showFullIdentity
+                                        ? identityText
+                                        : '. . . .   . . . .   . . . .   . . . .  ' +
+                                            identityText.substring(
+                                                identityText.length - 3)
+                                    : CustomStrings
+                                        .homeIdentifierSectionPlaceHolder,
+                                key: const Key('identifier'),
+                                style: CustomTextStyles.descriptionTextStyle
+                                    .copyWith(
+                                        fontSize: 15, color: Colors.black54),
+                              ),
+                            ),
+                            
+                            ElevatedButton(
+                              onPressed: () {
+                                // print(object)
+                                Navigator.of(context)
+                                    .push(MaterialPageRoute(builder: (_) {
+                                  return _buildfullIdentifierSection();
+                                }));
+                              },
+                              child: const Text("View"),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   );
                 },
                 buildWhen: (_, currentState) =>
                     currentState is LoadedIdentifierHomeState,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildfullIdentifierSection() {
+    return Scaffold(
+      appBar: AppBar(
+          // backgroundColor: Colors.white,
+          // elevation: 0,
+          ),
+      body: Padding(
+        padding: const EdgeInsets.only(left: 20.0, right: 20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
+              child: Text(
+                "My identity",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(8.0),
+              width: double.infinity,
+              height: 100,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                color: Colors.grey.shade200,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 15.0, right: 15.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          Container(
+                            height: 20,
+                            width: 20,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.grey.shade100,
+                              border: Border.all(
+                                color: Colors.black,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.done, size: 15,
+                              // color: iconColor,
+                            ),
+                          ),
+                          const Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Text(
+                              "identifier",
+                              style: TextStyle(fontSize: 13),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    BlocBuilder(
+                      bloc: _bloc,
+                      builder: (BuildContext context, HomeState state) {
+                        final String identityText = state.identifier ??
+                            CustomStrings.homeIdentifierSectionPlaceHolder;
+                        return Text(
+                          state.identifier ??
+                              CustomStrings.homeIdentifierSectionPlaceHolder,
+                          key: const Key('identifier'),
+                          style: CustomTextStyles.descriptionTextStyle
+                              .copyWith(fontSize: 13),
+                        );
+                      },
+                      buildWhen: (_, currentState) =>
+                          currentState is LoadedIdentifierHomeState,
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
