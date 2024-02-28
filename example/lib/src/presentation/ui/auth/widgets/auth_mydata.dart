@@ -13,20 +13,18 @@ import 'package:polygonid_flutter_sdk_example/utils/custom_strings.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_text_styles.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_widgets_keys.dart';
 
-class AuthScreen extends StatefulWidget {
+class AuthScreenData extends StatefulWidget {
   final AuthBloc _bloc;
-  
 
-  AuthScreen({Key? key})
+  AuthScreenData({Key? key})
       : _bloc = getIt<AuthBloc>(),
         super(key: key);
 
   @override
-  State<AuthScreen> createState() => _AuthScreenState();
+  State<AuthScreenData> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> {
-  
+class _AuthScreenState extends State<AuthScreenData> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,34 +48,50 @@ class _AuthScreenState extends State<AuthScreen> {
       child: SizedBox(
         width: MediaQuery.of(context).size.width,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _buildMydata(),
+
             SingleChildScrollView(
-              child: Column(
-                children: [
-                  // const SizedBox(height: 50),
-                  // _buildDescription(),
-                  // const SizedBox(height: 24),
-                  // _buildProgress(),
-                  // const SizedBox(height: 24),
-                  // _buildAuthenticationSuccessSection(),
-                  // const SizedBox(height: 24),
-                  // _buildErrorSection(),
-                  // const SizedBox(height: 48),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 24),
+                      _buildTitle(),
+                      // const SizedBox(height: 24),
+                      _buildSubTitle(),
+                      const SizedBox(height: 24),
+                  
+                      // _buildProgress(),
+                      // const SizedBox(height: 24),
+                      // _buildAuthenticationSuccessSection(),
+                      // const SizedBox(height: 24),
+                      // _buildErrorSection(),
+                      // const SizedBox(height: 10),
+                      Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Stack(
+                    children: [
+                      _buildBlocListener(),
+                      _buildAuthConnectButton(),
+                      // _buildNavigateToNextPageButton(),
+                    ],
+                  ),
+                              ),
+                    ],
+                    
+                  ),
+                ),
               ),
             ),
-            Expanded(child: _buildRadioButtons()),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Stack(
-                children: [
-                  _buildBlocListener(),
-                  _buildAuthConnectButton(),
-                  // _buildNavigateToNextPageButton(),
-                ],
-              ),
-            ),
+            // Expanded(child: _buildRadioButtons()),
+            
           ],
         ),
       ),
@@ -86,30 +100,57 @@ class _AuthScreenState extends State<AuthScreen> {
 
   ///
   Widget _buildAuthConnectButton() {
-    return Align(
-      alignment: Alignment.center,
-      child: ElevatedButton(
-        key: CustomWidgetsKeys.authScreenButtonConnect,
-        onPressed: () {
-          widget._bloc.add(const AuthEvent.clickScanQrCode());
-        },
-        style: CustomButtonStyle.primaryButtonStyle,
-        child: const Text(
-          CustomStrings.authButtonCTA,
-          style: CustomTextStyles.primaryButtonTextStyle,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Align(
+        alignment: Alignment.topLeft,
+        child: ElevatedButton(
+          key: CustomWidgetsKeys.authScreenButtonConnect,
+          onPressed: () {
+            widget._bloc.add(const AuthEvent.clickScanQrCode());
+          },
+          style: CustomButtonStyle.primaryButtonStyleSmall,
+          child: const Text(
+            CustomStrings.authButtonCTA,
+            style: CustomTextStyles.primaryButtonTextStyle,
+          ),
         ),
       ),
     );
   }
 
   ///
-  Widget _buildDescription() {
+  Widget _buildMydata() {
     return const Padding(
       padding: EdgeInsets.symmetric(horizontal: 24),
       child: Text(
-        CustomStrings.authDescription,
-        textAlign: TextAlign.center,
-        style: CustomTextStyles.descriptionTextStyle,
+        CustomStrings.homeMydata,
+        textAlign: TextAlign.start,
+        style: CustomTextStyles.TopicTextStyle,
+      ),
+    );
+  }
+
+  ///
+  Widget _buildTitle() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24),
+      child: Text(
+        CustomStrings.homeMydataTitle,
+        textAlign: TextAlign.start,
+        style: CustomTextStyles.TitleTextStyle,
+      ),
+    );
+  }
+
+  ///
+  Widget _buildSubTitle() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24),
+      child: Text(
+        CustomStrings.homeMydataSubTitle,
+        textAlign: TextAlign.start,
+        style: CustomTextStyles.SubTitleTextStyle,
       ),
     );
   }

@@ -15,6 +15,10 @@ class CustomStrings {
       "Remove identity\nidentity.removeIdentity() ";
   static const String homeFeatureCardDisabledReason =
       "You need to create an identity first";
+  static const String homeMydataTitle = "Connect with a service                                                 ";
+  static const String homeMydataSubTitle = "Connect with a service to add credentials about your identity";
+  static const String homeMydata = "My Data                                                                   ";
+    
 
   // AUTH
   static const String authPrivateProfile = "Private Profile";

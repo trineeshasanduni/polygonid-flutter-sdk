@@ -28,6 +28,18 @@ class CustomButtonStyle {
     ),
   );
 
+  static ButtonStyle primaryButtonStyleSmallBlack = ElevatedButton.styleFrom(
+    elevation: 0,
+    enableFeedback: false,
+    padding:
+        const EdgeInsets.only(top: 8.0, bottom: 8.0, right: 12.0, left: 12.0),
+    backgroundColor: Color.fromARGB(255, 0, 0, 0),
+    shadowColor: Color.fromARGB(0, 207, 207, 207),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(6),
+    ),
+  );
+
   static ButtonStyle outlinedPrimaryButtonStyle = ElevatedButton.styleFrom(
     elevation: 0,
     enableFeedback: false,

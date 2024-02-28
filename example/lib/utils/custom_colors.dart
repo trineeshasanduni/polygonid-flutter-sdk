@@ -6,6 +6,8 @@ class CustomColors {
   CustomColors._();
 
   static const Color transparent = Color(0x00000000);
+  
+  static const Color black = Color(0x00000000);
 
   static const Color primaryButton = Color(0xff8247E5);
 

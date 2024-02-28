@@ -1,7 +1,12 @@
+import 'dart:ui';
+
+import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/auth/widgets/auth.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/auth/widgets/auth_mydata.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/bethel_home/widget/mydata.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/bethel_home/widget/network.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_event.dart';
@@ -10,7 +15,6 @@ import 'package:polygonid_flutter_sdk_example/utils/custom_button_style.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_strings.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_text_styles.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_widgets_keys.dart';
-// import '../Screens/mydata.dart';
 import '../widget/bottom_nav.dart';
 import '../widget/setting.dart';
 // import 'splash.dart';
@@ -43,12 +47,6 @@ class _MyHomePageState extends State<MyHomePage> {
           leading: IconButton(
             icon: Icon(Icons.person),
             tooltip: 'User',
-            //  onPressed: (){
-            //       Navigator.of(context).push(MaterialPageRoute(builder: (_) {
-            //         return Identity();
-            //       }));
-            //     },
-
             onPressed: () {
               // print(object)
               Navigator.of(context).push(MaterialPageRoute(builder: (_) {
@@ -66,10 +64,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   child: InkWell(
                     onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(builder: (_) {
+                      Navigator.of(context)
+                          .push(MaterialPageRoute(builder: (_) {
                         return AuthScreen();
-                      }
-                      ));
+                      }));
                     },
                     child: Container(
                       width: 150,
@@ -84,16 +82,11 @@ class _MyHomePageState extends State<MyHomePage> {
                             IconButton(
                               icon: Icon(Icons.language),
                               tooltip: 'Search',
-                              onPressed: () {
-                                // Navigator.of(context)
-                                //     .push(MaterialPageRoute(builder: (_) {
-                                //   return Network();
-                                // }));
-                              },
+                              onPressed: () {},
                               color: Colors.black,
                             ),
                             const Text(
-                              "Network",
+                              "network",
                               style: TextStyle(color: Colors.black),
                             ),
                           ],
@@ -102,15 +95,15 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   width: 70,
                 ),
                 IconButton(
-                  icon: Icon(Icons.settings),
+                  icon: const Icon(Icons.settings),
                   tooltip: 'Search',
                   onPressed: () {
                     Navigator.of(context).push(MaterialPageRoute(builder: (_) {
-                      return Setting();
+                      return const Setting();
                     }));
                   },
                   color: Colors.black,
@@ -119,11 +112,11 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ]),
       body: InkWell(
-        // onTap: () {
-        //   Navigator.of(context).push(MaterialPageRoute(builder: (_) {
-        //     return MyData();
-        //   }));
-        // },
+        onTap: () {
+          Navigator.of(context).push(MaterialPageRoute(builder: (_) {
+            return AuthScreenData();
+          }));
+        },
         child: Container(
           width: double.infinity,
           decoration: const BoxDecoration(
@@ -153,7 +146,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         onPressed: null),
                   ),
                   const Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
+                    padding: EdgeInsets.only(left: 8.0),
                     child: TextButton(
                         child: Text(
                           "Credentials",
@@ -164,23 +157,22 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                         onPressed: null),
                   ),
-                  Padding(
-                    padding: EdgeInsets.only(left: 8.0),
-                    child: ElevatedButton(
-                        onPressed: null,
-                        child: Text(
-                          'Unlocked',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w400),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                        )),
+                  const SizedBox(
+                    height: 40,
                   ),
-                  SizedBox(
-                    height: 80,
+                  Padding(
+                    padding: const EdgeInsets.only(left: 20.0),
+                    child: ElevatedButton(
+                      onPressed: () {},
+                      style: CustomButtonStyle.primaryButtonStyleSmallBlack,
+                      child: const Text(
+                        'Unlock',
+                        style: CustomTextStyles.primaryButtonTextStyle,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 30,
                     width: 60,
                   ),
                 ],
@@ -270,7 +262,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                         fontSize: 15, color: Colors.black54),
                               ),
                             ),
-                            
                             ElevatedButton(
                               onPressed: () {
                                 // print(object)
@@ -318,7 +309,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Container(
               padding: const EdgeInsets.all(8.0),
               width: double.infinity,
-              height: 100,
+              height: 160,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
                 color: Colors.grey.shade200,
@@ -329,7 +320,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.all(8.0),
                       child: Row(
                         children: [
                           Container(
@@ -348,12 +339,13 @@ class _MyHomePageState extends State<MyHomePage> {
                             ),
                           ),
                           const Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
+                            padding: EdgeInsets.only(left: 8.0),
                             child: Text(
                               "identifier",
                               style: TextStyle(fontSize: 13),
                             ),
                           ),
+                          
                         ],
                       ),
                     ),
@@ -362,12 +354,34 @@ class _MyHomePageState extends State<MyHomePage> {
                       builder: (BuildContext context, HomeState state) {
                         final String identityText = state.identifier ??
                             CustomStrings.homeIdentifierSectionPlaceHolder;
-                        return Text(
-                          state.identifier ??
-                              CustomStrings.homeIdentifierSectionPlaceHolder,
-                          key: const Key('identifier'),
-                          style: CustomTextStyles.descriptionTextStyle
-                              .copyWith(fontSize: 13),
+                        return Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+
+                            children: [
+                              Text(
+                                state.identifier ??
+                                    CustomStrings
+                                        .homeIdentifierSectionPlaceHolder,
+                                key: const Key('identifier'),
+                                style: CustomTextStyles.descriptionTextStyle
+                                    .copyWith(fontSize: 13),
+                              ),
+                              ElevatedButton(
+                                
+                                onPressed: () async {
+                                  await FlutterClipboard.copy(identityText);
+                                },
+                                
+                                child: const Icon(
+                                Icons.copy,
+                                
+                              ),
+                              
+                              ),
+                              
+                              
+                            ],
+                          
                         );
                       },
                       buildWhen: (_, currentState) =>

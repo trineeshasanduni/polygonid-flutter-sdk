@@ -33,6 +33,28 @@ class CustomTextStyles {
     decoration: TextDecoration.none,
     fontWeight: FontWeight.w400,
   );
+  static const TextStyle TitleTextStyle = TextStyle(
+    color: CustomColors.textGrayDark,
+    fontSize: 16,
+    height: 1.8,
+    decoration: TextDecoration.none,
+    fontWeight: FontWeight.w500,
+  );
+
+static const TextStyle SubTitleTextStyle = TextStyle(
+    color: CustomColors.textGrayDark,
+    fontSize: 13,
+    height: 1.8,
+    decoration: TextDecoration.none,
+    fontWeight: FontWeight.w400,
+  );
+  static const TextStyle TopicTextStyle = TextStyle(
+    color: CustomColors.textGrayDark,
+    fontSize: 20,
+    height: 1.8,
+    decoration: TextDecoration.none,
+    fontWeight: FontWeight.w500,
+  );
 
   static TextStyle successTextStyle =
       descriptionTextStyle.copyWith(color: CustomColors.greenSuccess);
