@@ -57,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen> {
           children: [
             SvgPicture.asset(
               ImageResources.logo,
-              width: 380,
+              width: 20,
               // height: double.infinity,
             ),
             _buildDownloadProgress(),
