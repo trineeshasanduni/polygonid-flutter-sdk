@@ -54,6 +54,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       PrivateIdentityEntity identity =
           await _polygonIdSdk.identity.addIdentity();
       logger().i("identity: ${identity.privateKey}");
+      print('identity: ${identity.privateKey}');
       await SecureStorage.write(
           key: SecureStorageKeys.privateKey, value: identity.privateKey);
       emit(HomeState.loaded(identifier: identity.did));
@@ -85,6 +86,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       network: chain.network,
       method: chain.method,
     );
+    print('did: $did');
 
     try {
       await _polygonIdSdk.identity

@@ -6,10 +6,8 @@ import 'package:polygonid_flutter_sdk/common/domain/entities/env_config_entity.d
 class EnvEntity {
   final String pushUrl;
   final String ipfsUrl;
-
   final Map<String, ChainConfigEntity> chainConfigs;
   final List<DidMethodEntity> didMethods;
-
   final String? stacktraceEncryptionKey;
   final String? pinataGateway;
   final String? pinataGatewayToken;
@@ -36,9 +34,9 @@ class EnvEntity {
 
   factory EnvEntity.fromJson(Map<String, dynamic> json) {
     return EnvEntity(
-      
+
       pushUrl: json['pushUrl'],
-      ipfsUrl: json['ipfsUrl'],
+      ipfsUrl: json['ipfsUrl'] ,
       chainConfigs: (json['chainConfigs'] as Map<String, dynamic>).map(
         (key, value) => MapEntry(
           key,
