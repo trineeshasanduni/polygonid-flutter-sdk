@@ -36,6 +36,7 @@ class EnvEntity {
 
   factory EnvEntity.fromJson(Map<String, dynamic> json) {
     return EnvEntity(
+      
       pushUrl: json['pushUrl'],
       ipfsUrl: json['ipfsUrl'],
       chainConfigs: (json['chainConfigs'] as Map<String, dynamic>).map(

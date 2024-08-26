@@ -40,6 +40,7 @@ Future<void> init() async {
 
 void registerEnv() {
   Map<String, dynamic> defaultEnv = jsonDecode(Env.defaultEnvironment);
+  print('defaultEnv: $defaultEnv');
   String stacktraceEncryptionKey = Env.stacktraceEncryptionKey;
   String pinataGateway = Env.pinataGateway;
   String pinataGatewayToken = Env.pinataGatewayToken;
