@@ -47,7 +47,7 @@ class ClaimsBloc extends Bloc<ClaimsEvent, ClaimsState> {
       FetchAndSaveClaimsEvent event, Emitter<ClaimsState> emit) async {
     String? privateKey =
         await SecureStorage.read(key: SecureStorageKeys.privateKey);
-
+print('privateKey: $privateKey');
     if (privateKey == null) {
       emit(const ClaimsState.error("Private key not found"));
       return;
@@ -59,6 +59,8 @@ class ClaimsBloc extends Bloc<ClaimsEvent, ClaimsState> {
         privateKey: privateKey,
         blockchain: chainConfig.blockchain,
         network: chainConfig.network);
+
+        print('didIdentifier: $didIdentifier');
 
     emit(const ClaimsState.loading());
 
@@ -324,6 +326,7 @@ class ClaimsBloc extends Bloc<ClaimsEvent, ClaimsState> {
   Future<void> _handleScanQrCodeResponse(
       ScanQrCodeResponse event, Emitter<ClaimsState> emit) async {
     String? qrCodeResponse = event.response;
+    print('qrCodeResponse: $qrCodeResponse');
     if (qrCodeResponse == null || qrCodeResponse.isEmpty) {
       emit(const ClaimsState.error("no qr code scanned"));
     }

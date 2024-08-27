@@ -77,6 +77,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       emit(const HomeState.error(message: "no private key found"));
       return;
     }
+    
 
     final ChainConfigEntity chain = await _polygonIdSdk.getSelectedChain();
 
@@ -87,6 +88,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       method: chain.method,
     );
     print('did: $did');
+
+    
 
     try {
       await _polygonIdSdk.identity

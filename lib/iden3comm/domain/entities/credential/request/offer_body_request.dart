@@ -84,10 +84,12 @@ class OfferBodyRequest extends CredentialOfferBody {
     List<CredentialOfferData> credentials = (json['credentials'] as List)
         .map((item) => CredentialOfferData.fromJson(item))
         .toList();
+        print('credentials: $credentials');
     return OfferBodyRequest(
       url: json['url'],
       credentials: credentials,
     );
+    
   }
 
   Map<String, dynamic> toJson() => {

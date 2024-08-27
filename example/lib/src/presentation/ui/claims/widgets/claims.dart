@@ -241,6 +241,8 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
     return BlocListener<ClaimsBloc, ClaimsState>(
       bloc: widget._bloc,
       listener: (context, state) {
+        print('state1: $state');
+        
         if (state is NavigateToQrCodeScannerClaimsState) {
           _handleNavigateToQrCodeScannerClaimsState();
         }
@@ -260,6 +262,7 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
     String? qrCodeScanningResult =
         await Navigator.pushNamed(context, Routes.qrCodeScannerPath) as String?;
     widget._bloc.add(ClaimsEvent.onScanQrCodeResponse(qrCodeScanningResult));
+    print('qrCodeScanningResult: $qrCodeScanningResult');
   }
 
   ///

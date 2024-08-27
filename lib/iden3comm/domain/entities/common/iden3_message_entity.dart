@@ -60,6 +60,8 @@ abstract class Iden3MessageEntity<T> {
   String toString() =>
       "[Iden3MessageEntity] {id: $id, typ: $typ, type: $type, messageType: $messageType, thid: $thid, body: $body, from: $from, to: $to, nextRequest: $nextRequest}";
 
+      
+
   @override
   Map<String, dynamic> toJson() => {
         'id': id,

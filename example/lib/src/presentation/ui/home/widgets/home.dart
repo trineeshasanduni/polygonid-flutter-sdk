@@ -209,6 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
           BlocBuilder(
             bloc: _bloc,
             builder: (BuildContext context, HomeState state) {
+              print('state.identifier: ${state.identifier}');
               return Text(
                 state.identifier ??
                     CustomStrings.homeIdentifierSectionPlaceHolder,
@@ -220,10 +221,14 @@ class _HomeScreenState extends State<HomeScreen> {
             buildWhen: (_, currentState) =>
                 currentState is LoadedIdentifierHomeState,
           ),
+          TextButton(onPressed:(){}, child: 
+            Text('submit')
+          )
         ],
       ),
     );
   }
+
 
   ///
   Widget _buildErrorSection() {
