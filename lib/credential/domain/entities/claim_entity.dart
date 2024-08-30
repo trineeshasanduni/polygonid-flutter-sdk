@@ -63,6 +63,8 @@ class ClaimEntity {
       "expiration: $expiration, schema: $schema, type: $type, info: $info, "
       "displayType: $displayType}";
 
+      
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||

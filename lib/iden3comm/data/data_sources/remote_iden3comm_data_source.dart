@@ -192,6 +192,77 @@ class RemoteIden3commDataSource {
     });
   }
 
+  Future<ClaimDTO> fetchRegister({
+    required String did,
+    required String first,
+    required String last,
+    required String email,
+  }) {
+    const String baseUrl = 'https://apimobile.becx.io/api/v1';
+    _stacktraceManager.addTrace(
+        "[RemoteIden3commDataSource] fetchClaim: did:$did\nurl: $first\nauthToken: $last\nemail: $email");  
+    logger().i(
+        "[RemoteIden3commDataSource] fetchClaim: did:$did\nurl: $first\nauthToken: $last\nemail: $email");
+
+    return Future.value(Uri.parse('$baseUrl/add-user'))
+        .then((uri) => client.post(
+              uri,
+              body: jsonEncode({
+                'did': did,
+                'first': first,
+                'last': last,
+                'email': email,
+              }),
+             
+            ))
+        .then((response) {
+      logger()
+          .d("fetchClaim: code: ${response.statusCode} msg: ${response.body}");
+      _stacktraceManager.addTrace(
+          "[RemoteIden3commDataSource] fetchClaim: ${response.statusCode} ${response.body}");
+      if (response.statusCode == 200) {
+        Map<String, dynamic> jsonResponse = json.decode(response.body);
+        final fetchResponse = FetchClaimResponseDTO.fromJson(jsonResponse);
+
+        if (fetchResponse.type == FetchClaimResponseType.issuance) {
+          logger().i(
+              "[RemoteIden3commDataSource] fetchClaim: ${fetchResponse.credential.toJson()}");
+          final claimDTO = ClaimDTO(
+            id: fetchResponse.credential.id,
+            issuer: fetchResponse.from,
+            did: did,
+            type: fetchResponse.credential.credentialSubject.type,
+            expiration: fetchResponse.credential.expirationDate,
+            info: fetchResponse.credential,
+            credentialRawValue: response.body,
+          );
+          logger().i(
+              "[RemoteIden3commDataSource] fetchClaim: ${claimDTO.info.toJson()}");
+          return claimDTO;
+        } else {
+          _stacktraceManager.addTrace(
+              "[RemoteIden3commDataSource] fetchClaim: UnsupportedFetchClaimTypeException");
+          _stacktraceManager.addError(
+              "[RemoteIden3commDataSource] fetchClaim: UnsupportedFetchClaimTypeException");
+          throw UnsupportedFetchClaimTypeException(
+            type: fetchResponse.type.name,
+            errorMessage:
+                'Unsupported fetch claim type: ${fetchResponse.type.name}\nShould be ${FetchClaimResponseType.issuance.name}',
+          );
+        }
+      } else {
+        logger().d(
+            'fetchClaim Error: code: ${response.statusCode} msg: ${response.body}');
+        _stacktraceManager.addError(
+            'fetchClaim Error: $response response with\ncode: ${response.statusCode}\nmsg: ${response.body}');
+        throw NetworkException(
+          errorMessage: response.body,
+          statusCode: response.statusCode,
+        );
+      }
+    });
+  }
+
   Future<Map<String, dynamic>> fetchSchema({required String url}) async {
     try {
       String schemaUrl = url;

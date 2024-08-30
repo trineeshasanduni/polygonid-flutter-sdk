@@ -6,7 +6,9 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/models/
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/widgets/claims.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/auth/widgets/auth.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/widgets/home.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/widgets/register.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/qrcode_scanner/widgets/qrcode_scanner.dart';
+// import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/widgets/register.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/restore_identity/widgets/restore_identity.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/sign/widgets/sign.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/splash/widgets/splash.dart';
@@ -16,6 +18,9 @@ class Routes {
   static const String splashPath = "/splash";
   static const String introPath = "/intro";
   static const String homePath = "/home";
+  static const String registerPath = "/register";
+  static const String dashboardPath = "/dashboard";
+  // static const String registerPath = "/register";
   static const String claimsPath = "/claims";
   static const String qrCodeScannerPath = "/qrcode_scanner";
   static const String authPath = "/auth";
@@ -31,6 +36,8 @@ class Routes {
       initialPath: _splashRoute(),
       splashPath: _splashRoute(),
       homePath: _homeRoute(),
+      registerPath: _registerRoute(),
+      // dashboardPath: _dashboardRoute(),
       qrCodeScannerPath: _qrCodeScannerRoute(),
       authPath: _authRoute(),
       claimsPath: _claimsRoute(),
@@ -51,6 +58,16 @@ class Routes {
   static WidgetBuilder _homeRoute() {
     return (BuildContext context) => const HomeScreen();
   }
+
+  ///
+  static WidgetBuilder _registerRoute() {
+    return (BuildContext context) => const Signup();
+  }
+
+  // ///
+  // static WidgetBuilder _dashboardRoute() {
+  //   return (BuildContext context) => const Signup();
+  // }
 
   ///
   static WidgetBuilder _claimsRoute() {

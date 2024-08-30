@@ -11,7 +11,7 @@ class ClaimsState with _$ClaimsState {
   const factory ClaimsState.loading() = LoadingDataClaimsState;
 
   const factory ClaimsState.navigateToQrCodeScanner() =
-      NavigateToQrCodeScannerClaimsState;
+      NavigateToQrCodeScannerClaimsState;   
 
   const factory ClaimsState.qrCodeScanned(Iden3MessageEntity iden3message) =
       QrCodeScannedClaimsState;

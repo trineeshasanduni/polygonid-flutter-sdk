@@ -11,6 +11,13 @@ abstract class Iden3commCredentialRepository {
     required String authToken,
   });
 
+  Future<ClaimEntity> fetchRegisterResponse({
+    required String did,
+    required String first,
+    required String last,
+    required String email,
+  });
+
   Future<Map<String, dynamic>> fetchSchema({required String url});
 
   Future<ClaimEntity> refreshCredential({

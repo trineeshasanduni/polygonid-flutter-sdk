@@ -54,6 +54,32 @@ class Iden3commCredentialRepositoryImpl extends Iden3commCredentialRepository {
     }
   }
 
+  @override
+  Future<ClaimEntity>fetchRegisterResponse({
+    required String did,
+    required String first,
+    required String last,
+    required String email,
+    
+  }) async {
+    try {
+      ClaimDTO claimDTOs = await _remoteIden3commDataSource
+          .fetchRegister(did: did, first: first, last: last, email: email);
+      final displayRegisterMethod = claimDTOs.info.displayMethod;
+      claimDTOs = await _fetchSchemaAndDisplayType(claimDTOs);
+      final ClaimEntity claimEntity = _claimMapper.mapFrom(claimDTOs);
+      return claimEntity;
+    } on PolygonIdSDKException catch (_) {
+      rethrow;
+    } catch (e) {
+      _stacktraceManager.addError("Error fetching claim: $e");
+      throw FetchClaimException(
+        errorMessage: "Error fetching claim",
+        error: e,
+      );
+    }
+  }
+
   /// fetch schema and displayType, if available add to the claimDTO otherwise
   /// return the claimDTO
   /// possible errors are not blocking

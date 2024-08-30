@@ -221,14 +221,13 @@ class _HomeScreenState extends State<HomeScreen> {
             buildWhen: (_, currentState) =>
                 currentState is LoadedIdentifierHomeState,
           ),
-          TextButton(onPressed:(){}, child: 
-            Text('submit')
-          )
+          TextButton(onPressed: () {
+            Navigator.of(context).pushReplacementNamed(Routes.registerPath);
+          }, child: Text('Dashboard')) 
         ],
       ),
     );
   }
-
 
   ///
   Widget _buildErrorSection() {

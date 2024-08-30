@@ -11,18 +11,24 @@ class QrcodeParserUtils {
 
   ///
   Future<Iden3MessageEntity> getIden3MessageFromQrCode(String message) async {
+    print('fetching iden3Message');
     try {
       String rawMessage = message;
+      print('message1: ${message.toString()}');
+     
       if (message.startsWith("iden3comm://?i_m")) {
         rawMessage = await _getMessageFromBase64(message);
+        print('rawMessage : $rawMessage');
       }
 
       if (message.startsWith("iden3comm://?request_uri")) {
         rawMessage = await _getMessageFromRemote(message);
+        print('rawMessage2 : $rawMessage');
       }
 
       Iden3MessageEntity? _iden3Message =
           await _polygonIdSdk.iden3comm.getIden3Message(message: rawMessage);
+          print('iden3Message3: $_iden3Message');
       return _iden3Message;
     } catch (error) {
       throw Exception("Error while processing the QR code");

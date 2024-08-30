@@ -37,6 +37,7 @@ class ClaimsBloc extends Bloc<ClaimsEvent, ClaimsState> {
     on<RemoveAllClaimsEvent>(_removeAllClaims);
     on<UpdateClaimEvent>(_updateClaim);
     on<ClickScanQrCodeEvent>(_handleClickScanQrCode);
+    // on<ClickRegisterEvent>(_handleRegisterResponse);
     on<ScanQrCodeResponse>(_handleScanQrCodeResponse);
     on<OnClickClaim>(_handleClickClaim);
     on<OnClaimDetailRemoveResponse>(_handleRemoveClaimResponse);
@@ -65,6 +66,7 @@ print('privateKey: $privateKey');
     emit(const ClaimsState.loading());
 
     Iden3MessageEntity iden3message = event.iden3message;
+    print('iden3message fetch: $iden3message');
     if (event.iden3message.messageType != Iden3MessageType.credentialOffer) {
       emit(const ClaimsState.error("Read message is not of type offer"));
       return;
@@ -84,6 +86,8 @@ print('privateKey: $privateKey');
         profileNonce: nonce,
         privateKey: privateKey,
       );
+
+      print('claimList: ${claimList}.');
 
       if (claimList.isNotEmpty) {
         add(const GetClaimsEvent());
@@ -322,6 +326,8 @@ print('privateKey: $privateKey');
     emit(const ClaimsState.navigateToQrCodeScanner());
   }
 
+
+
   ///
   Future<void> _handleScanQrCodeResponse(
       ScanQrCodeResponse event, Emitter<ClaimsState> emit) async {
@@ -334,11 +340,14 @@ print('privateKey: $privateKey');
     try {
       final Iden3MessageEntity iden3message =
           await _qrcodeParserUtils.getIden3MessageFromQrCode(qrCodeResponse!);
+          print('iden3message res: $iden3message');
       emit(ClaimsState.qrCodeScanned(iden3message));
+      print('get fetch ');
     } catch (error) {
       emit(const ClaimsState.error("Scanned code is not valid"));
     }
   }
+
 
   ///
   void _handleClickClaim(OnClickClaim event, Emitter<ClaimsState> emit) {

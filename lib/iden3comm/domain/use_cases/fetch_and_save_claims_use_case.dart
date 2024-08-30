@@ -210,6 +210,8 @@ class FetchAndSaveClaimsUseCase
     return claims;
   }
 
+  
+
   Future<List<ClaimEntity>> _fetchOnchainClaims(
     OnchainOfferIden3MessageEntity message,
     String profileDid,
