@@ -147,6 +147,7 @@ class _AuthScreenState extends State<AuthScreen> {
     String? qrCodeScanningResult =
         await Navigator.pushNamed(context, Routes.qrCodeScannerPath) as String?;
     widget._bloc.add(AuthEvent.onScanQrCodeResponse(qrCodeScanningResult));
+    print('qrCodeScanningResult4: $qrCodeScanningResult');
   }
 
   ///
@@ -227,6 +228,7 @@ class _AuthScreenState extends State<AuthScreen> {
     void _selectProfile(SelectedProfile profile) {
       widget._bloc.add(AuthEvent.profileSelected(profile));
     }
+   
 
     return BlocBuilder(
         bloc: widget._bloc,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:polygonid_flutter_sdk/registers/domain/usecases/register_usecase.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/routes.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/login/bloc/login_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/bloc/register_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/themes/theme_data.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_colors.dart';
@@ -18,18 +19,20 @@ class App extends StatefulWidget {
 class AppState extends State<App> {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   late final RegisterBloc _registerBloc ;
+late final LoginBloc _loginBloc;
 
   @override
   Widget build(BuildContext context) {
     
     return MultiBlocProvider(
       providers: [
-        // BlocProvider<HomeBloc>(
-        //   create: (context) => HomeBloc(),
-        // ),
+        BlocProvider<LoginBloc>(
+          create: (context) => _loginBloc,
+        ),
         BlocProvider<RegisterBloc>(
           create: (context) => _registerBloc,
           ),
+
         
       ],child: MaterialApp(
       title: CustomStrings.appTitle,

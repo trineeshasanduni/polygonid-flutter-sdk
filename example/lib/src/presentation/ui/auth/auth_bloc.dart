@@ -52,6 +52,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _handleScanQrCodeResponse(
       ScanQrCodeResponse event, Emitter<AuthState> emit) async {
     String? qrCodeResponse = event.response;
+    print('processing qr code response: $qrCodeResponse');
     if (qrCodeResponse == null || qrCodeResponse.isEmpty) {
       emit(const AuthState.error("no qr code scanned"));
       return;
@@ -92,6 +93,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         await _polygonIdSdk.getSelectedChain();
     final EnvEntity envEntity = await _polygonIdSdk.getEnv();
 
+
     String? did = await _polygonIdSdk.identity.getDidIdentifier(
       privateKey: privateKey,
       blockchain: currentChain.blockchain,
@@ -105,11 +107,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
 
     try {
+      print('get fetch profile : $selectedProfile');
       final BigInt nonce = selectedProfile == SelectedProfile.public
           ? GENESIS_PROFILE_NONCE
           : await NonceUtils(getIt()).getPrivateProfileNonce(
               did: did, privateKey: privateKey, from: iden3message.from);
+
+              print('nonce fetch: $nonce');
+              print('fetch did: $did');
+              print('iden3message fetch: $iden3message');
+              print('privateKey fetch: $privateKey');
+              print('identityEntity fetch: $identityEntity');
+              print('env fetch: $envEntity');
+
       await _polygonIdSdk.iden3comm.authenticateV2(
+        
         message: iden3message,
         genesisDid: did,
         privateKey: privateKey,
@@ -117,6 +129,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         identityEntity: identityEntity,
         env: envEntity,
       );
+      print('env fetch: $envEntity');
 
       emit(const AuthState.authenticated());
     } on OperatorException catch (error) {

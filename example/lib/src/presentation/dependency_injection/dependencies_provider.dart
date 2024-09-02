@@ -3,9 +3,14 @@ import 'dart:convert';
 import 'package:get_it/get_it.dart';
 import 'package:polygonid_flutter_sdk/common/domain/entities/env_entity.dart';
 import 'package:polygonid_flutter_sdk/iden3comm/data/mappers/iden3_message_type_mapper.dart';
+import 'package:polygonid_flutter_sdk/login/data/dataSources/remote/login_remote_dataSource_impl.dart' as login_remote_dataSource_impl;
+import 'package:polygonid_flutter_sdk/login/data/dataSources/remote/login_remote_datasource_impl.dart';
+import 'package:polygonid_flutter_sdk/login/domain/repositories/login_repository.dart';
+import 'package:polygonid_flutter_sdk/login/domain/usecases/login_usecase.dart';
 import 'package:polygonid_flutter_sdk/registers/data/dataSources/register_remote_dataSource.dart';
 import 'package:polygonid_flutter_sdk/registers/data/dataSources/remote/register_remote_dataSource_impl.dart';
 import 'package:polygonid_flutter_sdk/registers/data/repositories/register_repo_impl.dart';
+import 'package:polygonid_flutter_sdk/login/data/repositories/login_repository_impl.dart';
 import 'package:polygonid_flutter_sdk/registers/domain/repositories/register_repo.dart';
 import 'package:polygonid_flutter_sdk/registers/domain/usecases/register_usecase.dart';
 import 'package:polygonid_flutter_sdk/sdk/polygon_id_sdk.dart';
@@ -19,6 +24,7 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/mappers
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/mappers/claim_model_state_mapper.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/mappers/proof_model_type_mapper.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/login/bloc/login_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/bloc/register_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/restore_identity/bloc/restore_identity_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/sign/sign_bloc.dart';
@@ -44,6 +50,8 @@ Future<void> init() async {
   registerRestoreIdentityDependencies();
   registerUtilities();
   registerRegisterDependencies();
+  registerLoginDependencies();
+  _initGetit();
 }
 
 void registerEnv() {
@@ -89,7 +97,7 @@ void registerHomeDependencies() {
 void registerRegisterDependencies() {
   getIt.registerFactory(() => RegisterBloc(getIt(), getIt(), getIt(), getIt()));
 
-   // Use cases
+  // Use cases
   getIt.registerLazySingleton(() => RegisterUsecase(getIt()));
 
   // // Repositories
@@ -99,11 +107,27 @@ void registerRegisterDependencies() {
   // // Data sources
   getIt.registerLazySingleton<RegisterRemoteDatasource>(
       () => RegisterRemoteDatasourceImpl(client: getIt()));
-
-      
-  getIt.registerLazySingleton(() => http.Client());
-
 }
+
+void _initGetit() {
+  getIt.registerLazySingleton(() => http.Client());
+}
+
+void registerLoginDependencies() {
+  getIt.registerFactory(() => LoginBloc(getIt(), getIt(), getIt(), getIt()));
+
+  // Use cases
+  getIt.registerLazySingleton(() => LoginDoneUsecase(getIt()));
+  getIt.registerLazySingleton(() => LoginStatusUsecase(getIt()));
+
+  // // Repositories
+  getIt.registerLazySingleton<LoginRepository>(
+      () => LoginRepositoryImpl(loginRemoteDatasource: getIt()));
+
+  // // Data sources
+getIt.registerFactory<LoginRemoteDatasource>(
+      () => LoginRemoteDatasourceImpl(client:getIt()));
+      }
 
 ///
 void registerClaimsDependencies() {

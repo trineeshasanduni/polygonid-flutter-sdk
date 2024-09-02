@@ -3,4 +3,5 @@ class SecureStorageKeys {
 
   static const String privateKey = 'privateKey';
   static const String backupKey = 'backupKey';
+  static const String sessionId = 'sessionId';  
 }

@@ -1,4 +1,3 @@
-// import 'dart:convert';
 
 import 'dart:convert';
 
@@ -45,15 +44,19 @@ class RegisterRemoteDatasourceImpl implements RegisterRemoteDatasource {
       if (response.statusCode == 201) {
         // Parse the response body
         final jsonResponse = json.decode(response.body) as Map<String, dynamic>;
+        print('jsonResponse56: $jsonResponse');
         final claim = jsonResponse['claim'] as Map<String, dynamic>;
-        final body = jsonEncode(claim);
+        print('claim12: $claim');
+        // final body = jsonEncode(claim);
         final registerResponse = RegisterModel.fromJson(claim);
 
+      print('registerResponse11: ${registerResponse.body?.url}');
+
         // Log the request and response details
-        print('Register Request: $claim');
-        print('Register Response Body: ${response.body}');
-        print('object: ${body}');
-        print('registermodel: ${RegisterModel.fromJson(claim).body?.url}');
+        // print('Register Request: $claim');
+        // print('Register Response Body: ${response.body}');
+        // print('object: ${body}');
+        // print('registermodel: ${RegisterModel.fromJson(claim).body?.url}');
         final registerModel = RegisterModel(
           body: Body(
             credentials: [

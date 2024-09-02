@@ -3,16 +3,6 @@ part of 'register_bloc.dart';
 @immutable
 sealed class RegisterEvent {}
 
-// final class SubmitSignup extends RegisterEvent {
-//   final String did;
-//   final String first;
-//   final String last;
-//     final String email;
-
-
-//   SubmitSignup({required this.did,required this.first,required this.last,required this.email});
-// }
-
 final class SubmitSignup extends RegisterEvent {
   final String did;
   final String first;
