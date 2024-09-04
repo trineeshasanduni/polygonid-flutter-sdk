@@ -1,6 +1,9 @@
 
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/dashboard_navigation.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/plans_navigation.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/profile_navigation.dart';
 
 class BethelBottomBar extends StatefulWidget {
   const BethelBottomBar({super.key});
@@ -19,7 +22,6 @@ class BethelBottomBarState extends State<BethelBottomBar> {
         Icons.dashboard,
         size: 30,
         color: Theme.of(context).secondaryHeaderColor,
-// replace with your desired color
       ),
       Icon(
         Icons.document_scanner,
@@ -43,7 +45,6 @@ class BethelBottomBarState extends State<BethelBottomBar> {
       ),
     ];
     return PopScope(
-      // onWillPop: _systemBackButtonPressed,
       child: Scaffold(
         bottomNavigationBar: CurvedNavigationBar(
           items: items,
@@ -52,35 +53,25 @@ class BethelBottomBarState extends State<BethelBottomBar> {
             setState(() {
               currentIndex = index;
             });
-            //  _goBranch(currentIndex);
           },
 
           height: 60,
           backgroundColor: Colors.black,
           color: Theme.of(context).colorScheme.secondary.withOpacity(0.2),
-          // color: Colors.black,
 
           buttonBackgroundColor: Theme.of(context).colorScheme.secondary,
 
-          // animationDuration: const Duration(milliseconds: 200),
         ),
         body: SafeArea(
           top: false,
           child: IndexedStack(
             index: currentIndex,
             children: const <Widget>[
-              /// First Route
-              // HomeNav(),
-              // TransferNav(),
-              // ProfileNav(),
-              // DashboardNav(),
-              // FileNav(),
-              // ProfileNav(),
-              // PlansNav(),
-              // ActivitiesNav(),
-
-              /// Second Route
-              // UpdatesNavigator(),
+              
+              DashboardNav(),
+              FileNav(),
+              ProfileNav(),
+              
             ],
           ),
         ),

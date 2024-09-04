@@ -1,13 +1,21 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="io.iden3.polygonid_flutter_sdk.example">
-
+    
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
+    <!-- <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+    </queries> -->
+
     <application
         android:icon="@mipmap/ic_launcher"
-        android:label="polygonid_flutter_sdk_example">
+        android:label="Bethel_ZKP">
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
@@ -34,6 +42,13 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            <!-- </intent-filter>
+
+            <intent-filter> -->
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="flutterdapp" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
@@ -42,4 +57,13 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+    
+
+    <queries>
+        <package android:name="io.metamask"/>
+        <package android:name="com.wallet.crypto.trustapp"/>
+        <package android:name="io.gnosis.safe"/>
+        <package android:name="me.rainbow"/>
+    </queries>
+    
 </manifest>

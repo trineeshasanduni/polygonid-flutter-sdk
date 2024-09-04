@@ -1,12 +1,13 @@
 import 'package:flutter/widgets.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/bethelBottomBar.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/backup_identity/widgets/backup_identity.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/check_identity_validity/widgets/check_identity_validity.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claim_detail/widgets/claim_detail.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/models/claim_model.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/widgets/claims.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/auth/widgets/auth.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/widgets/home.dart';
-// import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/widgets/register.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/qrcode_scanner/widgets/qrcode_scanner.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/widgets/register.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/restore_identity/widgets/restore_identity.dart';
@@ -20,7 +21,7 @@ class Routes {
   static const String homePath = "/home";
   static const String registerPath = "/register";
   static const String dashboardPath = "/dashboard";
-  // static const String registerPath = "/register";
+  static const String bottomBarPath = "/bottomBar";
   static const String claimsPath = "/claims";
   static const String qrCodeScannerPath = "/qrcode_scanner";
   static const String authPath = "/auth";
@@ -37,7 +38,8 @@ class Routes {
       splashPath: _splashRoute(),
       homePath: _homeRoute(),
       registerPath: _registerRoute(),
-      // dashboardPath: _dashboardRoute(),
+      dashboardPath: _dashboardRoute(),
+      bottomBarPath: _bottomBarRoute(),
       qrCodeScannerPath: _qrCodeScannerRoute(),
       authPath: _authRoute(),
       claimsPath: _claimsRoute(),
@@ -64,10 +66,15 @@ class Routes {
     return (BuildContext context) => const Signup();
   }
 
-  // ///
-  // static WidgetBuilder _dashboardRoute() {
-  //   return (BuildContext context) => const Signup();
-  // }
+  ///
+  static WidgetBuilder _dashboardRoute() {
+    return (BuildContext context) => const Dashboard();
+  }
+
+  ///
+  static WidgetBuilder _bottomBarRoute() {
+    return (BuildContext context) => const BethelBottomBar();
+  }
 
   ///
   static WidgetBuilder _claimsRoute() {

@@ -13,7 +13,6 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_event.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_state.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/widgets/claim.dart';
-// import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/widgets/setupPassword.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/bloc/register_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/widgets/setupPassword.dart';
 import 'package:polygonid_flutter_sdk_example/utils/qr_code_parser_utils.dart';
@@ -31,12 +30,13 @@ class Signup extends StatefulWidget {
 class _SignupState extends State<Signup> {
   late final HomeBloc _bloc;
   late final RegisterBloc _registerBloc;
-
+  String? _errorMessage;
   final formKey = GlobalKey<FormState>();
   var identity = TextEditingController();
   final storage = const FlutterSecureStorage();
   VideoPlayerController? _controller;
   final ValueNotifier<bool> isButtonEnabled = ValueNotifier(false);
+  bool _isFetching = true; // Added flag to control fetching
 
   @override
   void initState() {
@@ -145,23 +145,39 @@ class _SignupState extends State<Signup> {
                                     ? TextEditingController(
                                         text: state.identifier)
                                     : TextEditingController();
-                                return TextFormField(
-                                  controller: identity,
-                                  enabled: false,
-                                  decoration: InputDecoration(
-                                    labelText: 'Paste your Polygon DID here',
-                                    labelStyle: TextStyle(
-                                      color: Colors.white.withOpacity(0.4),
-                                      fontFamily:
-                                          GoogleFonts.robotoMono().fontFamily,
-                                      fontSize: 13,
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: Colors.red.withOpacity(0.4),
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    TextFormField(
+                                      controller: identity,
+                                      enabled: false,
+                                      decoration: InputDecoration(
+                                        labelText:
+                                            'Paste your Polygon DID here',
+                                        labelStyle: TextStyle(
+                                          color: Colors.white.withOpacity(0.4),
+                                          fontFamily: GoogleFonts.robotoMono()
+                                              .fontFamily,
+                                          fontSize: 13,
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: Colors.red.withOpacity(0.4),
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                    if (_errorMessage != null) ...[
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        _errorMessage!,
+                                        style: const TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 );
                               },
                               buildWhen: (_, currentState) =>
@@ -210,17 +226,46 @@ class _SignupState extends State<Signup> {
                                   builder: (BuildContext context,
                                       RegisterState state) {
                                     if (state is RegisterSuccess) {
+                                      final statusCode =
+                                          state.response.statusCode;
                                       final response =
                                           jsonEncode(state.response.toJson());
-                                      debugPrint('response123: $response');
+                                      print('response123: $response');
+                                      print('statuscode11: $statusCode');
 
-                                      // Defer the state change until after the current frame
-                                      WidgetsBinding.instance
-                                          .addPostFrameCallback((_) {
-                                        _registerBloc.add(
-                                            onGetRegisterResponse(response));
-                                      });
+                                      if (statusCode == 200 && _isFetching) {
+                                        print(
+                                            'Fetching stopped due to 200 status code');
+                                        _errorMessage =
+                                            'You are already registered Using this DID';
+
+                                        // Stop further fetching
+                                        _isFetching = false;
+
+                                        // Defer the state change until after the current frame
+                                        WidgetsBinding.instance
+                                            .addPostFrameCallback((_) {
+                                          setState(
+                                              () {}); // Update the UI to show the error message
+                                        });
+                                      } else if (statusCode == 201) {
+                                        _errorMessage = null;
+                                        // Handle other status codes or responses
+                                        WidgetsBinding.instance
+                                            .addPostFrameCallback((_) {
+                                          _registerBloc.add(
+                                              onGetRegisterResponse(response));
+                                        });
+                                      } else {
+                                        WidgetsBinding.instance
+                                            .addPostFrameCallback((_) {
+                                          _errorMessage =
+                                              'Error in registration';
+                                        });
+                                      }
                                     } else if (state is Registered) {
+                                      _errorMessage = null;
+
                                       // Defer navigation until after the current frame
                                       WidgetsBinding.instance
                                           .addPostFrameCallback((_) {
@@ -229,10 +274,10 @@ class _SignupState extends State<Signup> {
                                         // Navigate to the desired page (e.g., HomeScreen)
                                       });
                                     } else if (state is loadedClaims) {
+                                      _errorMessage = null;
                                       // Defer navigation until after the current frame
                                       WidgetsBinding.instance
                                           .addPostFrameCallback((_) {
-                                            
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
@@ -245,19 +290,23 @@ class _SignupState extends State<Signup> {
 
                                     return GestureDetector(
                                       onTap: () {
-                                        _registerBloc.add(
-                                          SubmitSignup(
+                                        if (_isFetching) {
+                                          _registerBloc.add(
+                                              SubmitSignup(
                                             did: identity.text,
                                             first: "thathsarani",
                                             last: "trineesha",
                                             email: "trineesha@gmail.com",
-                                          ),
-                                        );
+                                          ),);
+                                        } else {
+                                          // Handle case when fetching is disabled
+                                        }
                                       },
                                       child: Container(
-                                        width:
-                                            MediaQuery.of(context).size.width /
-                                                3,
+                                        width: MediaQuery.of(context)
+                                                .size
+                                                .width /
+                                            1.8,
                                         alignment: Alignment.bottomCenter,
                                         padding: const EdgeInsets.symmetric(
                                             vertical: 15),
@@ -269,12 +318,19 @@ class _SignupState extends State<Signup> {
                                             gradient: LinearGradient(
                                               colors: [
                                                 Color(0xFFa3d902),
-                                                Color(0xFF2CFFAE)
+                                                Color(0xFF2CFFAE),
                                               ],
                                             ),
                                             width: 2,
                                           ),
                                         ),
+                                        // child: const Text(
+                                        //   'Sign Up',
+                                        //   style: TextStyle(
+                                        //     color: Colors.white,
+                                        //     fontSize: 16,
+                                        //   ),
+                                        // ),
                                         child: Center(
                                           child: state is RegisterLoading
                                               ? const CircularProgressIndicator(
@@ -294,10 +350,9 @@ class _SignupState extends State<Signup> {
                                       ),
                                     );
                                   },
-                                )
+                                ),
                               ],
                             ),
-                            const SizedBox(height: 16),
                           ],
                         ),
                       ),
@@ -312,8 +367,8 @@ class _SignupState extends State<Signup> {
     );
   }
 
-  void _handleRegistered(Iden3MessageEntity iden3message) async {
-    print('iden3message233: $iden3message');
-    _registerBloc.add(fetchAndSaveClaims(iden3message: iden3message));
+  Future<void> _handleRegistered(Iden3MessageEntity iden3message) async {
+    debugPrint('User is registered');
+     _registerBloc.add(fetchAndSaveClaims(iden3message: iden3message));
   }
 }

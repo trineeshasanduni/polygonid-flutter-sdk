@@ -17,7 +17,7 @@ import 'package:polygonid_flutter_sdk_example/utils/custom_colors.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_strings.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_text_styles.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_widgets_keys.dart';
-import 'package:polygonid_flutter_sdk_example/utils/image_resources.dart';
+import 'package:polygonid_flutter_sdk_example/utils/image_resource.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);

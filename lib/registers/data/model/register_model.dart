@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 class RegisterModel {
   Body? body;
   String? from;
@@ -6,9 +8,11 @@ class RegisterModel {
   String? to;
   String? typ;
   String? type;
+  String? error;
+  int? statusCode;
 
   RegisterModel(
-      {this.body, this.from, this.id, this.thid, this.to, this.typ, this.type});
+      {this.body, this.from, this.id, this.thid, this.to, this.typ, this.type,this.error,this.statusCode});
 
   RegisterModel.fromJson(Map<String, dynamic> json) {
     body = json['body'] != null ? Body.fromJson(json['body']) : null;
@@ -18,6 +22,8 @@ class RegisterModel {
     to = json['to'];
     typ = json['typ'];
     type = json['type'];
+    error =json['error'];
+    statusCode =json['statusCode'];
   }
 
   Map<String, dynamic> toJson() {
@@ -31,6 +37,8 @@ class RegisterModel {
     data['to'] = this.to;
     data['typ'] = this.typ;
     data['type'] = this.type;
+    data['error']= this.error;
+    data['statusCode']=this.statusCode;
     return data;
   }
 }

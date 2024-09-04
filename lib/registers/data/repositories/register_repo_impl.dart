@@ -43,6 +43,7 @@ class RegisterRepoImpl implements RegisterRepository {
         thid: registerModel.thid,
         to: registerModel.to,
         typ: registerModel.typ,
+        statusCode: registerModel.statusCode,
 
 
       ));

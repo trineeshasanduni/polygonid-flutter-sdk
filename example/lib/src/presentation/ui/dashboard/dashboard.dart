@@ -1,17 +1,23 @@
+import 'dart:convert';
 import 'dart:ui';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:get/get.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gradient_borders/box_borders/gradient_box_border.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/bar.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/customCurveEdge.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/widgets/setupPassword.dart';
+import 'package:web3modal_flutter/services/w3m_service/w3m_service.dart';
+import 'package:web3modal_flutter/web3modal_flutter.dart';
+import 'package:web3modal_flutter/widgets/w3m_account_button.dart';
+import 'package:web3modal_flutter/widgets/w3m_connect_wallet_button.dart';
+import 'package:web3modal_flutter/widgets/w3m_network_select_button.dart';
 import 'package:pie_chart/pie_chart.dart';
-
+import 'package:file_picker/file_picker.dart';
+import 'package:http/http.dart' as http;
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -31,12 +37,11 @@ class _DashboardState extends State<Dashboard> {
   void initState() {
     super.initState();
     _initW3MService();
-   
   }
 
   void _initW3MService() async {
     _w3mService = W3MService(
-      projectId: 'e96af4893d7308f455d1055dcf0a8fb3',
+      projectId: 'fe65e1d4350f3699c3aa913768035e39',
       metadata: const PairingMetadata(
         name: 'Web3Modal Flutter Example',
         description: 'Web3Modal Flutter Example',
@@ -48,11 +53,10 @@ class _DashboardState extends State<Dashboard> {
         ),
       ),
     );
-
     await _w3mService.init();
 
-    // await storage.write( key: 'walletAddress', value: _w3mService.session?.address ?? '');
     final WalletAddress = _w3mService.session?.address;
+    print('walletAddress123: $WalletAddress');
     final storage = GetStorage();
     storage.write('walletAddress', WalletAddress);
 
@@ -70,7 +74,7 @@ class _DashboardState extends State<Dashboard> {
       setState(() {
         isConnected = isConnect;
       });
-      if (!isConnected) {
+      if (isConnected) {
         print('connected: $isConnected');
         _showWelcomeDialog();
       }
@@ -91,14 +95,49 @@ class _DashboardState extends State<Dashboard> {
             ],
     );
   }
+  
+  Future<String> addUser(
+      String Commitment, String Did, String NullifierHash, String Owner) async {
+    print('add user up');
+    try {
+      final storage = GetStorage();
+      final owner1 = storage.read('walletAddress');
+      // Construct the data to be sent
+      Map<String, dynamic> data = {
+        Commitment: Commitment,
+        Did: Did,
+        NullifierHash: NullifierHash,
+        Owner: Owner,
+      };
+      print('add user data: $data');
 
-  void openfile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles();
-    if (result != null) {
-      PlatformFile file = result.files.first;
-      print('file name:${file.name}');
-    } else {
-      // User canceled the picker
+      // Define the URI for the sign-up API endpoint
+      final uri = Uri.parse('https://apimobile.becx.io/api/v1/add-user');
+
+      // Make the POST request with the proper headers and body
+      final response = await http.post(
+        uri,
+        // headers: {"Content-Type": "application/json"},
+        body: jsonEncode(data),
+      );
+      print('add user status code: ${response.statusCode}');
+
+      Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+      print('add user Status Code: ${response.statusCode}');
+      print('add user Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        return jsonEncode(jsonResponse);
+        // return jsonResponse;
+      } else {
+        print('Failed to add user');
+        // return response.body;
+      }
+      return jsonEncode(jsonResponse);
+    } catch (error) {
+      print('Error during add user: $error');
+      throw Exception('Failed to add user');
     }
   }
 
@@ -112,14 +151,16 @@ class _DashboardState extends State<Dashboard> {
           actions: <Widget>[
             TextButton(
               child: Text('Add User'),
-              onPressed: () async {
-                await WalletController.to.addUser(
-                    "79179855485517959415279473341851584883681887175169008946781267938371369",
-                    _did!,
-                    "88871286709793914884405575185504262374183498556034135874130629985717964",
-                    "0xD1F56B3efC77b00E1c0b31F77Ae42212D8babc9A");
-
-                Navigator.of(context).pop(Dashboard());
+              onPressed: () {
+                final storage = GetStorage();
+                final owner1 = storage.read('walletAddress');
+                print('owener did: $owner1');
+                addUser(
+                  "79179855485517959415279473341851584883681887175169008946781267938371369",
+                  'did:polygonid:polygon:main:2pzuZ5jPYEFcKj4byRmdm3p6UJAqUDL3sJofLpaAi7',
+                  "88871286709793914884405575185504262374183498556034135874130629985717964",
+                  owner1,
+                );
               },
             ),
           ],
@@ -152,12 +193,10 @@ class _DashboardState extends State<Dashboard> {
     return SafeArea(
       child: Scaffold(
         backgroundColor: Theme.of(context).primaryColor,
-      
         body: SingleChildScrollView(
           child: SizedBox(
             child: Column(
               children: [
-                
                 ListTile(
                   title: Row(
                     children: [
@@ -186,8 +225,7 @@ class _DashboardState extends State<Dashboard> {
                           ]))
                     ],
                   ),
-                  subtitle: 
-                  Column(
+                  subtitle: Column(
                     children: !isConnected
                         ? [
                             W3MNetworkSelectButton(service: _w3mService),
@@ -220,7 +258,7 @@ class _DashboardState extends State<Dashboard> {
                     ),
                   ),
                 ),
-               
+
                 ListTile(
                   title: Text('My Storage',
                       style: TextStyle(
@@ -308,12 +346,12 @@ class _DashboardState extends State<Dashboard> {
         'icon': Icons.file_open,
         'route': ()
       },
-      {
-        'title': 'Storage',
-        'subtitle': 'Total',
-        'icon': Icons.storage,
-        'route': MyFiles()
-      },
+      // {
+      //   'title': 'Storage',
+      //   'subtitle': 'Total',
+      //   'icon': Icons.storage,
+      //   'route': MyFiles()
+      // },
     ];
     return SizedBox(
       height: 120,
@@ -377,7 +415,6 @@ class _DashboardState extends State<Dashboard> {
                             color: Theme.of(context).colorScheme.secondary,
                             width: 1),
                         color: Theme.of(context).primaryColor,
-                       
                       ),
                       child: Icon(
                         items[index]['icon'],
@@ -424,7 +461,6 @@ class _DashboardState extends State<Dashboard> {
                                 fontSize: 8,
                                 fontFamily: GoogleFonts.robotoMono().fontFamily,
                                 fontWeight: FontWeight.w300)),
-                        
                       ],
                     ),
                   ),
@@ -548,7 +584,6 @@ class _DashboardState extends State<Dashboard> {
             border: Border.all(
               color: Theme.of(context).colorScheme.secondary,
             ),
-            
           ),
           child: Center(
             child: Text(

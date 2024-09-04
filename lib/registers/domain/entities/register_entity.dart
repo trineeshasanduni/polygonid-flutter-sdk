@@ -6,9 +6,10 @@ class RegisterEntity {
   String? to;
   String? typ;
   String? type;
+  int? statusCode;
 
   RegisterEntity(
-      {this.body, this.from, this.id, this.thid, this.to, this.typ, this.type});
+      {this.body, this.from, this.id, this.thid, this.to, this.typ, this.type,this.statusCode});
 
   RegisterEntity.fromJson(Map<String, dynamic> json) {
     body = json['body'] != null ? BodyEntity.fromJson(json['body']) : null;
@@ -18,6 +19,7 @@ class RegisterEntity {
     to = json['to'];
     typ = json['typ'];
     type = json['type'];
+    statusCode = json['statusCode'];
   }
 
   Map<String, dynamic> toJson() {
@@ -31,6 +33,7 @@ class RegisterEntity {
     data['to'] = this.to;
     data['typ'] = this.typ;
     data['type'] = this.type;
+    data['statusCode']= this.statusCode;
     return data;
   }
 }

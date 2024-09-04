@@ -15,13 +15,20 @@ class LoginRemoteDatasourceImpl implements LoginRemoteDatasource {
 
 
   LoginRemoteDatasourceImpl({required this.client});
-  static const BASE_URL = 'https://apimobile.becx.io/api/v1';
+  // static const BASE_URL = 'http://192.168.1.10:9000/api/v1';
+    static const BASE_URL = 'https://apimobile.becx.io/api/v1';
+
 
   @override
   Future<LoginModal> loginDone()  async {
+    
+    print('fetching login');
     try {
+      
       final response = await client.get(Uri.parse('$BASE_URL/sign-in'));
-      print('login status: ${response.body}');
+      print('login status: $response');
+
+      print('login status1: ${response.statusCode}');
 
       if (response.statusCode == 200) {
        
@@ -64,7 +71,8 @@ class LoginRemoteDatasourceImpl implements LoginRemoteDatasource {
 
         
         return loginResponse;
-      } else {
+      }
+       else {
         throw Exception('Failed to load login: ${response.statusCode}');
       }
     } catch (e) {

@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -10,8 +9,8 @@ class RegisterRemoteDatasourceImpl implements RegisterRemoteDatasource {
 
   RegisterRemoteDatasourceImpl({required this.client});
 
-  static const BASE_URL = 'https://apimobile.becx.io/api/v1';
-
+  // static const BASE_URL = 'https://apimobile.becx.io/api/v1';
+  static const BASE_URL = 'http://192.168.1.253:9000/api/v1';
   @override
   Future<RegisterModel> registerWithDID({
     required String did,
@@ -39,9 +38,10 @@ class RegisterRemoteDatasourceImpl implements RegisterRemoteDatasource {
         body: jsonEncode(data),
       );
       print('Signup status code: ${response.statusCode}');
+      final statusCode = response.statusCode;
 
       // Check for a successful status code
-      if (response.statusCode == 201) {
+      if (response.statusCode == 201 ) {
         // Parse the response body
         final jsonResponse = json.decode(response.body) as Map<String, dynamic>;
         print('jsonResponse56: $jsonResponse');
@@ -50,7 +50,7 @@ class RegisterRemoteDatasourceImpl implements RegisterRemoteDatasource {
         // final body = jsonEncode(claim);
         final registerResponse = RegisterModel.fromJson(claim);
 
-      print('registerResponse11: ${registerResponse.body?.url}');
+        print('registerResponse11: ${registerResponse.body?.url}');
 
         // Log the request and response details
         // print('Register Request: $claim');
@@ -73,11 +73,21 @@ class RegisterRemoteDatasourceImpl implements RegisterRemoteDatasource {
           to: registerResponse.to,
           typ: registerResponse.typ,
           type: registerResponse.type,
+          statusCode: statusCode,
         );
         print('registerModel1: $registerModel');
 
         // Return the RegisterModel
         return registerModel;
+      } else if (response.statusCode == 200) {
+        print('fetching 200');
+        print('statuscode fetch:$statusCode');
+
+        final registeredResponse = RegisterModel(
+          statusCode: statusCode,
+        );
+        print('registerresponse: $registeredResponse');
+        return registeredResponse;
       } else {
         // Log the failure and throw a custom exception
         print('Failed to register with status code: ${response.statusCode}');

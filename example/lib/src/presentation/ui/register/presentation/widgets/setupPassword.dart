@@ -143,10 +143,13 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
         }
         
         if (state is StatusLoaded) {
-          final did = jsonEncode(state.did.toJson());
+          final did = jsonEncode(state.did.did);
           print('did get fetch: ${did}');
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pushNamed(context, Routes.homePath);
+            // Navigator.pushNamed(context, Routes.bottomBarPath);  
+            Navigator.push(context, MaterialPageRoute(
+            builder: (context) => const BethelBottomBar(),
+          ),);
             print('Status loaded for DID: ${did}');
           });
         }
@@ -259,114 +262,6 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
     );
   }
 
-//   Widget _buildAuthenticationSuccessSection(String sessionId) {
-//   if (sessionId.isNotEmpty) {
-//     // Ensure this event is only added once by using a post-frame callback
-//     WidgetsBinding.instance.addPostFrameCallback((_) {
-//       _loginBloc.add(onGetStatusEvent(sessionId));
-//     });
-//   }
 
-//   return BlocBuilder<LoginBloc, LoginState>(
-//     bloc: _loginBloc,
-//     builder: (context, state) {
-//       if (state is StatusLoaded) {
-//         print('did get fetch: ${state.did}');
-//         // Perform navigation or any other logic based on the status being loaded
-//         WidgetsBinding.instance.addPostFrameCallback((_) {
-//           Navigator.pushNamed(context, Routes.homePath);
-//           print('Status loaded for DID: ${state.did}');
-//         });
-//       }
 
-//       return const SizedBox.shrink();
-//     },
-//   );
-// }
-
-// Widget _buildAuthenticationSuccessSection(String sessionId) {
-//   if (sessionId.isNotEmpty) {
-//     WidgetsBinding.instance.addPostFrameCallback((_) {
-//       _loginBloc.add(onGetStatusEvent(sessionId));
-//     });
-//   }
-
-//   return BlocBuilder<LoginBloc, LoginState>(
-//     bloc: _loginBloc,
-//     builder: (context, state) {
-//       if (state is StatusLoaded) {
-//         print('fetch did:');
-//         final did =jsonEncode(state.did.toJson());
-//         print('did get fetch: ${did}');
-//         WidgetsBinding.instance.addPostFrameCallback((_) {
-//           Navigator.pushNamed(context, Routes.homePath);
-//           print('Status loaded for DID: ${did}');
-//         });
-//       } else if (state is LoginLoading) {
-//         return const CircularProgressIndicator(); // Show a loading indicator
-//       } else if (state is LoginFailure) {
-//         return Text(state.error, style: const TextStyle(color: Colors.red)); // Show error message
-//       }
-
-//       return const SizedBox.shrink(); // Default state
-//     },
-//   );
-// }
-
-  Widget _buildAuthenticationSuccessSection(String sessionId) {
-    print('authenticating');
-    if (sessionId.isNotEmpty) {
-      // Add the event to fetch the status
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _loginBloc.add(onGetStatusEvent(sessionId));
-      });
-      print('authenticated');
-    }
-
-    BlocBuilder<LoginBloc, LoginState>(
-      bloc: _loginBloc,
-      builder: (context, state) {
-        if (state is StatusLoaded) {
-          print('fetch did:');
-          final did = jsonEncode(state.did.toJson());
-          print('did get fetch: ${did}');
-
-          // Direct navigation inside the StatusLoaded state
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pushNamed(context, Routes.homePath);
-            print('Status loaded for DID: ${did}');
-          });
-
-          // Return an empty widget while navigation is processed
-          return const SizedBox.shrink();
-        } else if (state is LoginLoading) {
-          return const CircularProgressIndicator(
-            color: Colors.pink,
-          ); // Show a loading indicator
-        } else if (state is LoginFailure) {
-          return Text(state.error,
-              style: const TextStyle(color: Colors.red)); // Show error message
-        }
-
-        return const SizedBox.shrink(); // Default state
-      },
-    );
-    return const SizedBox.shrink();
-  }
-
-  // Widget _getStatusResponse() {
-  //   return BlocBuilder<LoginBloc, LoginState>(
-  //     bloc: _loginBloc,
-  //     builder: (context, state) {
-  //       if (state is StatusLoaded) {
-  //         WidgetsBinding.instance.addPostFrameCallback((_) {
-  //           Navigator.pushNamed(context, Routes.homePath);
-  //           print('Status loaded for DID: ${state.did}');
-  //         });
-  //       }
-
-  //       return const SizedBox.shrink();
-  //     },
-  //   );
-  // }
 }

@@ -50,7 +50,7 @@ dependencies:
   envied: ^0.5.4+1
   scan: ^1.6.0
   video_player: ^2.9.1
-  google_fonts: ^4.0.4
+  google_fonts: ^6.2.1
   gradient_borders: ^1.0.1
   curved_navigation_bar: ^1.0.6
   flutter_spinkit: ^5.2.1
@@ -59,9 +59,10 @@ dependencies:
   pie_chart: ^5.4.0
   flutter_speed_dial: ^7.0.0
   flutter_slidable: ^3.1.1
-  file_picker: ^8.1.2
-
   web3modal_flutter: ^3.3.3 
+  file_picker: ^8.0.7
+  fl_chart: ^0.69.0
+  percent_indicator: ^4.2.3
 
 dev_dependencies:
   integration_test:
@@ -94,6 +95,8 @@ flutter:
   assets:
     - assets/
     - assets/images/
+    - assets/abi/
+    
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

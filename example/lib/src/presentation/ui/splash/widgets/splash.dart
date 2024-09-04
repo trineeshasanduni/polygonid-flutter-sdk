@@ -11,7 +11,7 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/splash/splash_
 import 'package:polygonid_flutter_sdk_example/utils/custom_button_style.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_colors.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_text_styles.dart';
-import 'package:polygonid_flutter_sdk_example/utils/image_resources.dart';
+import 'package:polygonid_flutter_sdk_example/utils/image_resource.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
