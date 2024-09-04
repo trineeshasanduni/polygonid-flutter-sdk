@@ -34,7 +34,7 @@ class _SignupState extends State<Signup> {
   final formKey = GlobalKey<FormState>();
   var identity = TextEditingController();
   final storage = const FlutterSecureStorage();
-  VideoPlayerController? _controller;
+  // VideoPlayerController? _controller;
   final ValueNotifier<bool> isButtonEnabled = ValueNotifier(false);
   bool _isFetching = true; // Added flag to control fetching
 
@@ -43,13 +43,13 @@ class _SignupState extends State<Signup> {
     super.initState();
 
     // Initialize the video player controller
-    _controller = VideoPlayerController.asset('assets/images/green-bg.mp4')
-      ..initialize().then((_) {
-        debugPrint('video initialized: ${_controller!.value.isInitialized}');
-        _controller!.play();
-        _controller!.setLooping(true);
-        setState(() {});
-      });
+    // _controller = VideoPlayerController.asset('assets/images/green-bg.mp4')
+    //   ..initialize().then((_) {
+    //     debugPrint('video initialized: ${_controller!.value.isInitialized}');
+    //     _controller!.play();
+    //     _controller!.setLooping(true);
+    //     setState(() {});
+    //   });
 
     _bloc = getIt<HomeBloc>();
     _registerBloc = getIt<RegisterBloc>();
@@ -65,7 +65,7 @@ class _SignupState extends State<Signup> {
 
   @override
   void dispose() {
-    _controller?.dispose();
+    // _controller?.dispose();
     super.dispose();
   }
 
@@ -77,18 +77,18 @@ class _SignupState extends State<Signup> {
         backgroundColor: Theme.of(context).primaryColor,
         body: Stack(
           children: [
-            Center(
-              child: _controller != null && _controller!.value.isInitialized
-                  ? Transform.scale(
-                      scale: 1.8,
-                      child: SizedBox(
-                        width: MediaQuery.of(context).size.width,
-                        height: MediaQuery.of(context).size.height / 3.5,
-                        child: VideoPlayer(_controller!),
-                      ),
-                    )
-                  : const SizedBox(),
-            ),
+            // Center(
+            //   child: _controller != null && _controller!.value.isInitialized
+            //       ? Transform.scale(
+            //           scale: 1.8,
+            //           child: SizedBox(
+            //             width: MediaQuery.of(context).size.width,
+            //             height: MediaQuery.of(context).size.height / 3.5,
+            //             child: VideoPlayer(_controller!),
+            //           ),
+            //         )
+            //       : const SizedBox(),
+            // ),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Center(

@@ -6,7 +6,7 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/botto
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/profile_navigation.dart';
 
 class BethelBottomBar extends StatefulWidget {
-  const BethelBottomBar({super.key});
+  const BethelBottomBar( {super.key});
 
   @override
   BethelBottomBarState createState() => BethelBottomBarState();

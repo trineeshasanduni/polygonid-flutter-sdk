@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
@@ -9,6 +10,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:gradient_borders/box_borders/gradient_box_border.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/bar.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/customCurveEdge.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_state.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/widgets/setupPassword.dart';
 import 'package:web3modal_flutter/services/w3m_service/w3m_service.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
@@ -38,6 +41,8 @@ class _DashboardState extends State<Dashboard> {
     super.initState();
     _initW3MService();
   }
+
+  void _initDid() {}
 
   void _initW3MService() async {
     _w3mService = W3MService(
@@ -95,13 +100,12 @@ class _DashboardState extends State<Dashboard> {
             ],
     );
   }
-  
+
   Future<String> addUser(
       String Commitment, String Did, String NullifierHash, String Owner) async {
     print('add user up');
     try {
-      final storage = GetStorage();
-      final owner1 = storage.read('walletAddress');
+      // final did
       // Construct the data to be sent
       Map<String, dynamic> data = {
         Commitment: Commitment,
@@ -154,10 +158,12 @@ class _DashboardState extends State<Dashboard> {
               onPressed: () {
                 final storage = GetStorage();
                 final owner1 = storage.read('walletAddress');
+                // final did = storage.read('DID');
+                // print('did 123: $did');
                 print('owener did: $owner1');
                 addUser(
                   "79179855485517959415279473341851584883681887175169008946781267938371369",
-                  'did:polygonid:polygon:main:2pzuZ5jPYEFcKj4byRmdm3p6UJAqUDL3sJofLpaAi7',
+                  '',
                   "88871286709793914884405575185504262374183498556034135874130629985717964",
                   owner1,
                 );

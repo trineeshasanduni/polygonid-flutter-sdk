@@ -6,18 +6,13 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gradient_borders/box_borders/gradient_box_border.dart';
-import 'package:video_player/video_player.dart';
-
-import 'package:polygonid_flutter_sdk_example/src/data/secure_storage.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/bethelBottomBar.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/routes.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/login/bloc/login_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/widgets/register.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_colors.dart';
-import 'package:polygonid_flutter_sdk_example/utils/custom_strings.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_text_styles.dart';
-import 'package:polygonid_flutter_sdk_example/utils/secure_storage_keys.dart';
 
 class SetupPasswordScreen extends StatefulWidget {
   const SetupPasswordScreen({super.key});
@@ -31,24 +26,15 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
   final storage = const FlutterSecureStorage();
-  VideoPlayerController? _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.asset('assets/images/green-bg.mp4')
-      ..initialize().then((_) {
-        _controller!.play();
-        _controller!.setLooping(true);
-        setState(() {});
-      });
-
     _loginBloc = getIt<LoginBloc>();
   }
 
   @override
   void dispose() {
-    _controller?.dispose();
     super.dispose();
   }
 
@@ -68,25 +54,9 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
       ),
       body: Stack(
         children: [
-          _buildVideoBackground(),
           _buildContent(context),
         ],
       ),
-    );
-  }
-
-  Widget _buildVideoBackground() {
-    return Center(
-      child: _controller != null && _controller!.value.isInitialized
-          ? Transform.scale(
-              scale: 1.8,
-              child: SizedBox(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height / 3.5,
-                child: VideoPlayer(_controller!),
-              ),
-            )
-          : const SizedBox(),
     );
   }
 
@@ -114,49 +84,47 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
       bloc: _loginBloc,
       builder: (context, state) {
         if (state is LoginLoading) {
-          return const CircularProgressIndicator(
-            color: Colors.yellow,
-          );
+          return const CircularProgressIndicator(color: Colors.yellow);
         }
         if (state is LoginFailure) {
           return Text(state.error, style: const TextStyle(color: Colors.red));
         }
         if (state is LoginSuccess) {
-          final response = jsonEncode(state.response.toJson());
-          final sessionId = state.response.headers.toString();
-
-          print('headers123: $sessionId');
-          // final storage = GetStorage();
-          // storage.write('sessionID', sessionId);
-
-          print('Login response123: $response');
-          _loginBloc.add(onLoginResponse(response));
-
-          // if (state is authenticated) {
-          // String? getSessionId = storage.read(key: 'sessionID') as String?;
-          print('getSessionId: $sessionId');
-
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _loginBloc.add(onGetStatusEvent(sessionId));
-          });
-        // }
+          _handleLoginSuccess(state);
         }
-        
         if (state is StatusLoaded) {
-          final did = jsonEncode(state.did.did);
-          print('did get fetch: ${did}');
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            // Navigator.pushNamed(context, Routes.bottomBarPath);  
-            Navigator.push(context, MaterialPageRoute(
-            builder: (context) => const BethelBottomBar(),
-          ),);
-            print('Status loaded for DID: ${did}');
-          });
+          _handleStatusLoaded(state);
         }
-
         return _buildLoginButton();
       },
     );
+  }
+
+  void _handleLoginSuccess(LoginSuccess state) {
+    final response = jsonEncode(state.response.toJson());
+    final sessionId = state.response.headers.toString();
+
+    print('Login response: $response');
+    _loginBloc.add(onLoginResponse(response));
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loginBloc.add(onGetStatusEvent(sessionId));
+    });
+  }
+
+  void _handleStatusLoaded(StatusLoaded state) async {
+    final did = jsonEncode(state.did.did);
+    print('DID fetched: $did');
+    
+    // final storage = GetStorage();
+    // await storage.write('DID', did);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const BethelBottomBar(did)),
+      );
+    });
   }
 
   Widget _buildTitle() {
@@ -261,7 +229,4 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
       ),
     );
   }
-
-
-
 }
