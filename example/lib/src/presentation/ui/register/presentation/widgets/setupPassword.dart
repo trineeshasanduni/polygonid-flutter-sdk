@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,6 +27,11 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
   final storage = const FlutterSecureStorage();
+  // late final AnimationController _controller= AnimationController(vsync: this, duration: const Duration(seconds: 2),)..repeat(reverse: true);
+  // late Animation<Offset> _animation = Tween(
+  //   begin:  Offset.zero,
+  //   end:  const Offset(0, 0.08),
+  // ).animate(_controller);
 
   @override
   void initState() {
@@ -36,24 +42,47 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
   @override
   void dispose() {
     super.dispose();
+    // _controller.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
-      appBar: AppBar(
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
-            onPressed: () {
-              Navigator.of(context).pushReplacementNamed(Routes.homePath);
-            },
-          ),
-        ],
-      ),
       body: Stack(
         children: [
+          Positioned(
+            top: -150,
+            left: -50,
+            child: Container(
+              height: MediaQuery.of(context).size.height / 2.5,
+              width: MediaQuery.of(context).size.width / 2.4,
+              decoration: BoxDecoration(
+                  color: const Color(0xFFa3d902).withOpacity(0.3),
+                  shape: BoxShape.circle),
+            ),
+          ),
+          Positioned(
+            top: 200,
+            right: -60,
+            child: Container(
+              height: MediaQuery.of(context).size.height / 1.5,
+              width: MediaQuery.of(context).size.width / 1.5,
+              decoration: BoxDecoration(
+                  color: const Color(0xFF2CFFAE).withOpacity(0.15),
+                  shape: BoxShape.circle),
+            ),
+          ),
+          BackdropFilter(
+            filter: ImageFilter.blur(
+              //sigmaX is the Horizontal blur
+              sigmaX: 40.0,
+              //sigmaY is the Vertical blur
+              sigmaY: 50.0,
+            ),
+            child: Container(),
+          ),
+          // _header(state),
           _buildContent(context),
         ],
       ),
@@ -67,12 +96,38 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildTitle(),
-            _buildSubtitle(),
-            _buildBlocContent(context),
-            const SizedBox(height: 20),
-            _buildRegisterButton(),
-            _buildDashboardButton(),
+            // Column(
+            //   children: [
+
+            //     // _buildWelcome(),
+            //   ],
+            // ),
+
+            Column(
+              children: [
+                _buildLogo(),
+                const SizedBox(height: 20),
+                _buildTitle(),
+                SizedBox(height: MediaQuery.of(context).size.height / 6),
+                _buildSubtitle(),
+              ],
+            ),
+
+            Column(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () {
+                    Navigator.of(context).pushReplacementNamed(Routes.homePath);
+                  },
+                ),
+                _buildBlocContent(context),
+                const SizedBox(height: 20),
+                _buildRegisterButton(),
+              ],
+            ),
+
+            // _buildDashboardButton(),
           ],
         ),
       ),
@@ -84,7 +139,7 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
       bloc: _loginBloc,
       builder: (context, state) {
         if (state is LoginLoading) {
-          return const CircularProgressIndicator(color: Colors.yellow);
+          return  CircularProgressIndicator(color: Theme.of(context).secondaryHeaderColor);
         }
         if (state is LoginFailure) {
           return Text(state.error, style: const TextStyle(color: Colors.red));
@@ -115,16 +170,33 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
   void _handleStatusLoaded(StatusLoaded state) async {
     final did = jsonEncode(state.did.did);
     print('DID fetched: $did');
-    
-    // final storage = GetStorage();
-    // await storage.write('DID', did);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const BethelBottomBar(did)),
+        MaterialPageRoute(
+            builder: (context) => BethelBottomBar(
+                  did: did,
+                )),
       );
     });
+  }
+
+  Widget _buildLogo() {
+    return Transform.rotate(
+      angle: 45 * 3.1415927 / 180, // Converts 45 degrees to radians
+      child: Container(
+        width: MediaQuery.of(context).size.width / 2,
+        height: MediaQuery.of(context).size.height / 5,
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/space.png'),
+            fit: BoxFit.contain,
+          ),
+        ),
+      ),
+      // ),
+    );
   }
 
   Widget _buildTitle() {
@@ -151,16 +223,42 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
     );
   }
 
+  // Widget _buildSubtitle() {
+  //   return Column(
+  //     children: [
+  //       const SizedBox(height: 4),
+  //       Text(
+  //         'Hack Proof Blockchain Based Secure Decentralized File Storage with Zero-Knowledge Proof (ZKP)',
+  //         textAlign: TextAlign.center,
+  //         style: GoogleFonts.robotoMono(
+  //           fontSize: 10,
+  //           color: Colors.white,
+  //         ),
+  //       ),
+  //       const SizedBox(height: 20),
+  //     ],
+  //   );
+  // }
   Widget _buildSubtitle() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 4),
         Text(
-          'Hack Proof Blockchain Based Secure Decentralized File Storage with Zero-Knowledge Proof (ZKP)',
-          textAlign: TextAlign.center,
+          'Let\'s Get',
           style: GoogleFonts.robotoMono(
-            fontSize: 10,
-            color: Colors.white,
+            fontSize: 50,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).secondaryHeaderColor,
+          ),
+        ),
+        Text(
+          'Started',
+          // textAlign: TextAlign.center,
+          style: GoogleFonts.robotoMono(
+            fontSize: 40,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.primary,
           ),
         ),
         const SizedBox(height: 20),
@@ -173,7 +271,8 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
       onTap: () {
         _loginBloc.add(LoginWithCredentials());
       },
-      child: _buildButton('Log in'),
+      child: _buildButton('Log in', Colors.transparent,
+          Theme.of(context).colorScheme.primary, Colors.white),
     );
   }
 
@@ -186,44 +285,50 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
           ),
         );
       },
-      child: _buildButton('Register'),
+      child: _buildButton('Register', Theme.of(context).colorScheme.secondary,
+          Colors.black, Colors.black),
     );
   }
 
-  Widget _buildDashboardButton() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const BethelBottomBar(),
-          ),
-        );
-      },
-      child: _buildButton('Dashboard'),
-    );
-  }
+  // Widget _buildDashboardButton() {
+  //   return GestureDetector(
+  //     onTap: () {
+  //       Navigator.push(
+  //         context,
+  //         MaterialPageRoute(
+  //           builder: (context) => const BethelBottomBar(),
+  //         ),
+  //       );
+  //     },
+  //     child: _buildButton('Dashboard'),
+  //   );
+  // }
 
-  Widget _buildButton(String text) {
+  Widget _buildButton(
+      String text, dynamic colorScheme, dynamic border, dynamic textColor) {
     return Container(
-      width: MediaQuery.of(context).size.width / 3,
+      width: MediaQuery.of(context).size.width,
       alignment: Alignment.center,
       padding: const EdgeInsets.symmetric(vertical: 15),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor,
-        borderRadius: BorderRadius.circular(6),
-        border: const GradientBoxBorder(
-          gradient: LinearGradient(
-            colors: [Color(0xFFa3d902), Color(0xFF2CFFAE)],
-          ),
+        color: colorScheme,
+        borderRadius: BorderRadius.circular(50),
+        border: Border.all(
+          color: border,
           width: 2,
         ),
+        // border: const GradientBoxBorder(
+        //   gradient: LinearGradient(
+        //     colors: [Color(0xFFa3d902), Color(0xFF2CFFAE)],
+        //   ),
+        //   width: 1,
+        // ),
       ),
       child: Text(
         text,
         style: GoogleFonts.robotoMono(
-          color: Colors.white,
-          fontSize: 15,
+          color: textColor,
+          fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
       ),

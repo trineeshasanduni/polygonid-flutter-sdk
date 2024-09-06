@@ -23,17 +23,20 @@ import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 
 class Dashboard extends StatefulWidget {
-  const Dashboard({super.key});
+  final String? did;
+  
+  const Dashboard({super.key, required this.did});
+
 
   @override
   State<Dashboard> createState() => _DashboardState();
 }
 
 class _DashboardState extends State<Dashboard> {
+  
   late W3MService _w3mService;
   bool isConnected = false;
 
-  String? _did;
   final storage = const FlutterSecureStorage();
 
   @override
@@ -41,8 +44,6 @@ class _DashboardState extends State<Dashboard> {
     super.initState();
     _initW3MService();
   }
-
-  void _initDid() {}
 
   void _initW3MService() async {
     _w3mService = W3MService(
@@ -108,10 +109,10 @@ class _DashboardState extends State<Dashboard> {
       // final did
       // Construct the data to be sent
       Map<String, dynamic> data = {
-        Commitment: Commitment,
-        Did: Did,
-        NullifierHash: NullifierHash,
-        Owner: Owner,
+        "Commitment": Commitment,
+        "Did": Did,
+        "NullifierHash": NullifierHash,
+        "Owner": Owner,
       };
       print('add user data: $data');
 
@@ -161,9 +162,12 @@ class _DashboardState extends State<Dashboard> {
                 // final did = storage.read('DID');
                 // print('did 123: $did');
                 print('owener did: $owner1');
+                
+                final did = jsonDecode(widget.did.toString());
+                print('did23: $did');
                 addUser(
                   "79179855485517959415279473341851584883681887175169008946781267938371369",
-                  '',
+                  did!,
                   "88871286709793914884405575185504262374183498556034135874130629985717964",
                   owner1,
                 );
@@ -253,9 +257,9 @@ class _DashboardState extends State<Dashboard> {
                           width: 1),
                     ),
                     child: GestureDetector(
-                      // onTap: () {
-                      //   _showWelcomeDialog();
-                      // },
+                      onTap: () {
+                        _showWelcomeDialog();
+                      },
                       child: Icon(
                         Icons.wallet,
                         color: Theme.of(context).secondaryHeaderColor,

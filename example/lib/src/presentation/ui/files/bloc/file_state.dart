@@ -17,6 +17,12 @@ final class FileUploaded extends FileState {
   const FileUploaded(this.response);
 }
 
+final class FileUsingSpaced extends FileState {
+  final FileEntity txHash;
+
+  const FileUsingSpaced(this.txHash);
+}
+
 final class FileUploadFailed extends FileState {
   final String message;
 

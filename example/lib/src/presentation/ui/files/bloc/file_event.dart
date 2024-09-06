@@ -13,3 +13,10 @@ class FileuploadEvent extends FileEvent {
   final File fileData;
   const FileuploadEvent( {required this.did,required this.ownerDid, required this.fileData});
 }
+
+class UseSpaceEvent extends FileEvent {
+  final String did;
+  final String ownerDid;
+  final int batchSize;
+  const UseSpaceEvent( {required this.did,required this.ownerDid, required this.batchSize});
+}

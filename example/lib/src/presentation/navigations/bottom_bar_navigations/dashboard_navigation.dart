@@ -1,21 +1,22 @@
 
 import 'package:flutter/material.dart';
-import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/widget/files.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard.dart';
 
-class FileNav extends StatefulWidget {
-  const FileNav({super.key});
+class DashboardNav extends StatefulWidget {
+  final String? did;
+  const DashboardNav({super.key, required this.did});
 
   @override
-  State<FileNav> createState() => _FileNavState();
+  State<DashboardNav> createState() => _DashboardNavState();
 }
 
-GlobalKey<NavigatorState> FileNavKey = GlobalKey<NavigatorState>();
+GlobalKey<NavigatorState> DashboardNavKey = GlobalKey<NavigatorState>();
 
-class _FileNavState extends State<FileNav> {
+class _DashboardNavState extends State<DashboardNav> {
   @override
   Widget build(BuildContext context) {
     return Navigator(
-      key: FileNavKey,
+      key: DashboardNavKey,
       onGenerateRoute: (RouteSettings settings) {
         return MaterialPageRoute(
           settings: settings,
@@ -33,7 +34,7 @@ class _FileNavState extends State<FileNav> {
             //   return const Dashboard();
             // }
             // return const HomePage();
-            return const Files();
+            return  Dashboard( did: widget.did,);
           },
         );
       },

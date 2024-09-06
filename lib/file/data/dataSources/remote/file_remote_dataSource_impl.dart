@@ -12,7 +12,7 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
 
   FileRemoteDatasourceImpl({required this.client});
 
-  static const BASE_URL = 'https://apimobile.becx.io/api/v1';
+  static const BASE_URL = 'https://test.becx.io/api/v1';
   
   @override
   Future<FileModel> fileUpload({required String did, required String ownerDid, required File fileData}) async{
@@ -50,6 +50,42 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
       print('Error during file upload: $error');
       throw Exception('Failed to upload file');
     }
+  }
+  
+  @override
+  Future<FileModel> useSpace({required String did, required String ownerDid, required int batchSize}) async{
+    print('Using space');
+    try {
+      // Define the URI for the use-space API endpoint
+      final uri = Uri.parse('$BASE_URL/use-space');
+
+      // Make the POST request with the proper headers and body
+      final response = await client.post(
+        uri,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "BatchSize": batchSize,
+          "DID": did,
+          "Owner": ownerDid
+        }),
+      );
+
+      print('Use space status code: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final responseJson = jsonDecode(response.body);
+        return FileModel.fromJson(responseJson);
+      } else {
+        print('Failed to use space');
+        throw Exception('Failed to use space');
+      }
+    } catch (error) {
+      print('Error during use space: $error');
+      throw Exception('Failed to use space');
+    }
+
+   
+    
   }
 
 }

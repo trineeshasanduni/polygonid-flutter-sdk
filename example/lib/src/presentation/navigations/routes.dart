@@ -21,7 +21,6 @@ class Routes {
   static const String homePath = "/home";
   static const String registerPath = "/register";
   static const String dashboardPath = "/dashboard";
-  static const String bottomBarPath = "/bottomBar";
   static const String claimsPath = "/claims";
   static const String qrCodeScannerPath = "/qrcode_scanner";
   static const String authPath = "/auth";
@@ -38,8 +37,7 @@ class Routes {
       splashPath: _splashRoute(),
       homePath: _homeRoute(),
       registerPath: _registerRoute(),
-      dashboardPath: _dashboardRoute(),
-      bottomBarPath: _bottomBarRoute(),
+      // dashboardPath: _dashboardRoute(),
       qrCodeScannerPath: _qrCodeScannerRoute(),
       authPath: _authRoute(),
       claimsPath: _claimsRoute(),
@@ -66,15 +64,13 @@ class Routes {
     return (BuildContext context) => const Signup();
   }
 
-  ///
-  static WidgetBuilder _dashboardRoute() {
-    return (BuildContext context) => const Dashboard();
-  }
+  // ///
+  // static WidgetBuilder _dashboardRoute() {
+  //   return (BuildContext context) => const Dashboard();
+  // }
 
   ///
-  static WidgetBuilder _bottomBarRoute() {
-    return (BuildContext context) => const BethelBottomBar();
-  }
+  
 
   ///
   static WidgetBuilder _claimsRoute() {

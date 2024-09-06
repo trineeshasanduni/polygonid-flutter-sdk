@@ -11,4 +11,10 @@ abstract class FileRepository {
     required String ownerDid,
     required File fileData,
   });
+
+  Future<Either<Failure, FileEntity>> useSpace({
+    required String did,
+    required String ownerDid,
+    required int batchSize,
+  });
 }

@@ -16,7 +16,7 @@ class LoginRemoteDatasourceImpl implements LoginRemoteDatasource {
 
   LoginRemoteDatasourceImpl({required this.client});
   // static const BASE_URL = 'http://192.168.1.10:9000/api/v1';
-    static const BASE_URL = 'https://apimobile.becx.io/api/v1';
+    static const BASE_URL = 'https://test.becx.io/api/v1';
 
 
   @override

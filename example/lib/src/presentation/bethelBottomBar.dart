@@ -1,12 +1,13 @@
 
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/dashboard_navigation.dart';
-import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/plans_navigation.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/file_navigation.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/dashBoard_navigation.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/profile_navigation.dart';
 
 class BethelBottomBar extends StatefulWidget {
-  const BethelBottomBar( {super.key});
+  final String? did;
+  const BethelBottomBar( {super.key,required this.did,} );
 
   @override
   BethelBottomBarState createState() => BethelBottomBarState();
@@ -66,10 +67,12 @@ class BethelBottomBarState extends State<BethelBottomBar> {
           top: false,
           child: IndexedStack(
             index: currentIndex,
-            children: const <Widget>[
+            children:  <Widget>[
               
-              DashboardNav(),
-              FileNav(),
+              DashboardNav( 
+                did: widget.did,
+              ),
+              FileNav(did: widget.did,),
               ProfileNav(),
               
             ],

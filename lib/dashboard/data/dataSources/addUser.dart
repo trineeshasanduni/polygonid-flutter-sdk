@@ -7,7 +7,7 @@ Future<String> addUser(
 
       String Commitment, String Did, String NullifierHash, String Owner) async {
 
-       const BASE_URL = 'https://apimobile.becx.io/api/v1';
+       const BASE_URL = 'https://test.becx.io/api/v1';
 
     print('add user up');
     try {

@@ -10,7 +10,7 @@ class RegisterRemoteDatasourceImpl implements RegisterRemoteDatasource {
   RegisterRemoteDatasourceImpl({required this.client});
 
   // static const BASE_URL = 'https://apimobile.becx.io/api/v1';
-  static const BASE_URL = 'http://192.168.1.253:9000/api/v1';
+  static const BASE_URL = 'https://test.becx.io/api/v1';
   @override
   Future<RegisterModel> registerWithDID({
     required String did,

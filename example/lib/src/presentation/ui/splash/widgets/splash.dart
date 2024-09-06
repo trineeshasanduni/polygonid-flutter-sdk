@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/routes.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/widgets/setupPassword.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/splash/splash_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/splash/splash_event.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/splash/splash_state.dart';
@@ -127,7 +128,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
   ///
   void _handleWaitingTimeEnded() {
-    Navigator.of(context).pushReplacementNamed(Routes.registerPath);
+    // Navigator.of(context).pushReplacementNamed(Routes.registerPath);
+    Navigator.push(context, MaterialPageRoute(builder: (context) => const SetupPasswordScreen()));
   }
 
   ///

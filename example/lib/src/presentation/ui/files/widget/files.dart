@@ -18,7 +18,8 @@ import 'package:web3dart/web3dart.dart';
 import 'package:web_socket_channel/io.dart';
 
 class Files extends StatefulWidget {
-  const Files({super.key});
+  final String? did;
+  const Files({super.key, required this.did});
 
   @override
   State<Files> createState() => _FilesState();
@@ -26,6 +27,7 @@ class Files extends StatefulWidget {
 
 class _FilesState extends State<Files> {
   List<PlatformFile> selectedFiles = [];
+  int size = 0;
   bool _isLoading = false;
   late final FileBloc _fileBloc;
   late final HomeBloc _homeBloc;
@@ -58,6 +60,7 @@ class _FilesState extends State<Files> {
     if (result != null) {
       setState(() {
         selectedFiles = result.files;
+        size = result.files.single.size;
       });
       _uploadFiles();
     }
@@ -92,6 +95,7 @@ class _FilesState extends State<Files> {
       );
 
       if (result.isNotEmpty && result[0] is List) {
+        print('result123: ${result[0]}');
         _processContractResult(result[0]);
       } else {
         print('No data returned from contract');
@@ -113,6 +117,7 @@ class _FilesState extends State<Files> {
       print('Verified: ${batchDetails[4]}');
       print('---');
     }
+
   }
 
   Future<void> _uploadFiles() async {
@@ -134,10 +139,12 @@ class _FilesState extends State<Files> {
     });
 
     try {
+      final did = jsonDecode(widget.did.toString());
+      print('did12344: $did');
       for (var file in selectedFiles) {
         final fileToSave = await saveFile(file);
         _fileBloc.add(FileuploadEvent(
-          did: 'did:polygonid:polygon:main:2pzuZ5jPYEFcKj4byRmdm3p6UJAqUDL3sJofLpaAi7',
+          did: did,
           ownerDid: walletAddress,
           fileData: fileToSave,
         ));
@@ -180,11 +187,28 @@ class _FilesState extends State<Files> {
                   _isLoading = true;
                 });
               } else if (state is FileUploaded) {
+                final storage = GetStorage();
+                final walletAddress = storage.read('walletAddress');
                 setState(() {
                   _isLoading = false;
-                  selectedFiles.clear();
+                  // selectedFiles.clear();
+                  
                 });
-                _showSnackbar('Files uploaded successfully!');
+                print('did124: ${jsonDecode(widget.did.toString())}, ownerDid: $walletAddress, batchSize: $size');
+                _fileBloc.add(UseSpaceEvent(
+                  did: jsonDecode(widget.did.toString()),
+                  ownerDid: walletAddress,
+                  batchSize: size,
+                ));
+                print('end of file upload');
+                // _showSnackbar('Files uploaded successfully!');
+              } else if (state is FileUsingSpaced) {
+                print('fetching space: ${state.txHash}');
+                setState(() {
+                  _isLoading = true;
+                });
+                print('usespace check');
+                _showSnackbar('Files uploaded successfully: ${state.txHash}');
               } else if (state is FileUploadFailed) {
                 setState(() {
                   _isLoading = false;

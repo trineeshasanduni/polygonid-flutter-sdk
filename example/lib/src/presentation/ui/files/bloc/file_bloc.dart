@@ -14,6 +14,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
 
   FileBloc(this.fileUsecase) : super(FileInitial()) {
     on<FileuploadEvent>(_handleFileUpload);
+    on<UseSpaceEvent>(_handleUseSpace);
 
 
   }
@@ -32,6 +33,25 @@ class FileBloc extends Bloc<FileEvent, FileState> {
     (upload) {
       print('Emitting StatusLoaded with DID: $upload');
     emit(FileUploaded(upload));
+    
+    },
+  );}
+
+
+  void _handleUseSpace(UseSpaceEvent event, Emitter<FileState> emit) async{
+    emit(FileUploading());
+   final useSpaceResponse= await fileUsecase(UseCaseParams(
+        did: event.did, ownerDid: event.ownerDid, batchSize: event.batchSize
+    ));
+    useSpaceResponse.fold(
+    (failure) {
+      print('failure get: $failure');
+      emit(FileUploadFailed(failure.toString()));
+    },
+    
+    (useSpace) {
+      print('Emitting StatusLoaded with DID: $useSpace');
+    emit(FileUsingSpaced(useSpace));
     },
   );
 
@@ -40,3 +60,4 @@ class FileBloc extends Bloc<FileEvent, FileState> {
 
   }
 }
+

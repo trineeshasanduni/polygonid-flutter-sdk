@@ -23,26 +23,38 @@ class FileRepoImpl implements FileRepository {
     required File fileData,
   }) async {
     try {
-      FileModel fileModel =
-          await fileRemoteDatasource.fileUpload(
+      FileModel fileModel = await fileRemoteDatasource.fileUpload(
         did: did,
         ownerDid: ownerDid,
         fileData: fileData,
       );
       // print('object234: ${registerModel.body?.credentials![0].description}');
-     return right(FileEntity(
+      return right(FileEntity(
         tXHash: fileModel.tXHash,
         did: fileModel.did,
         fileCount: fileModel.fileCount,
-        
-
-
-
       ));
     } catch (error) {
       return left(Failure('Failed to upload: $error'));
     }
   }
 
-
+  @override
+  Future<Either<Failure, FileEntity>> useSpace(
+      {required String did,
+      required String ownerDid,
+      required int batchSize}) async {
+    try {
+      FileModel fileModel = await fileRemoteDatasource.useSpace(
+        did: did,
+        ownerDid: ownerDid,
+        batchSize: batchSize,
+      );
+      return right(FileEntity(
+        tXHash: fileModel.tXHash,
+      ));
+    } catch (error) {
+      return left(Failure('Failed to upload: $error'));
+    }
+  }
 }

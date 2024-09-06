@@ -10,5 +10,12 @@ abstract class FileRemoteDatasource {
       }
   );
 
+  Future<FileModel> useSpace(
+      {required String did,
+      required String ownerDid,
+      required int batchSize,
+      }
+  );
+
  
 }
