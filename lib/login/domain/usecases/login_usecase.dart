@@ -4,7 +4,7 @@ import 'package:polygonid_flutter_sdk/login/domain/entities/login_entity.dart';
 import 'package:polygonid_flutter_sdk/login/domain/entities/login_status_entity.dart';
 import 'package:polygonid_flutter_sdk/login/domain/repositories/login_repository.dart';
 
-class LoginDoneUsecase  {
+class LoginDoneUsecase {
   final LoginRepository loginRepository;
 
   LoginDoneUsecase(this.loginRepository);
@@ -19,13 +19,9 @@ class LoginStatusUsecase {
 
   LoginStatusUsecase(this.loginRepository);
 
-  Future<Either<Failure, LoginStatusResponseentity>> call(UseCaseParams params) async {
-
-
-
-    return await loginRepository.fetchLoginStatus(
-      sessionId: params.sessionId
-    );
+  Future<Either<Failure, LoginStatusResponseentity>> call(
+      UseCaseParams params) async {
+    return await loginRepository.fetchLoginStatus(sessionId: params.sessionId);
   }
 }
 

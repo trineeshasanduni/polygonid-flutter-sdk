@@ -103,10 +103,11 @@ void registerHomeDependencies() {
 
 ///
 void registerRegisterDependencies() {
-  getIt.registerFactory(() => RegisterBloc(getIt(), getIt(), getIt(), getIt()));
+  getIt.registerFactory(() => RegisterBloc(getIt(), getIt(), getIt(), getIt(),getIt()));
 
   // Use cases
   getIt.registerLazySingleton(() => RegisterUsecase(getIt()));
+  getIt.registerLazySingleton(() => CallbackUsecase(getIt()));
 
   // // Repositories
   getIt.registerLazySingleton<RegisterRepository>(

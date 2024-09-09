@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:polygonid_flutter_sdk/iden3comm/domain/entities/common/iden3_message_entity.dart';
+import 'package:polygonid_flutter_sdk/registers/domain/entities/registerQr_entity.dart';
 import 'package:polygonid_flutter_sdk/sdk/polygon_id_sdk.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/routes.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/claims_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/claims_event.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/widgets/claims.dart';
@@ -16,6 +18,10 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_stat
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/widgets/claim.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/bloc/register_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/widgets/setupPassword.dart';
+import 'package:polygonid_flutter_sdk_example/utils/custom_button_style.dart';
+import 'package:polygonid_flutter_sdk_example/utils/custom_colors.dart';
+import 'package:polygonid_flutter_sdk_example/utils/custom_strings.dart';
+import 'package:polygonid_flutter_sdk_example/utils/custom_text_styles.dart';
 import 'package:polygonid_flutter_sdk_example/utils/qr_code_parser_utils.dart';
 import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -62,7 +68,20 @@ class _SignupState extends State<Signup> {
 
   void _initGetIdentifier() {
     _bloc.add(const GetIdentifierHomeEvent());
+    // _getdid();
   }
+
+  // void _getdid(){
+  //    BlocBuilder<HomeBloc, HomeState>(
+  //     bloc: _bloc,
+  //     builder: (BuildContext context, HomeState state) {
+  //      String did = state.identifier ?? '';
+
+  //     },
+  //     buildWhen: (_, currentState) =>
+  //         currentState is LoadedIdentifierHomeState,
+  //   );
+  // }
 
   @override
   void dispose() {
@@ -85,58 +104,61 @@ class _SignupState extends State<Signup> {
               Theme.of(context).colorScheme.secondary.withOpacity(0.5),
         ),
         body: Stack(
-          
           children: [
-              Positioned(
-                      top:50,
-                      left: -50,
-                      child: Container(
-                        height: MediaQuery.of(context).size.height / 2.5,
-                        width: MediaQuery.of(context).size.width / 2.4,
-                        decoration: BoxDecoration(
-                            color: const Color(0xFFa3d902).withOpacity(0.3),
-                            shape: BoxShape.circle),
-                      ),
-                    ),
-             Positioned(
-                    top: 400,
-                    right: -60,
-                    child: Container(
-                      height: MediaQuery.of(context).size.height /1.5,
-                      width: MediaQuery.of(context).size.width/1.5 ,
-                      decoration: BoxDecoration(
-                          color: const Color(0xFF2CFFAE).withOpacity(0.15),
-                          shape: BoxShape.circle),
-                    ),
-                  ),
-                  BackdropFilter(
-                    filter: ImageFilter.blur(
-                      //sigmaX is the Horizontal blur
-                      sigmaX: 40.0,
-                      //sigmaY is the Vertical blur
-                      sigmaY: 50.0,
-                    ),
-                    child: Container(),
-                  ),
+            Positioned(
+              top: 50,
+              left: -50,
+              child: Container(
+                height: MediaQuery.of(context).size.height / 2.5,
+                width: MediaQuery.of(context).size.width / 2.4,
+                decoration: BoxDecoration(
+                    color: const Color(0xFFa3d902).withOpacity(0.3),
+                    shape: BoxShape.circle),
+              ),
+            ),
+            Positioned(
+              top: 400,
+              right: -60,
+              child: Container(
+                height: MediaQuery.of(context).size.height / 1.5,
+                width: MediaQuery.of(context).size.width / 1.5,
+                decoration: BoxDecoration(
+                    color: const Color(0xFF2CFFAE).withOpacity(0.15),
+                    shape: BoxShape.circle),
+              ),
+            ),
+            BackdropFilter(
+              filter: ImageFilter.blur(
+                //sigmaX is the Horizontal blur
+                sigmaX: 40.0,
+                //sigmaY is the Vertical blur
+                sigmaY: 50.0,
+              ),
+              child: Container(),
+            ),
             Column(
               children: [
                 _walletDetails(),
                 Stack(
                   children: [
-                    
-                   
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                             SizedBox(height: MediaQuery.of(context).size.height /8),
+                            SizedBox(
+                                height: MediaQuery.of(context).size.height / 8),
                             _buildTitle(),
                             const SizedBox(height: 4),
                             _buildTopic(),
                             const SizedBox(height: 50),
                             _buildForm(),
+                            const SizedBox(height: 20),
+                             Divider(color:Theme.of(context).secondaryHeaderColor.withOpacity(0.5)),
+                            const SizedBox(height: 20),
+                            _buildQRButton(),
+                            _buildBlocListener(),
                           ],
                         ),
                       ),
@@ -337,10 +359,10 @@ class _SignupState extends State<Signup> {
                         decoration: BoxDecoration(
                           color: Theme.of(context).primaryColor,
                           borderRadius: BorderRadius.circular(50),
-                            border: Border.all(
-          color: Theme.of(context).colorScheme.primary,
-          width: 2,
-        ),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 2,
+                          ),
                         ),
                         child: Center(
                           child: state is RegisterLoading
@@ -368,8 +390,48 @@ class _SignupState extends State<Signup> {
       ),
     );
   }
-   
 
+  ///
+  Widget _buildButton(
+      String text, dynamic colorScheme, dynamic border, dynamic textColor) {
+    return Container(
+      width: MediaQuery.of(context).size.width,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(vertical: 15),
+      decoration: BoxDecoration(
+        color: colorScheme,
+        borderRadius: BorderRadius.circular(50),
+        border: Border.all(
+          color: border,
+          width: 2,
+        ),
+      ),
+      child: Text(
+        text,
+        style: GoogleFonts.robotoMono(
+          color: textColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  ///
+
+  ///
+  Widget _buildCircularProgress() {
+    return const SizedBox(
+      height: 20,
+      width: 20,
+      child: CircularProgressIndicator(
+        strokeWidth: 2,
+        backgroundColor: Colors.white,
+      ),
+    );
+  }
+
+  ///
   Widget _buildTitle() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -396,6 +458,7 @@ class _SignupState extends State<Signup> {
     );
   }
 
+  ///
   Widget _buildTopic() {
     return Text(
       'Hack Proof Blockchain Based Secure Decentralised file storage with (ZKP) Zero-Knowledge Proof',
@@ -412,8 +475,97 @@ class _SignupState extends State<Signup> {
     debugPrint('User is registered');
     _registerBloc.add(fetchAndSaveClaims(iden3message: iden3message));
   }
+
+  /////////////////////////Qr scanner for registration////////////////////////
+  // Widget _buildQRButton() {
+  //   return GestureDetector(
+  //     onTap: () {
+  //       Navigator.of(context).push(
+  //         MaterialPageRoute(
+  //           builder: (context) => const SetupPasswordScreen(),
+  //         ),
+  //       );
+  //     },
+  //     child: _buildButton('Register Using QR',
+  //         Theme.of(context).colorScheme.secondary, Colors.black, Colors.black),
+  //   );
+  // }
+
+  Widget _buildQRButton() {
+    return Align(
+      alignment: Alignment.center,
+      child: BlocBuilder(
+          bloc: _registerBloc,
+          builder: (BuildContext context, RegisterState state) {
+            bool loading = state is RegisterQrLoading;
+            return GestureDetector(
+              onTap: () {
+                if (!loading) {
+                  _registerBloc.add(clickScanQrCode());
+                }
+              },
+              // style: CustomButtonStyle.primaryButtonStyle,
+              child: loading
+                  ? _buildCircularProgress()
+                  : _buildButton(
+                      'Register Using QR',
+                      Theme.of(context).colorScheme.secondary,
+                      Colors.black,
+                      Colors.black),
+            );
+          }),
+    );
+  }
+
+  Widget _buildBlocListener() {
+    return BlocListener<RegisterBloc, RegisterState>(
+      bloc: _registerBloc,
+      listener: (context, state) {
+        print('state1: $state');
+
+        if (state is NavigateToQrCodeScanner) {
+          print('navigate to qr code scanner : $state');
+          _handleNavigateToQrCodeScanner();
+        }
+        if (state is QrCodeScanned) {
+          print('qr code scanned : $state');
+          _handleCallbackUrl(state.registerQREntity.body?.callbackUrl);
+        }
+        // if(state is CallbackLoaded){
+        //   print('callback loaded : ${state.callbackResponse}');
+        //   final response = jsonEncode(state.callbackResponse.toJson());
+        //   print('response Qr: $response');
+        //    _registerBloc.add(onGetRegisterResponse(response));
+        // }
+      },
+      child: const SizedBox.shrink(),
+    );
+  }
+
+  Future<void> _handleNavigateToQrCodeScanner() async {
+    String? qrCodeScanningResult =
+        await Navigator.pushNamed(context, Routes.qrCodeScannerPath) as String?;
+    _registerBloc.add(OnScanQrCodeResponse(qrCodeScanningResult));
+    print('qrCodeScanningResult: $qrCodeScanningResult');
+  }
+
+  Future<void> _handleCallbackUrl(String? callbackUrl) async {
+    if (callbackUrl == null || callbackUrl.isEmpty) {
+      _registerBloc
+          .add(RegisterFailure("no callback url found") as RegisterEvent);
+    } else {
+      String did = identity.text;
+      print('did qr code: $did');
+      print('callbackUrl qr code: $callbackUrl');
+
+      _registerBloc.add(getCallbackUrl(callbackUrl, did));
+    }
+  }
+
+  
 }
 
+//////////////////////////////// curves for the signup page////////////////////////////////////
 class TcustomCurve extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
@@ -465,8 +617,8 @@ class TcustomCurve1 extends CustomClipper<Path> {
     // Third curve to connect to the top-right corner
     final thirdFirstCurve = Offset(size.width, size.height - 50);
     final thirdLastCurve = Offset(size.width, size.height);
-    path.quadraticBezierTo(
-        thirdFirstCurve.dx, thirdFirstCurve.dy, thirdLastCurve.dx, thirdLastCurve.dy);
+    path.quadraticBezierTo(thirdFirstCurve.dx, thirdFirstCurve.dy,
+        thirdLastCurve.dx, thirdLastCurve.dy);
 
     // Close the path and connect to the top
     path.lineTo(size.width, 0);
@@ -477,4 +629,3 @@ class TcustomCurve1 extends CustomClipper<Path> {
   @override
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => true;
 }
-

@@ -29,20 +29,35 @@ final class fetchAndSaveClaims extends RegisterEvent {
   fetchAndSaveClaims({required this.iden3message});
 }
 
-final class getClaims extends RegisterEvent{
+final class getClaims extends RegisterEvent {
   final List<FilterEntity>? filters;
 
   getClaims({this.filters});
 }
 
-final class onClickClaim extends RegisterEvent{
+final class onClickClaim extends RegisterEvent {
   final ClaimModel claimModel;
 
   onClickClaim(this.claimModel);
 }
 
-      
-    
+final class clickScanQrCode extends RegisterEvent {}
 
+final class OnScanQrCodeResponse extends RegisterEvent {
+  final String? response;
 
+  OnScanQrCodeResponse(this.response);
+}
 
+final class getCallbackUrl extends RegisterEvent {
+  final String url;
+  final String did;
+
+  getCallbackUrl(this.url, this.did);
+}
+
+final class OnCallbackUrlResponse extends RegisterEvent {
+  final String? response;
+
+  OnCallbackUrlResponse(this.response);
+}

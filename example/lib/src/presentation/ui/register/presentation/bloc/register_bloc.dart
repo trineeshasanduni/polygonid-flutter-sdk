@@ -1,5 +1,5 @@
+import 'dart:convert';
 import 'dart:math';
-
 
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
@@ -10,7 +10,9 @@ import 'package:polygonid_flutter_sdk/credential/domain/entities/claim_entity.da
 import 'package:polygonid_flutter_sdk/credential/domain/exceptions/credential_exceptions.dart';
 import 'package:polygonid_flutter_sdk/iden3comm/domain/entities/common/iden3_message_entity.dart';
 import 'package:polygonid_flutter_sdk/iden3comm/domain/entities/credential/request/offer_iden3_message_entity.dart';
+import 'package:polygonid_flutter_sdk/registers/domain/entities/callback_response_entity.dart';
 import 'package:polygonid_flutter_sdk/registers/domain/entities/register_entity.dart';
+import 'package:polygonid_flutter_sdk/registers/domain/entities/registerQr_entity.dart';
 import 'package:polygonid_flutter_sdk/registers/domain/usecases/register_usecase.dart';
 import 'package:polygonid_flutter_sdk/sdk/polygon_id_sdk.dart';
 import 'package:polygonid_flutter_sdk_example/src/data/secure_storage.dart';
@@ -25,16 +27,15 @@ part 'register_event.dart';
 part 'register_state.dart';
 
 class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
-final RegisterUsecase registerUsecase;
-final QrcodeParserUtils qrcodeParserUtils;
- final PolygonIdSdk _polygonIdSdk;
-   final ClaimModelMapper _mapper;
+  final RegisterUsecase registerUsecase;
+  final CallbackUsecase callbackUsecase;
+  final QrcodeParserUtils qrcodeParserUtils;
+  final PolygonIdSdk _polygonIdSdk;
+  final ClaimModelMapper _mapper;
 
-
-
-  RegisterBloc( this.registerUsecase, this.qrcodeParserUtils, this._polygonIdSdk, this._mapper
-   ) :
-   super(RegisterInitial()) {
+  RegisterBloc(this.registerUsecase, this.callbackUsecase,
+      this.qrcodeParserUtils, this._polygonIdSdk, this._mapper)
+      : super(RegisterInitial()) {
     on<SubmitSignup>((event, emit) async {
       emit(RegisterLoading());
       print('registering');
@@ -43,16 +44,95 @@ final QrcodeParserUtils qrcodeParserUtils;
           first: event.first,
           last: event.last,
           email: event.email));
-          print('res: ${res.fold}');
-      return res.fold((failure) => emit(RegisterFailure(failure.message)),     
-          (register) => emit(RegisterSuccess(register)));         
+      print('res: ${res.fold}');
+      return res.fold((failure) => emit(RegisterFailure(failure.message)),
+          (register) => emit(RegisterSuccess(register)));
     });
 
     on<onGetRegisterResponse>(_handleRegisterResponse);
     on<fetchAndSaveClaims>(_fetchAndSaveClaims);
     on<getClaims>(_getClaims);
+    on<clickScanQrCode>(_handleClickScanQrCode);
+    on<OnScanQrCodeResponse>(_handleScanQrCodeResponse);
+    on<getCallbackUrl>(_handleCallbackUrl);
+  }
 
+  void _handleClickScanQrCode(
+      clickScanQrCode event, Emitter<RegisterState> emit) {
+        print('fetching qr code');
+    emit(NavigateToQrCodeScanner());
+  }
+
+  // Future<void> _handleScanQrCodeResponse(
+  //     OnScanQrCodeResponse event, Emitter<RegisterState> emit) async {
+  //   String? qrCodeResponse = event.response;
+  //   print('qrCodeResponse: $qrCodeResponse');
+  //   if (qrCodeResponse == null || qrCodeResponse.isEmpty) {
+  //     emit(RegisterFailure("no qr code scanned"));
+  //   }
+
+  //   try {
+  //     print('fetching try block');
+  //     final RegisterQREntity registerQREntity =
+  //         qrCodeResponse as RegisterQREntity;
+  //     print('registerQREntity res: $registerQREntity');
+  //     emit(QrCodeScanned(registerQREntity));
+  //     print('get fetch ');
+  //   } catch (error) {
+  //     emit(RegisterFailure("Scanned code is not valid"));
+  //   }
+  // }
+
+  Future<void> _handleScanQrCodeResponse(
+  OnScanQrCodeResponse event, 
+  Emitter<RegisterState> emit
+) async {
+  String? qrCodeResponse = event.response;
+  print('qrCodeResponse: $qrCodeResponse');
+  
+  if (qrCodeResponse == null || qrCodeResponse.isEmpty) {
+    emit(RegisterFailure("No QR code scanned"));
+    return;
+  }
+
+  try {
+    print('Attempting to parse QR code response');
     
+    // Parse the QR code response from JSON string
+    final Map<String, dynamic> parsedJson = jsonDecode(qrCodeResponse);
+    
+    // Create RegisterQREntity from the parsed JSON
+    final RegisterQREntity registerQREntity = RegisterQREntity.fromJson(parsedJson);
+    
+    print('registerQREntity result: $registerQREntity');
+    emit(QrCodeScanned(registerQREntity));
+  } catch (error) {
+    emit(RegisterFailure("Scanned code is not valid"));
+  }
+}
+
+
+  Future<void> _handleCallbackUrl(
+      getCallbackUrl event, Emitter<RegisterState> emit) async {
+    emit(RegisterQrLoading());
+
+    print('callbackUrl get: ${event.url}');
+    print('did get: ${event.did}');
+
+    final callbackUrl =
+        await callbackUsecase(CallbackParams(callbackUrl: event.url, did:event.did ));
+    print('callbackUrl get1: ${callbackUrl}');
+
+    callbackUrl.fold(
+      (failure) {
+        print('callbackUrl get2: $failure');
+        emit(RegisterFailure(failure.toString()));
+      },
+      (callbackUrlRes) {
+        print('Emitting StatusLoaded with DID: $callbackUrlRes');
+        emit(CallbackLoaded(callbackUrlRes));
+      },
+    );
   }
 
   Future<void> _handleRegisterResponse(
@@ -60,18 +140,18 @@ final QrcodeParserUtils qrcodeParserUtils;
     String? qrCodeResponse = event.response;
     print('qrCodeResponse1: $qrCodeResponse');
     if (qrCodeResponse == null || qrCodeResponse.isEmpty) {
-      emit( RegisterFailure("Scanned code is not valid"));
+      emit(RegisterFailure("Scanned code is not valid"));
     }
 
     try {
       final Iden3MessageEntity iden3message =
           await qrcodeParserUtils.getIden3MessageFromQrCode(qrCodeResponse!);
-          print('iden3message res1: $iden3message');
+      print('iden3message res1: $iden3message');
       emit(Registered(iden3message));
       print('state23: ${state}');
       print('get fetch1 ');
     } catch (error) {
-      emit( RegisterFailure("Scanned code is not valid"));
+      emit(RegisterFailure("Scanned code is not valid"));
     }
   }
 
@@ -79,9 +159,9 @@ final QrcodeParserUtils qrcodeParserUtils;
       fetchAndSaveClaims event, Emitter<RegisterState> emit) async {
     String? privateKey =
         await SecureStorage.read(key: SecureStorageKeys.privateKey);
-print('privateKey1: $privateKey');
+    print('privateKey1: $privateKey');
     if (privateKey == null) {
-      emit( RegisterFailure("Private key not found"));
+      emit(RegisterFailure("Private key not found"));
       return;
     }
 
@@ -92,14 +172,14 @@ print('privateKey1: $privateKey');
         blockchain: chainConfig.blockchain,
         network: chainConfig.network);
 
-        print('didIdentifier: $didIdentifier');
+    print('didIdentifier: $didIdentifier');
 
-    emit( RegisterLoading());
+    emit(RegisterLoading());
 
     Iden3MessageEntity iden3message = event.iden3message;
     print('iden3message fetch: $iden3message');
     if (event.iden3message.messageType != Iden3MessageType.credentialOffer) {
-      emit( RegisterFailure("Read message is not of type offer"));
+      emit(RegisterFailure("Read message is not of type offer"));
       return;
     }
 
@@ -129,8 +209,7 @@ print('privateKey1: $privateKey');
     }
   }
 
-  Future<void> _getClaims(
-      getClaims event, Emitter<RegisterState> emit) async {
+  Future<void> _getClaims(getClaims event, Emitter<RegisterState> emit) async {
     emit(RegisterLoading());
 
     List<FilterEntity>? filters = event.filters;
@@ -153,7 +232,7 @@ print('privateKey1: $privateKey');
     );
 
     if (did.isEmpty) {
-      emit( RegisterFailure(
+      emit(RegisterFailure(
           "without an identity is impossible to remove credential"));
       return;
     }
@@ -175,7 +254,4 @@ print('privateKey1: $privateKey');
       emit(RegisterFailure("generic error"));
     }
   }
-
 }
-
-

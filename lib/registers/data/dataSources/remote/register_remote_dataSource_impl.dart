@@ -2,7 +2,10 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:polygonid_flutter_sdk/registers/data/dataSources/register_remote_dataSource.dart';
+import 'package:polygonid_flutter_sdk/registers/data/model/callbackResponse_model.dart';
+import 'package:polygonid_flutter_sdk/registers/data/model/registerQr_model.dart';
 import 'package:polygonid_flutter_sdk/registers/data/model/register_model.dart';
+import 'package:polygonid_flutter_sdk/registers/domain/entities/callback_response_entity.dart';
 
 class RegisterRemoteDatasourceImpl implements RegisterRemoteDatasource {
   final http.Client client;
@@ -41,7 +44,7 @@ class RegisterRemoteDatasourceImpl implements RegisterRemoteDatasource {
       final statusCode = response.statusCode;
 
       // Check for a successful status code
-      if (response.statusCode == 201 ) {
+      if (response.statusCode == 201) {
         // Parse the response body
         final jsonResponse = json.decode(response.body) as Map<String, dynamic>;
         print('jsonResponse56: $jsonResponse');
@@ -97,6 +100,49 @@ class RegisterRemoteDatasourceImpl implements RegisterRemoteDatasource {
     } catch (error) {
       print('Error during registration: $error');
       throw Exception('Failed to register');
+    }
+  }
+
+  @override
+  Future<CallbackResponseModel> FetchWithCallbackUrl(
+      {required String callbackUrl, required String did}) async {
+    try {
+      Map<String, dynamic> data = {
+        "DID": did,
+      };
+      print('Signup data: $data');
+      print('Signup callbackUrl: $callbackUrl');
+
+      // Define the URI for the sign-up API endpoint
+      final uri = Uri.parse('$callbackUrl');
+
+      // Make the POST request with the proper headers and body
+      final response = await client.post(
+        uri,
+        // headers: {"Content-Type": "application/json"},
+        body: (data),
+      );
+      print('Signup status code: ${response.statusCode}');
+      final statusCode = response.statusCode;
+
+      // Check for a successful status code
+      if (response.statusCode == 200) {
+        // Parse the response body
+        final registerQrResponse =
+            json.decode(response.body) as Map<String, dynamic>;
+        // final body = jsonEncode(claim);
+        print('registerQrResponse: $registerQrResponse');
+
+        // Return the RegisterModel
+        return registerQrResponse as CallbackResponseModel;
+      } else {
+        // Log the failure and throw a custom exception
+        print('Failed to register with Qr: ${response.statusCode}');
+        throw Exception('Failed to register with Qr: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error during Qr: $error');
+      throw Exception('Failed to Qr');
     }
   }
 }
