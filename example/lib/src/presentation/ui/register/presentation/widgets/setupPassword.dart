@@ -124,6 +124,8 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
                 _buildBlocContent(context),
                 const SizedBox(height: 20),
                 _buildRegisterButton(),
+                const SizedBox(height: 20),
+                _buildDashboardButton(),
               ],
             ),
 
@@ -290,19 +292,20 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
     );
   }
 
-  // Widget _buildDashboardButton() {
-  //   return GestureDetector(
-  //     onTap: () {
-  //       Navigator.push(
-  //         context,
-  //         MaterialPageRoute(
-  //           builder: (context) => const BethelBottomBar(),
-  //         ),
-  //       );
-  //     },
-  //     child: _buildButton('Dashboard'),
-  //   );
-  // }
+  Widget _buildDashboardButton() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const BethelBottomBar( did: 'did'),
+          ),
+        );
+      },
+      child: _buildButton('Dashboard', Colors.transparent,
+          Theme.of(context).colorScheme.secondary, Colors.white),
+    );
+  }
 
   Widget _buildButton(
       String text, dynamic colorScheme, dynamic border, dynamic textColor) {

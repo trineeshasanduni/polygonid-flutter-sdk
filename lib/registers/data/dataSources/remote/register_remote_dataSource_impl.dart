@@ -12,8 +12,8 @@ class RegisterRemoteDatasourceImpl implements RegisterRemoteDatasource {
 
   RegisterRemoteDatasourceImpl({required this.client});
 
-  // static const BASE_URL = 'https://apimobile.becx.io/api/v1';
-  static const BASE_URL = 'https://test.becx.io/api/v1';
+  static const BASE_URL = 'https://apimobile.becx.io/api/v1';
+  // static const BASE_URL = 'http://192.168.1.246:3000/api/v1';
   @override
   Future<RegisterModel> registerWithDID({
     required String did,
@@ -104,45 +104,91 @@ class RegisterRemoteDatasourceImpl implements RegisterRemoteDatasource {
   }
 
   @override
-  Future<CallbackResponseModel> FetchWithCallbackUrl(
-      {required String callbackUrl, required String did}) async {
-    try {
-      Map<String, dynamic> data = {
-        "DID": did,
-      };
-      print('Signup data: $data');
-      print('Signup callbackUrl: $callbackUrl');
 
-      // Define the URI for the sign-up API endpoint
-      final uri = Uri.parse('$callbackUrl');
+  Future<CallbackResponseModel> FetchWithCallbackUrl({
+  required String callbackUrl,
+  required String did,
+}) async {
+  try {
+    // Define the data to be sent in the request body
+    Map<String, dynamic> data = {
+      "DID": did,
+    };
+    print('Signup data: ${data.toString()}');
+    print('Signup callbackUrl: $callbackUrl');
 
-      // Make the POST request with the proper headers and body
-      final response = await client.post(
-        uri,
-        // headers: {"Content-Type": "application/json"},
-        body: (data),
-      );
-      print('Signup status code: ${response.statusCode}');
-      final statusCode = response.statusCode;
+    // Define the URI for the API endpoint
+    final uri = Uri.parse(callbackUrl);
 
-      // Check for a successful status code
-      if (response.statusCode == 200) {
-        // Parse the response body
-        final registerQrResponse =
-            json.decode(response.body) as Map<String, dynamic>;
-        // final body = jsonEncode(claim);
-        print('registerQrResponse: $registerQrResponse');
+    // Make the POST request with proper headers and body (jsonEncode the data)
+    final response = await client.post(
+      uri,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode(data), // Encode the data to JSON format
+    );
 
-        // Return the RegisterModel
-        return registerQrResponse as CallbackResponseModel;
-      } else {
-        // Log the failure and throw a custom exception
-        print('Failed to register with Qr: ${response.statusCode}');
-        throw Exception('Failed to register with Qr: ${response.statusCode}');
-      }
-    } catch (error) {
-      print('Error during Qr: $error');
-      throw Exception('Failed to Qr');
+    print('Signup status code: ${response.statusCode}');
+    
+    // Check for a successful status code
+    if (response.statusCode == 200) {
+      // Parse the response body
+      final registerQrResponse =
+          json.decode(response.body) ;
+      print('registerQrResponse: $registerQrResponse');
+
+      // Return the response as CallbackResponseModel
+      return CallbackResponseModel.fromJson(registerQrResponse);
+    } else {
+      print('Failed to register with Qr: ${response.statusCode}');
+      throw Exception('Failed to register with Qr: ${response.statusCode}');
     }
+  } catch (error) {
+    print('Error during Qr: $error');
+    throw Exception('Failed to register with Qr');
   }
+}
+
+  // Future<CallbackResponseModel> FetchWithCallbackUrl(
+  //     {required String callbackUrl, required String did}) async {
+  //   try {
+  //     Map<String, dynamic> data = {
+  //       "DID": did,
+  //     };
+  //     print('Signup data: ${data.toString()}');
+  //     print('Signup callbackUrl: $callbackUrl');
+
+  //     // Define the URI for the sign-up API endpoint
+  //     final uri = Uri.parse('$callbackUrl');
+
+  //     // Make the POST request with the proper headers and body
+  //     final response = await client.post(
+  //       uri,
+  //       headers: {"Content-Type": "application/json"},
+  //       body: (data),
+  //     );
+  //     print('Signup status code: ${response.statusCode}');
+  //     final statusCode = response.statusCode;
+
+  //     // Check for a successful status code
+  //     if (response.statusCode == 200) {
+  //       // Parse the response body
+  //       final registerQrResponse =
+  //           json.decode(response.body) as Map<String, dynamic>;
+  //       // final body = jsonEncode(claim);
+  //       print('registerQrResponse: $registerQrResponse');
+
+  //       // Return the RegisterModel
+  //       return registerQrResponse as CallbackResponseModel;
+  //     } else {
+  //       // Log the failure and throw a custom exception
+  //       print('Failed to register with Qr: ${response.statusCode}');
+  //       throw Exception('Failed to register with Qr: ${response.statusCode}');
+  //     }
+  //   } catch (error) {
+  //     print('Error during Qr: $error');
+  //     throw Exception('Failed to Qr');
+  //   }
+  // }
 }

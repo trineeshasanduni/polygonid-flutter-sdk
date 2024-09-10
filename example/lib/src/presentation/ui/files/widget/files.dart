@@ -219,6 +219,7 @@ class _FilesState extends State<Files> {
             child: Column(
               children: [
                 _buildHeader(),
+                _buildAddPlan(),
                 _buildFileSelectionButton(),
                 Expanded(child: _buildFileList()),
               ],
@@ -227,6 +228,11 @@ class _FilesState extends State<Files> {
         ),
       ),
     );
+  }
+  Widget _buildAddPlan(){
+    return   TextButton(onPressed:(){}, child: Text("Add Plans"));
+      
+    
   }
 
   Widget _buildHeader() {

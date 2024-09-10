@@ -1,33 +1,21 @@
-class RegisterQRModel {
-  BodyQrModel? body;
+class RegisterQrModel {
+  String? qR;
+  String? aDDQR;
+  String? sessionID;
 
-  RegisterQRModel({this.body});
+  RegisterQrModel({this.qR, this.aDDQR, this.sessionID});
 
-  RegisterQRModel.fromJson(Map<String, dynamic> json) {
-    body = json['body'] != null ? new BodyQrModel.fromJson(json['body']) : null;
+  RegisterQrModel.fromJson(Map<String, dynamic> json) {
+    qR = json['QR'];
+    aDDQR = json['ADDQR'];
+    sessionID = json['SessionID'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.body != null) {
-      data['body'] = this.body!.toJson();
-    }
-    return data;
-  }
-}
-
-class BodyQrModel {
-  String? callbackUrl;
-
-  BodyQrModel({this.callbackUrl});
-
-  BodyQrModel.fromJson(Map<String, dynamic> json) {
-    callbackUrl = json['callbackUrl'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['callbackUrl'] = this.callbackUrl;
+    data['QR'] = this.qR;
+    data['ADDQR'] = this.aDDQR;
+    data['SessionID'] = this.sessionID;
     return data;
   }
 }

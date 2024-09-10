@@ -23,16 +23,34 @@ final class onGetRegisterResponse extends RegisterEvent {
   onGetRegisterResponse(this.response);
 }
 
+final class onGetQrResponse extends RegisterEvent {
+  final String? response;
+
+  onGetQrResponse(this.response);
+}
+
 final class fetchAndSaveClaims extends RegisterEvent {
   final Iden3MessageEntity iden3message;
 
   fetchAndSaveClaims({required this.iden3message});
 }
 
+final class fetchAndSaveQrClaims extends RegisterEvent {
+  final Iden3MessageEntity iden3message;
+
+  fetchAndSaveQrClaims({required this.iden3message});
+}
+
 final class getClaims extends RegisterEvent {
   final List<FilterEntity>? filters;
 
   getClaims({this.filters});
+}
+
+final class getQrClaims extends RegisterEvent {
+  final List<FilterEntity>? filters;
+
+  getQrClaims({this.filters});
 }
 
 final class onClickClaim extends RegisterEvent {

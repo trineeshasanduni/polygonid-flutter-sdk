@@ -27,6 +27,12 @@ final class loadedClaims extends RegisterState {
   loadedClaims(this.claimList);
 }
 
+final class loadedQrClaims extends RegisterState {
+  final List<ClaimModel> claimList;
+
+  loadedQrClaims(this.claimList);
+}
+
 final class RegisterFailure extends RegisterState {
   final String error;
 
@@ -36,7 +42,7 @@ final class RegisterFailure extends RegisterState {
 final class NavigateToQrCodeScanner extends RegisterState {}
 
 final class QrCodeScanned extends RegisterState {
-  final RegisterQREntity registerQREntity;
+  final RegisterQrEntity registerQREntity;
 
   QrCodeScanned(this.registerQREntity);
 }

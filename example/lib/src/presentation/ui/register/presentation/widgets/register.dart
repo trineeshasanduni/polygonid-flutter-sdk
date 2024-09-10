@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:polygonid_flutter_sdk/iden3comm/domain/entities/common/iden3_message_entity.dart';
 import 'package:polygonid_flutter_sdk/registers/domain/entities/registerQr_entity.dart';
 import 'package:polygonid_flutter_sdk/sdk/polygon_id_sdk.dart';
@@ -155,7 +156,10 @@ class _SignupState extends State<Signup> {
                             const SizedBox(height: 50),
                             _buildForm(),
                             const SizedBox(height: 20),
-                             Divider(color:Theme.of(context).secondaryHeaderColor.withOpacity(0.5)),
+                            Divider(
+                                color: Theme.of(context)
+                                    .secondaryHeaderColor
+                                    .withOpacity(0.5)),
                             const SizedBox(height: 20),
                             _buildQRButton(),
                             _buildBlocListener(),
@@ -529,14 +533,27 @@ class _SignupState extends State<Signup> {
         }
         if (state is QrCodeScanned) {
           print('qr code scanned : $state');
-          _handleCallbackUrl(state.registerQREntity.body?.callbackUrl);
+          final AddQr = state.registerQREntity.aDDQR;
+          print('add qr code1: $AddQr');
+          final storage = GetStorage();
+          // final getDID = storage.read('did');
+          final addQr = storage.write('AddQr', AddQr);
+          print('add qr code: $addQr');
+
+          _handleCallbackUrl(state.registerQREntity.qR);
         }
-        // if(state is CallbackLoaded){
-        //   print('callback loaded : ${state.callbackResponse}');
-        //   final response = jsonEncode(state.callbackResponse.toJson());
-        //   print('response Qr: $response');
-        //    _registerBloc.add(onGetRegisterResponse(response));
-        // }
+        if (state is CallbackLoaded) {
+          final response = jsonEncode(state.callbackResponse.toJson());
+          print('qr clback response: $response');
+          _registerBloc.add(onGetQrResponse(response));
+        }
+        if (state is loadedQrClaims) {
+          print('qr code fetching');
+          final storage = GetStorage();
+          final qr = storage.read('AddQr');
+          print('qr code read: $qr');
+          _handleCallbackUrl(qr.toString());
+        }
       },
       child: const SizedBox.shrink(),
     );
@@ -561,8 +578,6 @@ class _SignupState extends State<Signup> {
       _registerBloc.add(getCallbackUrl(callbackUrl, did));
     }
   }
-
-  
 }
 
 //////////////////////////////// curves for the signup page////////////////////////////////////

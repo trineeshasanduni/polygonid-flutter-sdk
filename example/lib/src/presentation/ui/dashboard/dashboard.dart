@@ -24,16 +24,14 @@ import 'package:http/http.dart' as http;
 
 class Dashboard extends StatefulWidget {
   final String? did;
-  
-  const Dashboard({super.key, required this.did});
 
+  const Dashboard({super.key, required this.did});
 
   @override
   State<Dashboard> createState() => _DashboardState();
 }
 
 class _DashboardState extends State<Dashboard> {
-  
   late W3MService _w3mService;
   bool isConnected = false;
 
@@ -162,7 +160,7 @@ class _DashboardState extends State<Dashboard> {
                 // final did = storage.read('DID');
                 // print('did 123: $did');
                 print('owener did: $owner1');
-                
+
                 final did = jsonDecode(widget.did.toString());
                 print('did23: $did');
                 addUser(

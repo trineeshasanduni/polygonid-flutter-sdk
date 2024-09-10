@@ -3,6 +3,7 @@ import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/file_navigation.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/dashBoard_navigation.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/plan_navigation.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/profile_navigation.dart';
 
 class BethelBottomBar extends StatefulWidget {
@@ -30,7 +31,7 @@ class BethelBottomBarState extends State<BethelBottomBar> {
         color: Theme.of(context).secondaryHeaderColor,
       ),
       Icon(
-        Icons.account_circle,
+        Icons.map,
         size: 30,
         color: Theme.of(context).secondaryHeaderColor,
       ),
@@ -73,7 +74,9 @@ class BethelBottomBarState extends State<BethelBottomBar> {
                 did: widget.did,
               ),
               FileNav(did: widget.did,),
+              PlanNav(),
               ProfileNav(),
+
               
             ],
           ),

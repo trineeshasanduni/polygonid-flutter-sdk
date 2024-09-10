@@ -48,10 +48,15 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
       return res.fold((failure) => emit(RegisterFailure(failure.message)),
           (register) => emit(RegisterSuccess(register)));
     });
-
+///scan//////
     on<onGetRegisterResponse>(_handleRegisterResponse);
     on<fetchAndSaveClaims>(_fetchAndSaveClaims);
     on<getClaims>(_getClaims);
+  ///callback/////
+    on<onGetQrResponse>(_handleQrResponse);
+    on<fetchAndSaveQrClaims>(_fetchAndSaveQrClaims);
+    on<getQrClaims>(_getQrClaims);
+    
     on<clickScanQrCode>(_handleClickScanQrCode);
     on<OnScanQrCodeResponse>(_handleScanQrCodeResponse);
     on<getCallbackUrl>(_handleCallbackUrl);
@@ -102,7 +107,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
     final Map<String, dynamic> parsedJson = jsonDecode(qrCodeResponse);
     
     // Create RegisterQREntity from the parsed JSON
-    final RegisterQREntity registerQREntity = RegisterQREntity.fromJson(parsedJson);
+    final RegisterQrEntity registerQREntity = RegisterQrEntity.fromJson(parsedJson);
     
     print('registerQREntity result: $registerQREntity');
     emit(QrCodeScanned(registerQREntity));
@@ -135,7 +140,127 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
     );
   }
 
-  Future<void> _handleRegisterResponse(
+  Future<void> _handleQrResponse(
+      onGetQrResponse event, Emitter<RegisterState> emit) async {
+    String? qrCodeResponse = event.response;
+    print('qrCodeResponse1: $qrCodeResponse');
+    if (qrCodeResponse == null || qrCodeResponse.isEmpty) {
+      emit(RegisterFailure("Scanned code is not valid"));
+    }
+
+    try {
+      final Iden3MessageEntity iden3message =
+          await qrcodeParserUtils.getIden3MessageFromQrCode(qrCodeResponse!);
+      print('iden3message res1: $iden3message');
+      emit(Registered(iden3message));
+      print('state23: ${state}');
+      print('get fetch1 ');
+    } catch (error) {
+      emit(RegisterFailure("Scanned code is not valid"));
+    }
+  }
+
+  Future<void> _fetchAndSaveQrClaims(
+      fetchAndSaveQrClaims event, Emitter<RegisterState> emit) async {
+    String? privateKey =
+        await SecureStorage.read(key: SecureStorageKeys.privateKey);
+    print('privateKey1: $privateKey');
+    if (privateKey == null) {
+      emit(RegisterFailure("Private key not found"));
+      return;
+    }
+
+    ChainConfigEntity chainConfig = await _polygonIdSdk.getSelectedChain();
+
+    String didIdentifier = await _polygonIdSdk.identity.getDidIdentifier(
+        privateKey: privateKey,
+        blockchain: chainConfig.blockchain,
+        network: chainConfig.network);
+
+    print('didIdentifier: $didIdentifier');
+
+    emit(RegisterQrLoading());
+
+    Iden3MessageEntity iden3message = event.iden3message;
+    print('iden3message fetch: $iden3message');
+    if (event.iden3message.messageType != Iden3MessageType.credentialOffer) {
+      emit(RegisterFailure("Read message is not of type offer"));
+      return;
+    }
+
+    BigInt nonce = await NonceUtils(_polygonIdSdk).lookupNonce(
+            did: didIdentifier,
+            privateKey: privateKey,
+            from: iden3message.from) ??
+        GENESIS_PROFILE_NONCE;
+
+    try {
+      List<ClaimEntity> claimList =
+          await _polygonIdSdk.iden3comm.fetchAndSaveClaims(
+        message: event.iden3message as OfferIden3MessageEntity,
+        genesisDid: didIdentifier,
+        profileNonce: nonce,
+        privateKey: privateKey,
+      );
+
+      print('claimList: ${claimList}.');
+
+      if (claimList.isNotEmpty) {
+        add(getQrClaims());
+        // add(event)
+      }
+    } catch (exception) {
+      emit(RegisterFailure(CustomStrings.iden3messageGenericError));
+    }
+  }
+
+  Future<void> _getQrClaims(getQrClaims event, Emitter<RegisterState> emit) async {
+    emit(RegisterQrLoading());
+
+    List<FilterEntity>? filters = event.filters;
+
+    String? privateKey =
+        await SecureStorage.read(key: SecureStorageKeys.privateKey);
+
+    if (privateKey == null) {
+      emit(RegisterFailure("Private key not found"));
+      return;
+    }
+
+    ChainConfigEntity chainConfig = await _polygonIdSdk.getSelectedChain();
+
+    String did = await _polygonIdSdk.identity.getDidIdentifier(
+      privateKey: privateKey,
+      blockchain: chainConfig.blockchain,
+      network: chainConfig.network,
+      method: chainConfig.method,
+    );
+
+    if (did.isEmpty) {
+      emit(RegisterFailure(
+          "without an identity is impossible to remove credential"));
+      return;
+    }
+
+    try {
+      List<ClaimEntity> claimList = await _polygonIdSdk.credential.getClaims(
+        filters: filters,
+        genesisDid: did,
+        privateKey: privateKey,
+      );
+
+      List<ClaimModel> claimModelList =
+          claimList.map((claimEntity) => _mapper.mapFrom(claimEntity)).toList();
+      emit(loadedQrClaims(claimModelList));
+      print('loadedClaims: ${claimModelList}');
+    } on GetClaimsException catch (_) {
+      emit(RegisterFailure("error while retrieving claims"));
+    } catch (_) {
+      emit(RegisterFailure("generic error"));
+    }
+  }
+
+   Future<void> _handleRegisterResponse(
       onGetRegisterResponse event, Emitter<RegisterState> emit) async {
     String? qrCodeResponse = event.response;
     print('qrCodeResponse1: $qrCodeResponse');
