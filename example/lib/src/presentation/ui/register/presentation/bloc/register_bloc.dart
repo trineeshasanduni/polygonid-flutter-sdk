@@ -68,25 +68,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
     emit(NavigateToQrCodeScanner());
   }
 
-  // Future<void> _handleScanQrCodeResponse(
-  //     OnScanQrCodeResponse event, Emitter<RegisterState> emit) async {
-  //   String? qrCodeResponse = event.response;
-  //   print('qrCodeResponse: $qrCodeResponse');
-  //   if (qrCodeResponse == null || qrCodeResponse.isEmpty) {
-  //     emit(RegisterFailure("no qr code scanned"));
-  //   }
-
-  //   try {
-  //     print('fetching try block');
-  //     final RegisterQREntity registerQREntity =
-  //         qrCodeResponse as RegisterQREntity;
-  //     print('registerQREntity res: $registerQREntity');
-  //     emit(QrCodeScanned(registerQREntity));
-  //     print('get fetch ');
-  //   } catch (error) {
-  //     emit(RegisterFailure("Scanned code is not valid"));
-  //   }
-  // }
+  
 
   Future<void> _handleScanQrCodeResponse(
   OnScanQrCodeResponse event, 
