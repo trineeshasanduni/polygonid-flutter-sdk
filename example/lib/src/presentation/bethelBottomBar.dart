@@ -74,7 +74,7 @@ class BethelBottomBarState extends State<BethelBottomBar> {
                 did: widget.did,
               ),
               FileNav(did: widget.did,),
-              PlanNav(),
+              PlanNav(did: widget.did),
               ProfileNav(),
 
               

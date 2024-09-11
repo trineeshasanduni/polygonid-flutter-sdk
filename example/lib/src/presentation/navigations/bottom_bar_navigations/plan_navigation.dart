@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/add_plans.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/widget/add_plans.dart';
 
 class PlanNav extends StatefulWidget {
-  const PlanNav({super.key});
+  final String? did;
+  const PlanNav({
+    super.key,
+    required this.did,
+  });
 
   @override
   State<PlanNav> createState() => _PlanNavState();
 }
+
 GlobalKey<NavigatorState> PlanNavKey = GlobalKey<NavigatorState>();
 
 class _PlanNavState extends State<PlanNav> {
@@ -31,7 +36,7 @@ class _PlanNavState extends State<PlanNav> {
             //   return const Dashboard();
             // }
             // return const HomePage();
-            return const AddPlans();
+            return  AddPlans( did: widget.did);
           },
         );
       },

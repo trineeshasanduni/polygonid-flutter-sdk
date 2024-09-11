@@ -62,6 +62,9 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
     on<getCallbackUrl>(_handleCallbackUrl);
   }
 
+
+  ///////register using callback////////
+
   void _handleClickScanQrCode(
       clickScanQrCode event, Emitter<RegisterState> emit) {
         print('fetching qr code');
@@ -134,7 +137,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
       final Iden3MessageEntity iden3message =
           await qrcodeParserUtils.getIden3MessageFromQrCode(qrCodeResponse!);
       print('iden3message res1: $iden3message');
-      emit(Registered(iden3message));
+      emit(QrRegistered(iden3message));
       print('state23: ${state}');
       print('get fetch1 ');
     } catch (error) {
@@ -159,12 +162,12 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
         blockchain: chainConfig.blockchain,
         network: chainConfig.network);
 
-    print('didIdentifier: $didIdentifier');
+    print('didIdentifier1: $didIdentifier');
 
     emit(RegisterQrLoading());
 
     Iden3MessageEntity iden3message = event.iden3message;
-    print('iden3message fetch: $iden3message');
+    print('iden3message fetch1: $iden3message');
     if (event.iden3message.messageType != Iden3MessageType.credentialOffer) {
       emit(RegisterFailure("Read message is not of type offer"));
       return;
@@ -185,7 +188,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
         privateKey: privateKey,
       );
 
-      print('claimList: ${claimList}.');
+      print('claimList1: ${claimList}.');
 
       if (claimList.isNotEmpty) {
         add(getQrClaims());
@@ -234,13 +237,16 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
       List<ClaimModel> claimModelList =
           claimList.map((claimEntity) => _mapper.mapFrom(claimEntity)).toList();
       emit(loadedQrClaims(claimModelList));
-      print('loadedClaims: ${claimModelList}');
+      print('loadedClaims1: ${claimModelList}');
     } on GetClaimsException catch (_) {
       emit(RegisterFailure("error while retrieving claims"));
     } catch (_) {
       emit(RegisterFailure("generic error"));
     }
   }
+
+
+  //////////register using app////////
 
    Future<void> _handleRegisterResponse(
       onGetRegisterResponse event, Emitter<RegisterState> emit) async {
@@ -271,6 +277,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
       emit(RegisterFailure("Private key not found"));
       return;
     }
+    print('print failure');
 
     ChainConfigEntity chainConfig = await _polygonIdSdk.getSelectedChain();
 

@@ -27,6 +27,7 @@ import 'package:polygonid_flutter_sdk_example/utils/qr_code_parser_utils.dart';
 import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gradient_borders/box_borders/gradient_box_border.dart';
+import 'package:web3modal_flutter/web3modal_flutter.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -521,42 +522,138 @@ class _SignupState extends State<Signup> {
     );
   }
 
+  // Widget _buildBlocListener() {
+  //   return BlocListener<RegisterBloc, RegisterState>(
+  //     bloc: _registerBloc,
+  //     listener: (context, state)async {
+  //       print('state1: $state');
+
+  //       if (state is NavigateToQrCodeScanner) {
+  //         print('navigate to qr code scanner : $state');
+  //         _handleNavigateToQrCodeScanner();
+  //       }
+  //       if (state is QrCodeScanned) {
+  //         print('qr code scanned : $state');
+  //         final AddQr = state.registerQREntity.aDDQR;
+  //         print('add qr code1: $AddQr');
+  //         final storage = GetStorage();
+  //         final addQr = storage.write('AddQr', AddQr);
+
+  //         final AddQr1 = await storage.read('AddQr');
+  //           print('qr code read1: $AddQr1');
+  //         print('add qr code: $addQr.');
+
+  //         _handleCallbackUrl(state.registerQREntity.qR);
+  //       }
+  //       if (state is CallbackLoaded) {
+  //         final response = jsonEncode(state.callbackResponse.toJson());
+  //         print('qr clback response: $response');
+  //         _registerBloc.add(onGetQrResponse(response));
+  //       }
+  //       if (state is QrRegistered) {
+  //         WidgetsBinding.instance.addPostFrameCallback((_) async{
+  //           print('fetching qr registered');
+  //          await _handleQrRegistered(state.iden3message);
+
+  //           // Navigate to the desired page (e.g., HomeScreen)
+  //         });
+  //       }
+  //       if (state is loadedQrClaims) {
+  //         // WidgetsBinding.instance.addPostFrameCallback((_) async {
+  //           print('qr code fetching');
+  //           final storage = GetStorage();
+  //           final AddQr =await storage.read('AddQr');
+  //           print('qr code read: $AddQr');
+  //           await _handleCallbackUrl(AddQr.toString());
+  //           Navigator.push(
+  //             context,
+  //             MaterialPageRoute(
+  //               builder: (context) => const SetupPasswordScreen(),
+  //             ),
+  //           );
+  //         // });
+  //       }
+  //     },
+  //     child: const SizedBox.shrink(),
+  //   );
+
   Widget _buildBlocListener() {
-    return BlocListener<RegisterBloc, RegisterState>(
-      bloc: _registerBloc,
-      listener: (context, state) {
-        print('state1: $state');
+  return BlocListener<RegisterBloc, RegisterState>(
+    bloc: _registerBloc,
+    listener: (context, state) async {
+      print('state1: $state');
 
-        if (state is NavigateToQrCodeScanner) {
-          print('navigate to qr code scanner : $state');
-          _handleNavigateToQrCodeScanner();
-        }
-        if (state is QrCodeScanned) {
-          print('qr code scanned : $state');
-          final AddQr = state.registerQREntity.aDDQR;
-          print('add qr code1: $AddQr');
-          final storage = GetStorage();
-          // final getDID = storage.read('did');
-          final addQr = storage.write('AddQr', AddQr);
-          print('add qr code: $addQr');
+      if (state is NavigateToQrCodeScanner) {
+        print('navigate to qr code scanner : $state');
+        _handleNavigateToQrCodeScanner();
+      }
 
-          _handleCallbackUrl(state.registerQREntity.qR);
+      if (state is QrCodeScanned) {
+        print('qr code scanned : $state');
+        final AddQr = state.registerQREntity.aDDQR;
+        print('add qr code1: $AddQr');
+
+       final SharedPreferences prefs = await SharedPreferences.getInstance();
+await prefs.setString('AddQr', AddQr!);  // Write
+final String? storedQr = prefs.getString('AddQr');  // Read
+print('Shared Preferences stored qr: $storedQr');
+
+        _handleCallbackUrl(state.registerQREntity.qR);
+      }
+
+      if (state is CallbackLoaded) {
+        final response = jsonEncode(state.callbackResponse.toJson());
+        print('qr callback response: $response');
+        _registerBloc.add(onGetQrResponse(response));
+      }
+
+      if (state is QrRegistered) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          print('fetching qr registered');
+          await _handleQrRegistered(state.iden3message);
+
+          // Navigate to the desired page (e.g., HomeScreen)
+        });
+      }
+
+      if (state is loadedQrClaims) {
+        // Ensure async read and await before using the value
+        print('qr code fetching');
+
+        final storage = GetStorage();
+        
+        try {
+          final SharedPreferences prefs = await SharedPreferences.getInstance();
+         final String? storedQr = prefs.getString('AddQr'); 
+          
+          if (storedQr != null) {
+            print('qr code read: $storedQr');
+            await _handleCallbackUrl(storedQr.toString());
+
+            // Navigate after handling callback URL
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SetupPasswordScreen(),
+              ),
+            );
+          } else {
+            print('Error: AddQr is null, no QR code found in storage.');
+          }
+        } catch (e) {
+          print('Error reading AddQr from storage: $e');
         }
-        if (state is CallbackLoaded) {
-          final response = jsonEncode(state.callbackResponse.toJson());
-          print('qr clback response: $response');
-          _registerBloc.add(onGetQrResponse(response));
-        }
-        if (state is loadedQrClaims) {
-          print('qr code fetching');
-          final storage = GetStorage();
-          final qr = storage.read('AddQr');
-          print('qr code read: $qr');
-          _handleCallbackUrl(qr.toString());
-        }
-      },
-      child: const SizedBox.shrink(),
-    );
+      }
+    },
+    child: const SizedBox.shrink(),
+  );
+
+
+  }
+
+  Future<void> _handleQrRegistered(Iden3MessageEntity iden3message) async {
+    debugPrint('User is registered');
+    _registerBloc.add(fetchAndSaveQrClaims(iden3message: iden3message));
   }
 
   Future<void> _handleNavigateToQrCodeScanner() async {

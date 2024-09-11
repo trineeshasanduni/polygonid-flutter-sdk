@@ -8,11 +8,13 @@ import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gradient_borders/box_borders/gradient_box_border.dart';
+import 'package:polygonid_flutter_sdk_example/src/data/secure_storage.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/bar.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/customCurveEdge.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_state.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/widgets/setupPassword.dart';
+import 'package:polygonid_flutter_sdk_example/utils/secure_storage_keys.dart';
 import 'package:web3modal_flutter/services/w3m_service/w3m_service.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
 import 'package:web3modal_flutter/widgets/w3m_account_button.dart';
@@ -100,49 +102,7 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  Future<String> addUser(
-      String Commitment, String Did, String NullifierHash, String Owner) async {
-    print('add user up');
-    try {
-      // final did
-      // Construct the data to be sent
-      Map<String, dynamic> data = {
-        "Commitment": Commitment,
-        "Did": Did,
-        "NullifierHash": NullifierHash,
-        "Owner": Owner,
-      };
-      print('add user data: $data');
-
-      // Define the URI for the sign-up API endpoint
-      final uri = Uri.parse('https://apimobile.becx.io/api/v1/add-user');
-
-      // Make the POST request with the proper headers and body
-      final response = await http.post(
-        uri,
-        // headers: {"Content-Type": "application/json"},
-        body: jsonEncode(data),
-      );
-      print('add user status code: ${response.statusCode}');
-
-      Map<String, dynamic> jsonResponse = jsonDecode(response.body);
-
-      print('add user Status Code: ${response.statusCode}');
-      print('add user Response Body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        return jsonEncode(jsonResponse);
-        // return jsonResponse;
-      } else {
-        print('Failed to add user');
-        // return response.body;
-      }
-      return jsonEncode(jsonResponse);
-    } catch (error) {
-      print('Error during add user: $error');
-      throw Exception('Failed to add user');
-    }
-  }
+  
 
   void _showWelcomeDialog() {
     showDialog(
@@ -163,12 +123,7 @@ class _DashboardState extends State<Dashboard> {
 
                 final did = jsonDecode(widget.did.toString());
                 print('did23: $did');
-                addUser(
-                  "79179855485517959415279473341851584883681887175169008946781267938371369",
-                  did!,
-                  "88871286709793914884405575185504262374183498556034135874130629985717964",
-                  owner1,
-                );
+                
               },
             ),
           ],
@@ -179,9 +134,24 @@ class _DashboardState extends State<Dashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final WalletAddress = _w3mService.session?.address;
-    final storage = GetStorage();
-    storage.write('walletAddress', WalletAddress);
+    // Safely assign WalletAddress, handling potential null values
+    String? walletAddress = _w3mService.session?.address;
+
+    if (walletAddress != null && walletAddress.isNotEmpty) {
+      // Write to SecureStorage, ensuring to await the async operation
+      SecureStorage.write(
+        key: SecureStorageKeys.owner,
+        value: walletAddress,
+      );
+
+      // Write to GetStorage
+      final storage = GetStorage();
+      storage.write('walletAddress', walletAddress);
+
+      print('Wallet address saved: $walletAddress');
+    } else {
+      print('Error: Wallet address is null or empty');
+    }
 
     // final wA = storage.read(key: 'walletAddress');
     // print('Wallet Address: ${wA.toString()}');
@@ -241,6 +211,7 @@ class _DashboardState extends State<Dashboard> {
                           ]
                         : [
                             W3MAccountButton(service: _w3mService),
+                            W3MConnectWalletButton(service: _w3mService),
                             // Text(WalletAddress.toString()),
                           ],
                   ),

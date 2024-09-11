@@ -104,7 +104,6 @@ class RegisterRemoteDatasourceImpl implements RegisterRemoteDatasource {
   }
 
   @override
-
   Future<CallbackResponseModel> FetchWithCallbackUrl({
   required String callbackUrl,
   required String did,

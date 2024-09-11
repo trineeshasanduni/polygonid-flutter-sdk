@@ -21,6 +21,12 @@ final class Registered extends RegisterState {
   Registered(this.iden3message);
 }
 
+final class QrRegistered extends RegisterState {
+  final Iden3MessageEntity iden3message;
+
+  QrRegistered(this.iden3message);
+}
+
 final class loadedClaims extends RegisterState {
   final List<ClaimModel> claimList;
 
