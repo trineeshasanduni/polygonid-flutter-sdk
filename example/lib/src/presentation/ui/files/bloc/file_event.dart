@@ -20,3 +20,8 @@ class UseSpaceEvent extends FileEvent {
   final int batchSize;
   const UseSpaceEvent( {required this.did,required this.ownerDid, required this.batchSize});
 }
+
+class GetFileNameEvent extends FileEvent {
+  final String BatchHash;
+  const GetFileNameEvent( {required this.BatchHash});
+}

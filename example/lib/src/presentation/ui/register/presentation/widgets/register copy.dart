@@ -282,9 +282,9 @@ class _SignupState extends State<Signup> {
                                           _registerBloc.add(
                                             SubmitSignup(
                                               did: identity.text,
-                                              first: "thathsarani",
-                                              last: "trineesha",
-                                              email: "trineesha@gmail.com",
+                                              first: "",
+                                              last: "",
+                                              email: "",
                                             ),
                                           );
                                         } else {

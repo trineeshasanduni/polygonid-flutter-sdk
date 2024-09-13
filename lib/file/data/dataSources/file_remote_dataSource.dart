@@ -1,5 +1,6 @@
 import 'dart:io';
-import 'package:polygonid_flutter_sdk/file/data/model/file_entity.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/file_model.dart';
 
 abstract class FileRemoteDatasource {
 
@@ -16,6 +17,8 @@ abstract class FileRemoteDatasource {
       required int batchSize,
       }
   );
+
+  Future<FileNameModel> getFileName(String BatchHash);
 
  
 }

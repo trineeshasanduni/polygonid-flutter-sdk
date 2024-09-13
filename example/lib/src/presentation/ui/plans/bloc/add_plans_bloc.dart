@@ -3,6 +3,7 @@ import 'dart:ffi';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/entities/addPlans_entity.dart';
+import 'package:polygonid_flutter_sdk/add_plans/domain/entities/freeSpace_entity.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/usecases/addPlans_usecase.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/bloc/dashboard_bloc.dart';
 
@@ -14,14 +15,15 @@ class AddPlansBloc extends Bloc<AddPlansEvent, AddPlansState> {
   final AddUserUsecase addUserUsecase;
   final CreateProofUsecase createProofUsecase;
   final VerifyUsecase verifyUsecase;
-  // final FreeSpaceUsecase freeSpaceUsecase;
+   final FreeSpaceUsecase freeSpaceUsecase;
 
-  AddPlansBloc(this.generateSecretsUsecase,this.addUserUsecase, this.createProofUsecase,this.verifyUsecase) : super(AddPlansInitial()) {
+  AddPlansBloc(this.generateSecretsUsecase,this.addUserUsecase, this.createProofUsecase,this.verifyUsecase,this.freeSpaceUsecase) : super(AddPlansInitial()) {
     on<GenerateSecretsEvent>(_handleGenerateSecrets); 
     on<addUserEvent>(_handleAddUser);
     on<createProofEvent>(_handleProof);
     on<verifyuserEvent>(_handleVerifyUser);
-    // on<freeSpaceEvent>(_handleFreeSpace);
+    on<freeSpaceEvent>(_handleFreeSpace);
+
   }
 
   Future<void> _handleGenerateSecrets(
@@ -88,17 +90,22 @@ class AddPlansBloc extends Bloc<AddPlansEvent, AddPlansState> {
     );  
   }
 
-  // Future<void> _handleFreeSpace(
-  //     freeSpaceEvent event, Emitter<AddPlansState> emit) async {
-  //   emit(AddPlansLoading());
-  //   final failureOrFreeSpace = await verifyUsecase(VerifyParams(
+  Future<void> _handleFreeSpace(
+      freeSpaceEvent event, Emitter<AddPlansState> emit) async {
+    emit(AddPlansLoading());
+    final failureOrFreeSpace = await freeSpaceUsecase(FreeSpaceParams(
+
+          did: event.did,
+          owner: event.owner
           
-  //         ));
-  //        failureOrFreeSpace.fold(
-  //     (failure) => emit(AddPlansFailure(failure.toString())),
-  //     (freeSpace) => emit(FreeSpace(freeSpace)),
-  //   );  
-  // }
+          ));
+         failureOrFreeSpace.fold(
+      (failure) => emit(AddPlansFailure(failure.toString())),
+      (freeSpace) => emit(FreeSpaceAdded(freeSpace)),
+    );  
+  }
+
+
 }
 
 

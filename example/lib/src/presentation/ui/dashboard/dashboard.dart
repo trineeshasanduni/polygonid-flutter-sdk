@@ -136,6 +136,10 @@ class _DashboardState extends State<Dashboard> {
   Widget build(BuildContext context) {
     // Safely assign WalletAddress, handling potential null values
     String? walletAddress = _w3mService.session?.address;
+    String? account = _w3mService.session?.connectedWalletName;
+    String? account1 = _w3mService.session?.getAccounts()?.first;
+    print('account12: $account');
+    print('account123: $account1');
 
     if (walletAddress != null && walletAddress.isNotEmpty) {
       // Write to SecureStorage, ensuring to await the async operation

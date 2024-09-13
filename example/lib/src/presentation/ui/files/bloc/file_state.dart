@@ -32,4 +32,19 @@ final class FileUploadFailed extends FileState {
   List<Object> get props => [message];
 }
 
+final class FileNameFetchedFailed extends FileState {
+  final String message;
+
+  const FileNameFetchedFailed(this.message);
+
+  @override
+  List<Object> get props => [message];
+}
+
+final class FileNameLoaded extends FileState {
+  final FileNameEntity fileName;
+
+  const FileNameLoaded(this.fileName);
+}
+
 

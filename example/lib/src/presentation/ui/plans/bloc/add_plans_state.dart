@@ -35,10 +35,17 @@ final class VerifyProof extends AddPlansState {
   VerifyProof(this.VerifyResponse);
 }
 
+
 final class AddPlansFailure extends AddPlansState {
   final String error;
 
   AddPlansFailure(this.error);
+}
+
+final class FreeSpaceAdded extends AddPlansState {
+  final FreeSpaceEntity freeSpaceResponse;
+
+  FreeSpaceAdded(this.freeSpaceResponse);
 }
 
 

@@ -64,6 +64,9 @@ dependencies:
   fl_chart: ^0.69.0
   percent_indicator: ^4.2.3
   lottie: ^3.1.2
+  hydrated_bloc: ^9.1.5
+  flutter_web3: ^2.1.9
+  
 
 dev_dependencies:
   integration_test:

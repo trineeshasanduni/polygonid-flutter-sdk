@@ -3,12 +3,12 @@ class AddPlansModel {
   String? nullifierHash;
   String? txhash;
   String? TXHash;
-  List<BigInt>? A; // A, B, C might be lists instead of single BigInt
-  List<BigInt>? B;
-  List<BigInt>? C;
-  List<BigInt>? a;
-  List<List<BigInt>>? b;
-  List<BigInt>? c;
+  List<String>? A; // A, B, C might be lists instead of single String
+  List<String>? B;
+  List<String>? C;
+  List<String>? a;
+  List<List<String>>? b;
+  List<String>? c;
   List<String>? input; // Assuming input is a list of strings now
   String? account;
 
@@ -35,26 +35,26 @@ class AddPlansModel {
 
     // Checking if A, B, C, etc., are lists and parsing them accordingly
     A = (json['A'] as List<dynamic>?)
-        ?.map((e) => BigInt.tryParse(e.toString()) ?? BigInt.zero)
+        ?.map((e) => e.toString()) 
         .toList();
     B = (json['B'] as List<dynamic>?)
-        ?.map((e) => BigInt.tryParse(e.toString()) ?? BigInt.zero)
+        ?.map((e) => e.toString()) 
         .toList();
     C = (json['C'] as List<dynamic>?)
-        ?.map((e) => BigInt.tryParse(e.toString()) ?? BigInt.zero)
+        ?.map((e) => e.toString()) 
         .toList();
 
     a = (json['a'] as List<dynamic>?)
-        ?.map((e) => BigInt.tryParse(e.toString()) ?? BigInt.zero)
+        ?.map((e) => e.toString()) 
         .toList();
    
     b = (json['b'] as List<dynamic>?)
         ?.map((list) => (list as List<dynamic>)
-            .map((item) => BigInt.tryParse(item.toString()) ?? BigInt.zero)
+            .map((item) => item.toString())
             .toList())
         .toList();
     c = (json['c'] as List<dynamic>?)
-        ?.map((e) => BigInt.tryParse(e.toString()) ?? BigInt.zero)
+        ?.map((e) => e.toString())
         .toList();
 
     input = (json['input'] as List<dynamic>?)

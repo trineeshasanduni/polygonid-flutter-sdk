@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -10,14 +9,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:gradient_borders/box_borders/gradient_box_border.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/bloc/file_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_event.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_state.dart';
 import 'package:web3dart/web3dart.dart';
-import 'package:web3modal_flutter/utils/debouncer.dart';
 import 'package:web_socket_channel/io.dart';
 
 class Files extends StatefulWidget {
@@ -36,21 +33,26 @@ class _FilesState extends State<Files> {
   late final HomeBloc _homeBloc;
   String identity = '';
   final walletAddress = '';
-  bool _isRequestInProgress = false;
-  List<String> fileNames = [];
-
-  List<dynamic> dataResult = []; // Store contract data as a list of lists
+  
+  List<dynamic> dataResult = [];
 
   @override
   void initState() {
     super.initState();
     _fileBloc = getIt<FileBloc>();
     _homeBloc = getIt<HomeBloc>();
-
     final storage = GetStorage();
     _deployContract();
+    // _initializeValues();
     _initGetIdentifier();
   }
+
+  // Future<void> _initializeValues() async {
+  //   final storage = GetStorage();
+  //   walletAddress = storage.read('walletAddress') ?? '';
+  //   print('walletAddress fetch: $walletAddress');
+
+  // }
 
   void _initGetIdentifier() {
     _homeBloc.add(const GetIdentifierHomeEvent());
@@ -66,6 +68,91 @@ class _FilesState extends State<Files> {
       });
       _uploadFiles();
     }
+  }
+
+  Future<void> _deployContract() async {
+    var httpClient = http.Client();
+    Web3Client? _web3Client;
+    try {
+      var rpcUrl =
+          'https://polygon-mainnet.g.alchemy.com/v2/pHKWzuctaLCPxAKYc0c8bKQA8d85oPlk';
+      _web3Client = Web3Client(rpcUrl, httpClient);
+
+      final abiFile =
+          await rootBundle.loadString('assets/abi/FileStorage.json');
+      if (abiFile.isEmpty) throw FormatException('ABI file is empty');
+
+      final jsonAbi = jsonDecode(abiFile);
+      final _abiCode =
+          ContractAbi.fromJson(jsonEncode(jsonAbi['abi']), 'FileStorage');
+      // final _abiCode = ContractAbi.fromJson(jsonEncode(jsonAbi['abi']), 'BethelInvoice');
+      print('ABI code: $_abiCode');
+
+      // final _contractAddress = EthereumAddress.fromHex('0xB05c8A8c54DDA3E4e785FD033AB63a50e09b9521');
+      final _contractAddress =
+          EthereumAddress.fromHex('0x665e346D9c68587Bd51C53eAd71e0F5367E7950C');
+      print('Ethereum address: $_contractAddress');
+
+      final _contract = DeployedContract(_abiCode, _contractAddress);
+      final _getAllBatchesFunction = _contract.function('getAllBatches');
+      final did = jsonDecode(widget.did.toString());
+
+      print('Calling contract function...');
+
+      final storage = GetStorage();
+      // final getDID = storage.read('did');
+      final walletAddress1 = storage.read('walletAddress');
+      print('walletAddress : $walletAddress');
+      final result = await _web3Client.call(
+        contract: _contract,
+        function: _getAllBatchesFunction,
+        params: [],
+        sender: EthereumAddress.fromHex(walletAddress1),
+        // sender: EthereumAddress.fromHex(walletAddress),
+      );
+
+      print('Raw result: $result');
+      if (result.isNotEmpty && result[0] is List) {
+        print('Processed result: ${result[0]}');
+        _processContractResult(result[0]);
+      } else {
+        print('No data returned from contract or result format is unexpected');
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+    } finally {
+      httpClient.close();
+    }
+  }
+
+  Widget _processContractResult(List<dynamic> dataResult) {
+    for (var batch in dataResult) {
+      var batchDetails = batch as List<dynamic>;
+      if (batchDetails.length >= 5) {
+        print('Owner DID: ${batchDetails[0]}');
+        print('Batch Hash: ${batchDetails[1]}');
+        print('Files Count: ${batchDetails[2]}');
+        print('Batch Size: ${batchDetails[3]}');
+        print('Verified: ${batchDetails[4]}');
+        return ListView.builder(
+          itemCount: batchDetails.length,
+          itemBuilder: (context, index) {
+            final file = batchDetails[index];
+            return Card(
+              child: ListTile(
+                leading: Icon(Icons.file_present),
+                title: Text(batchDetails[0]),
+                subtitle: Text(
+                    'Size: ${batchDetails[1]} bytes\nExtension: ${batchDetails[3]}'),
+              ),
+            );
+          },
+        );
+      } else {
+        return const SizedBox.shrink();
+      }
+    }
+    return const SizedBox.shrink();
   }
 
   Future<void> _uploadFiles() async {
@@ -102,19 +189,12 @@ class _FilesState extends State<Files> {
       setState(() {
         selectedFiles.clear();
       });
-      // _showSnackbar('Failed to upload files');
+      _showSnackbar('Failed to upload files');
     } finally {
       setState(() {
         _isLoading = false;
       });
     }
-  }
-
-  void _showSnackbar(String message) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(message)));
-    });
   }
 
   Future<File> saveFile(PlatformFile file) async {
@@ -123,116 +203,9 @@ class _FilesState extends State<Files> {
     return File(file.path!).copy(newFile.path);
   }
 
-  Future<void> _deployContract() async {
-    var httpClient = http.Client();
-    Web3Client? _web3Client;
-    try {
-      var rpcUrl =
-          'https://polygon-mainnet.g.alchemy.com/v2/pHKWzuctaLCPxAKYc0c8bKQA8d85oPlk';
-      _web3Client = Web3Client(rpcUrl, httpClient);
-
-      final abiFile =
-          await rootBundle.loadString('assets/abi/FileStorage.json');
-      if (abiFile.isEmpty) throw FormatException('ABI file is empty');
-
-      final jsonAbi = jsonDecode(abiFile);
-      final _abiCode =
-          ContractAbi.fromJson(jsonEncode(jsonAbi['abi']), 'FileStorage');
-
-      final _contractAddress =
-          EthereumAddress.fromHex('0x665e346D9c68587Bd51C53eAd71e0F5367E7950C');
-
-      final _contract = DeployedContract(_abiCode, _contractAddress);
-      final _getAllBatchesFunction = _contract.function('getAllBatches');
-
-      final storage = GetStorage();
-      final walletAddress1 = storage.read('walletAddress');
-
-      final result = await _web3Client.call(
-        contract: _contract,
-        function: _getAllBatchesFunction,
-        params: [],
-        sender: EthereumAddress.fromHex(walletAddress1),
-      );
-
-      if (result.isNotEmpty && result[0] is List) {
-        setState(() {
-          dataResult = List<dynamic>.from(result[0]);
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            // Store the result
-            _processContractResult(result[0]);
-          });
-        });
-      } else {
-        print('No data returned from contract or result format is unexpected');
-      }
-    } catch (e) {
-      print('An error occurred: $e');
-    } finally {
-      httpClient.close();
-    }
-  }
-
-//   Future<void> _processContractResult(List<dynamic> dataResult) async {
-//   await _deployContract(); // Ensure wallet address is loaded
-//   // final debouncer = FileNameDebouncer(delay: Duration(seconds: 1));
-//   // debouncer.run(() {
-//     for (var batchDetails in dataResult) {
-//       final batchHash = batchDetails[1].toString();
-//       _fileBloc.add(GetFileNameEvent(BatchHash: batchHash));
-//     }
-//   // });
-// }
-  Future<void> _processContractResult(List<dynamic> dataResult) async {
-    if (_isRequestInProgress) {
-      // If a request is already in progress, do nothing
-      return;
-    }
-
-    setState(() {
-      _isRequestInProgress = true; // Set the flag to true when request starts
-    });
-
-    int filesFetched = 0; // Counter to track the number of files fetched
-    final totalFiles = dataResult.length; // Total number of files to be fetched
-
-    try {
-      // Start listening to the BLoC stream outside of the loop
-      _fileBloc.stream.listen((state) {
-        if (state is FileNameLoaded) {
-          setState(() {
-            fileNames.add(state.fileName.fileName.toString());
-            filesFetched++; // Increment the counter for each loaded file
-
-            // Check if all files have been fetched
-            if (filesFetched == totalFiles) {
-              print('All files fetched successfully.');
-              _isRequestInProgress = false; // Stop requesting further files
-            }
-          });
-        }
-      });
-
-      // Loop through the dataResult and fetch file names
-      for (var batchDetails in dataResult) {
-        final batchHash = batchDetails[1].toString();
-        print("Total files: $totalFiles");
-
-        // Wait for a short delay between each request
-        await Future.delayed(Duration(milliseconds: 500), () {
-          if (filesFetched < totalFiles) {
-            _fileBloc.add(
-                GetFileNameEvent(BatchHash: batchHash)); // Fetch the next file
-          }
-        });
-      }
-    } catch (e) {
-      print('Error processing contract result: $e');
-    } finally {
-      setState(() {
-        _isRequestInProgress = false; // Reset the flag when request completes
-      });
-    }
+  void _showSnackbar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -242,79 +215,64 @@ class _FilesState extends State<Files> {
       child: SafeArea(
         child: Scaffold(
           backgroundColor: Theme.of(context).primaryColor,
-          body: BlocConsumer<FileBloc, FileState>(listener: (context, state) {
-            // if (state is FileUploadFailed) {
-            //   _showSnackbar('Failed to upload files: ${state.message}');
-            // }
-            if (state is FileUploaded) {
-              for (var file in dataResult) {
-                print('object file: $file');
+          body: BlocListener<FileBloc, FileState>(
+            listener: (context, state) {
+              if (state is FileUploading) {
+                // setState(() {
+                //   _isLoading = true;
+                // });
               }
+              if (state is FileUploaded) {
+                final storage = GetStorage();
+                final walletAddress = storage.read('walletAddress');
+                // setState(() {
+                //   _isLoading = false;
+                //   // selectedFiles.clear();
 
-              print('dataResult: $dataResult');
-            }
-            if (state is FileUsingSpaced) {
-              print('fetching space state: ${state.txHash}');
-              Container(
-                child: Text('fetching space state12: ${state.txHash}'),
-              );
-              // setState(() {
-              //   _isLoading = true;
-              // });
-              print('usespace check: ${state.txHash.TXHash}');
-              _showSnackbar(
-                  'Files uploaded successfully: ${state.txHash.TXHash}');
-            }
-          }, builder: (context, state) {
-            // if (state is FileNameLoaded) {
-            //   print('fileName: ${state.fileName.fileName}');
-            //   // for (var file in dataResult) {
-            //     Text('fileName: ${state.fileName.fileName}');
-            //   // }
-            // }
-            return Column(
+                // });
+                print(
+                    'did124: ${jsonDecode(widget.did.toString())}, ownerDid: $walletAddress, batchSize: $size');
+                // _fileBloc.add(UseSpaceEvent(
+                //   did: jsonDecode(widget.did.toString()),
+                //   ownerDid: walletAddress,
+                //   batchSize: size,
+                // ));
+                print('end of file upload : ${state.response.TXHash}');
+
+                // _showSnackbar('Files uploaded successfully!');
+              }
+              if (state is FileUsingSpaced) {
+                print('fetching space: ${state.txHash}');
+                // setState(() {
+                //   _isLoading = true;
+                // });
+                print('usespace check: ${state.txHash.TXHash}');
+                _showSnackbar(
+                    'Files uploaded successfully: ${state.txHash.TXHash}');
+              }
+              if (state is FileUploadFailed) {
+                // setState(() {
+                //   _isLoading = false;
+                // });
+                _showSnackbar('Failed to upload files: ${state.message}');
+              }
+            },
+            child: Column(
               children: [
                 _buildHeader(),
+                // _buildAddPlan(),
                 _buildFileSelectionButton(),
-                _buildFileList()
-                // Expanded(
-                //     child: _buildFileName()) // Display result
+                Expanded(child: _processContractResult( dataResult)),
               ],
-            );
-          }),
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildFileList() {
-    return Expanded(
-      child: fileNames.isNotEmpty
-          ? ListView.builder(
-              itemCount: fileNames.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(
-                    fileNames[index],
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontFamily: GoogleFonts.robotoMono().fontFamily,
-                    ),
-                  ),
-                );
-              },
-            )
-          : Center(
-              child: Text(
-                'No files fetched',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontFamily: GoogleFonts.robotoMono().fontFamily,
-                ),
-              ),
-            ),
-    );
+  Widget _buildAddPlan() {
+    return TextButton(onPressed: () {}, child: Text("Add Plans"));
   }
 
   Widget _buildHeader() {
@@ -347,7 +305,9 @@ class _FilesState extends State<Files> {
         ],
       ),
       trailing: GestureDetector(
-        onTap: _deployContract,
+        onTap: () {
+          _deployContract();
+        },
         child: Container(
           width: 30,
           height: 30,
@@ -423,6 +383,23 @@ class _FilesState extends State<Files> {
             style: TextStyle(
                 fontSize: 8, fontFamily: GoogleFonts.robotoMono().fontFamily)),
       ],
+    );
+  }
+
+  Widget _buildFileList() {
+    return ListView.builder(
+      itemCount: selectedFiles.length,
+      itemBuilder: (context, index) {
+        final file = selectedFiles[index];
+        return Card(
+          child: ListTile(
+            leading: Icon(Icons.file_present),
+            title: Text(file.name),
+            subtitle:
+                Text('Size: ${file.size} bytes\nExtension: ${file.extension}'),
+          ),
+        );
+      },
     );
   }
 }

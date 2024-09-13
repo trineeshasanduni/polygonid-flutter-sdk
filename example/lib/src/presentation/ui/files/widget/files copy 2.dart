@@ -193,36 +193,40 @@ class _FilesState extends State<Files> {
       _isRequestInProgress = true; // Set the flag to true when request starts
     });
 
-    int filesFetched = 0; // Counter to track the number of files fetched
-    final totalFiles = dataResult.length; // Total number of files to be fetched
-
     try {
-      // Start listening to the BLoC stream outside of the loop
-      _fileBloc.stream.listen((state) {
-        if (state is FileNameLoaded) {
-          setState(() {
-            fileNames.add(state.fileName.fileName.toString());
-            filesFetched++; // Increment the counter for each loaded file
-
-            // Check if all files have been fetched
-            if (filesFetched == totalFiles) {
-              print('All files fetched successfully.');
-              _isRequestInProgress = false; // Stop requesting further files
-            }
-          });
-        }
-      });
-
-      // Loop through the dataResult and fetch file names
       for (var batchDetails in dataResult) {
         final batchHash = batchDetails[1].toString();
-        print("Total files: $totalFiles");
+        var batchDetail = batchDetails as List<dynamic>;
+        final count = dataResult.length;
+        print("count: $count");
+        print('batchDetail: $batchDetail');
+        if (batchDetail.length >= count) {
+          await Future.delayed(Duration(milliseconds: 500), () {
+            _fileBloc.add(GetFileNameEvent(BatchHash: batchHash));
+          });
+        }
 
-        // Wait for a short delay between each request
-        await Future.delayed(Duration(milliseconds: 500), () {
-          if (filesFetched < totalFiles) {
-            _fileBloc.add(
-                GetFileNameEvent(BatchHash: batchHash)); // Fetch the next file
+        // _fileBloc.stream.listen((state) {
+        // if (state is FileNameLoaded) {
+        //   // fetchedFilesCount++;
+        //   // print('Fetched file count: $fetchedFilesCount');
+
+        //   // // Check if all files are fetched
+        //   // if (fetchedFilesCount >= dataResult.length) {
+        //   //   print('All files have been fetched');
+        //   //   setState(() {
+        //   //     _isRequestInProgress = false; // Reset the flag when all files are fetched
+        //   //   });
+        //   _buildFileName(state.fileName.fileName.toString());
+        //   print('filename 123: ${state.fileName.fileName}');
+        // }
+        // });
+        _fileBloc.stream.listen((state) {
+          if (state is FileNameLoaded) {
+            setState(() {
+              fileNames.add(state.fileName.fileName.toString());
+              // Store filenames in the list
+            });
           }
         });
       }

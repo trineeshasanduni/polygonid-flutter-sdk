@@ -1,12 +1,12 @@
-class FileEntity {
+class FileModel {
   String? Did;
   String? TXHash;
   int? FileCount;
 
 
-  FileEntity({this.Did, this.TXHash, this.FileCount});
+  FileModel({this.Did, this.TXHash, this.FileCount});
 
-  FileEntity.fromJson(Map<String, dynamic> json) {
+  FileModel.fromJson(Map<String, dynamic> json) {
     Did = json['Did'];
     TXHash = json['TXHash'];
     FileCount = json['FileCount'];

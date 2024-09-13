@@ -2,8 +2,11 @@ import 'dart:convert';
 
 import 'package:get_it/get_it.dart';
 import 'package:polygonid_flutter_sdk/add_plans/data/dataSources/remote/addPlans_remote_datasource_impl.dart';
+import 'package:polygonid_flutter_sdk/add_space/data/dataSources/remote/addSpace_remote_datasource_impl.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/repositories/addPlans_repository.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/usecases/addPlans_usecase.dart';
+import 'package:polygonid_flutter_sdk/add_space/domain/repositories/addSpace_repository.dart';
+import 'package:polygonid_flutter_sdk/add_space/domain/usecases/addSpace_usecase.dart';
 import 'package:polygonid_flutter_sdk/common/domain/entities/env_entity.dart';
 import 'package:polygonid_flutter_sdk/file/data/dataSources/file_remote_dataSource.dart';
 import 'package:polygonid_flutter_sdk/file/domain/repositories/file_repo.dart';
@@ -21,6 +24,7 @@ import 'package:polygonid_flutter_sdk/registers/data/repositories/register_repo_
 import 'package:polygonid_flutter_sdk/login/data/repositories/login_repository_impl.dart';
 import 'package:polygonid_flutter_sdk/file/data/repositories/file_repo_impl.dart';
 import 'package:polygonid_flutter_sdk/add_plans/data/repositories/addPlans_repository_impl.dart';
+import 'package:polygonid_flutter_sdk/add_space/data/repositories/addSpace_repository_impl.dart';
 import 'package:polygonid_flutter_sdk/registers/domain/repositories/register_repo.dart';
 import 'package:polygonid_flutter_sdk/registers/domain/usecases/register_usecase.dart';
 import 'package:polygonid_flutter_sdk/sdk/polygon_id_sdk.dart';
@@ -145,10 +149,13 @@ void registerLoginDependencies() {
 }
 
 void fileUploadDependencies() {
-  getIt.registerFactory(() => FileBloc( getIt()));
+  getIt.registerFactory(() => FileBloc( getIt(),
+      getIt(),getIt()));
 
   // Use cases
   getIt.registerLazySingleton(() => FileUsecase(getIt()));
+  getIt.registerLazySingleton(() => UseSpaceUsecase(getIt()));
+  getIt.registerLazySingleton(() => FileNameUsecase(getIt()));
 
   // // Repositories
   getIt.registerLazySingleton<FileRepository>(
@@ -161,13 +168,14 @@ void fileUploadDependencies() {
 
 ///
 void addPlansDependencies() {
-  getIt.registerFactory(() => AddPlansBloc( getIt(), getIt(), getIt(), getIt()));
+  getIt.registerFactory(() => AddPlansBloc( getIt(), getIt(), getIt(), getIt(), getIt()));
 
   // Use cases
   getIt.registerLazySingleton(() => AddUserUsecase(getIt()));
   getIt.registerLazySingleton(() => GenerateSecretsUsecase(getIt()));
   getIt.registerLazySingleton(() => CreateProofUsecase(getIt()));
   getIt.registerLazySingleton(() => VerifyUsecase(getIt()));
+  getIt.registerLazySingleton(() => FreeSpaceUsecase(getIt()));
 
 
   // // Repositories
@@ -178,6 +186,8 @@ void addPlansDependencies() {
   getIt.registerFactory<AddPlansRemoteDatasource>(
       () => AddPlansRemoteDatasourceImpl(client: getIt()));
 }
+
+
 ///
 void registerClaimsDependencies() {
   getIt.registerFactory(() => ClaimsBloc(

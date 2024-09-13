@@ -38,9 +38,9 @@ final class createProofEvent extends AddPlansEvent {
 }
 
 final class verifyuserEvent extends AddPlansEvent {
-  final List<BigInt> A;
-  final List<List<BigInt>> B;
-  final List<BigInt> C;
+  final List<String> A;
+  final List<List<String>> B;
+  final List<String> C;
   final List<String> Inputs;
   final String Owner;
   final String Did;
@@ -64,5 +64,7 @@ final class freeSpaceEvent extends AddPlansEvent {
     required this.owner,
   });
 }
+
+
 
 

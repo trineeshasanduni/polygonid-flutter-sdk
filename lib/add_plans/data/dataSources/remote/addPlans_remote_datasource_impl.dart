@@ -3,6 +3,7 @@ import 'dart:ffi';
 
 import 'package:http/http.dart' as http;
 import 'package:polygonid_flutter_sdk/add_plans/data/model/addPlans_model.dart';
+import 'package:polygonid_flutter_sdk/add_plans/data/model/freeSpace_model.dart';
 import 'package:polygonid_flutter_sdk/login/data/model/login_modal.dart';
 import 'package:polygonid_flutter_sdk/login/data/model/login_status_model.dart';
 
@@ -16,20 +17,24 @@ abstract interface class AddPlansRemoteDatasource {
   Future<AddPlansModel> createProof(
       {required String account, required String txhash});
   Future<AddPlansModel> verifyUser(
-      {required List<BigInt> A,
-      required List<List<BigInt>> B,
-      required List<BigInt> C,
+      {required List<String> A,
+      required List<List<String>> B,
+      required List<String> C,
       required List<String> Inputs,
       required String Owner,
       required String Did});
+
+  Future<FreeSpaceModel> freeSpace({required String did, required String owner});
+
+  
 }
 
 class AddPlansRemoteDatasourceImpl implements AddPlansRemoteDatasource {
   final http.Client client;
 
   AddPlansRemoteDatasourceImpl({required this.client});
-  static const BASE_URL = 'http://adduser.bethel.network';
-  // static const BASE_URL = 'http://192.168.1.246:3000/api/v1';
+  static const BASE_URL = 'http://192.168.1.42:9000/api/v1';
+  // static const BASE_URL = 'https://apimobile.becx.io/api/v1';
 
   @override
   Future<AddPlansModel> genetateSecrets() async {
@@ -55,7 +60,7 @@ class AddPlansRemoteDatasourceImpl implements AddPlansRemoteDatasource {
         throw Exception('Failed to load login: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching login: $e');
+      print('Error fetching add plans: $e');
       throw Exception('Failed to fetch login');
     }
   }
@@ -68,15 +73,16 @@ class AddPlansRemoteDatasourceImpl implements AddPlansRemoteDatasource {
     required String Owner}) async {
   print('add user up');
   try {
+    final did = jsonDecode(Did);
     Map<String, dynamic> data = {
       "Commitment": Commitment,
-      "Did": Did,
+      "Did": did,
       "NullifierHash": NullifierHash,
       "Owner": Owner,
     };
     print('add user data: $data');
 
-    final uri = Uri.parse('https://apimobile.becx.io/api/v1/add-user');
+    final uri = Uri.parse('$BASE_URL/add-user');
     final response = await http.post(
       uri,
       body: jsonEncode(data),
@@ -150,9 +156,9 @@ class AddPlansRemoteDatasourceImpl implements AddPlansRemoteDatasource {
 
   @override
 Future<AddPlansModel> verifyUser({
-  required List<BigInt> A,
-  required List<List<BigInt>> B,
-  required List<BigInt> C,
+  required List<String> A,
+  required List<List<String>> B,
+  required List<String> C,
   required List<String> Inputs,
   required String Owner,
   required String Did,
@@ -163,20 +169,41 @@ Future<AddPlansModel> verifyUser({
     List<List<String>> bList = B.map((e) => e.map((e) => e.toString()).toList()).toList();
     List<String> cList = C.map((e) => e.toString()).toList();
 
+    //convert to string
 
+    final did = jsonDecode(Did);
+    print('did verify11: $did');
+    print('inputs verify11: $Inputs');
+    final owner = jsonEncode(Owner);
+    final aLista =jsonEncode(aList);
+    final bLista =jsonEncode(bList);
+    final cLista =jsonEncode(cList);
+    final inputs= jsonEncode(Inputs);
+    final did1 = jsonEncode(did);
+
+
+    print('aList verify: $aList');
+    print('bList verify: $bList');
+    print('cList verify: $cList');
+    print('did verify111: $did1');
+
+print('owner verify: $Owner');
     // Construct the data to be sent
     Map<String, dynamic> data = {
-      "A": jsonEncode(aList),
-      "B": jsonEncode(bList),
-      "C": jsonEncode(cList),
-      "Inputs": jsonEncode(Inputs),
-      "Owner": jsonEncode(Owner),
-      "Did": Did,
+      "A": aLista,
+      "B": bLista,
+      "C": cLista,
+      "Inputs": inputs,
+      "Did": did,
+      "Owner": Owner,
     };
     print('verify user data: $data');
 
+    print('did verify: $Did');
+    print('owner verify: $Owner');
+
     // Define the URI for the sign-up API endpoint
-    final uri = Uri.parse('https://apimobile.becx.io/api/v1/verify-user');
+    final uri = Uri.parse('$BASE_URL/verify-user');
 
     // Make the POST request with the proper headers and body
     final response = await http.post(
@@ -206,6 +233,47 @@ Future<AddPlansModel> verifyUser({
     throw Exception('Failed to verify user');
   }
 }
+
+ @override
+  Future<FreeSpaceModel> freeSpace({required String did, required String owner}) async{
+    try {
+       final Did = jsonDecode(did);
+       print('did free space: $Did');
+      Map<String, dynamic> data = {
+        "DID": Did,
+        "Owner": owner, // Using the TXHash from addUser here
+      };
+      print('space data: $data');
+
+      final uri = Uri.parse('$BASE_URL/free-space');
+      final response = await http.post(
+        uri,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(data),
+      );
+      print('space status code: ${response.statusCode}');
+
+      Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+      
+      final responseProof = FreeSpaceModel.fromJson(jsonResponse);
+      final spaceResponse =FreeSpaceModel(
+        TXHash: responseProof.TXHash,
+      );
+      
+
+      if (response.statusCode == 200) {
+        print('space response: ${spaceResponse.TXHash}');
+        return spaceResponse;
+      } else {
+        throw Exception('Failed to space');
+      }
+    } catch (error) {
+      print('Error during space: $error');
+      throw Exception('Failed to space');
+    }
+  }
+
+  
 
   
 }

@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:fpdart/fpdart.dart';
 import 'package:polygonid_flutter_sdk/common/errors/server_failure.dart';
 import 'package:polygonid_flutter_sdk/file/data/dataSources/file_remote_dataSource.dart';
-import 'package:polygonid_flutter_sdk/file/data/model/file_entity.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/file_model.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/fileName_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/file_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/repositories/file_repo.dart';
 import 'package:polygonid_flutter_sdk/registers/data/dataSources/register_remote_dataSource.dart';
@@ -30,9 +32,9 @@ class FileRepoImpl implements FileRepository {
       );
       // print('object234: ${registerModel.body?.credentials![0].description}');
       return right(FileEntity(
-        tXHash: fileModel.tXHash,
-        did: fileModel.did,
-        fileCount: fileModel.fileCount,
+        TXHash: fileModel.TXHash,
+        Did: fileModel.Did,
+        FileCount: fileModel.FileCount,
       ));
     } catch (error) {
       return left(Failure('Failed to upload: $error'));
@@ -51,10 +53,24 @@ class FileRepoImpl implements FileRepository {
         batchSize: batchSize,
       );
       return right(FileEntity(
-        tXHash: fileModel.tXHash,
+        TXHash: fileModel.TXHash,
       ));
     } catch (error) {
       return left(Failure('Failed to upload: $error'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, FileNameEntity>> getFileName(
+      {required String BatchHash}) async {
+    try {
+      final FileNameModel fileNameModel =
+          await fileRemoteDatasource.getFileName(BatchHash);
+      return right(FileNameEntity(
+         fileName: fileNameModel.fileName,
+      ));
+    } catch (e) {
+      return Left(Failure());
     }
   }
 }

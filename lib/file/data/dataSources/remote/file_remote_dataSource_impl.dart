@@ -3,7 +3,8 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:polygonid_flutter_sdk/file/data/dataSources/file_remote_dataSource.dart';
-import 'package:polygonid_flutter_sdk/file/data/model/file_entity.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/file_model.dart';
 import 'package:polygonid_flutter_sdk/registers/data/dataSources/register_remote_dataSource.dart';
 import 'package:polygonid_flutter_sdk/registers/data/model/register_model.dart';
 
@@ -12,7 +13,8 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
 
   FileRemoteDatasourceImpl({required this.client});
 
-  static const BASE_URL = 'https://test.becx.io/api/v1';
+  // static const BASE_URL = 'https://apimobile.becx.io/api/v1';
+  static const BASE_URL = 'http://192.168.1.42:9000/api/v1';
   
   @override
   Future<FileModel> fileUpload({required String did, required String ownerDid, required File fileData}) async{
@@ -27,6 +29,9 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
         ..fields['owner'] = ownerDid
         ..files
             .add(await http.MultipartFile.fromPath('fileData', fileData.path));
+            print('did file: $did');
+            print('ownerDid file: $ownerDid');
+            print('fileData file: $fileData');
 
       print('request: $request');
 
@@ -39,7 +44,9 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
       print('Upload file response body: $responseBody');
 
       if (response.statusCode == 201) {
+        print('successfully uploaded file');
         final responseJson = jsonDecode(responseBody);
+        print('object responseJson: $responseJson');
         return FileModel.fromJson(responseJson);
         
       } else {
@@ -52,10 +59,16 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
     }
   }
   
+  
   @override
   Future<FileModel> useSpace({required String did, required String ownerDid, required int batchSize}) async{
     print('Using space');
     try {
+       Map<String, dynamic> data = {
+        "BatchSize": batchSize,
+        "DID": did,
+        "Owner":ownerDid 
+      };
       // Define the URI for the use-space API endpoint
       final uri = Uri.parse('$BASE_URL/use-space');
 
@@ -63,18 +76,21 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
       final response = await client.post(
         uri,
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "BatchSize": batchSize,
-          "DID": did,
-          "Owner": ownerDid
-        }),
+        body: jsonEncode(data),
       );
+      print('data use space: $data');
 
       print('Use space status code: ${response.statusCode}');
+Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+       final responseProof = FileModel.fromJson(jsonResponse);
+      final fileResponse = FileModel(
+       TXHash: responseProof.TXHash,
+      );
 
       if (response.statusCode == 200) {
-        final responseJson = jsonDecode(response.body);
-        return FileModel.fromJson(responseJson);
+
+        
+        return fileResponse;
       } else {
         print('Failed to use space');
         throw Exception('Failed to use space');
@@ -87,5 +103,39 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
    
     
   }
+
+  @override
+  Future<FileNameModel> getFileName(String BatchHash) async {
+  print('fetching file name');
+  try {
+    final response = await client
+        .get(Uri.parse('$BASE_URL/get-filename?BatchHash=$BatchHash'));
+    // print('file name status: ${response.body}');
+
+    print('file name status1: ${response.statusCode}');
+
+    if (response.statusCode == 200) {
+      print('fetch file name status code: ${response.statusCode}');
+      final List<dynamic> fileNameList = jsonDecode(response.body);
+
+      // Assuming the response is a list of objects, use the first item
+      if (fileNameList.isNotEmpty) {
+        final fileNameJson = fileNameList[0] as Map<String, dynamic>;
+
+        final fileNameModel = FileNameModel.fromJson(fileNameJson);
+        print("fileName response: $fileNameModel");
+        return fileNameModel;
+      } else {
+        throw Exception('No data found in the response');
+      }
+    } else {
+      throw Exception('Failed to load file name: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Error fetching file name: $e');
+    throw Exception('Failed to fetch file name');
+  }
+}
+
 
 }

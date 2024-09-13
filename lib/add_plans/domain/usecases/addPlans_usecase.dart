@@ -2,6 +2,7 @@ import 'dart:ffi';
 
 import 'package:fpdart/fpdart.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/entities/addPlans_entity.dart';
+import 'package:polygonid_flutter_sdk/add_plans/domain/entities/freeSpace_entity.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/repositories/addPlans_repository.dart';
 import 'package:polygonid_flutter_sdk/common/errors/server_failure.dart';
 import 'package:polygonid_flutter_sdk/common/usecase/usecase.dart';
@@ -64,19 +65,19 @@ class VerifyUsecase implements UseCase<AddPlansEntity, VerifyParams> {
   }
 }
 
-// class FreeSpaceUsecase implements UseCase<AddPlansEntity, FreeSpaceParams> {
-//   final AddPlansRepository addPlansRepository;
-//   const FreeSpaceUsecase(this.addPlansRepository);
-//   @override
-//   Future<Either<Failure, AddPlansEntity>> call(UseCaseParams params) async {
-//     print('registering123: ${params.nullifier}');
-//     return await addPlansRepository.addUser(
-//         Commitment: params.commitment,
-//         Did: params.did,
-//         NullifierHash: params.nullifier,
-//         Owner: params.owner);
-//   }
-// }
+class FreeSpaceUsecase implements UseCase<FreeSpaceEntity, FreeSpaceParams> {
+  final AddPlansRepository addSpaceRepository;
+  const FreeSpaceUsecase(this.addSpaceRepository);
+  @override
+  Future<Either<Failure, FreeSpaceEntity>> call(FreeSpaceParams params) async {
+    print('registering1234: ${params.did}');
+    print('registering12341: ${params.owner}');
+    return await addSpaceRepository.freeSpace(
+        did: params.did,
+        owner: params.owner);
+  }
+}
+
 class FreeSpaceParams{
   
   final String did;
@@ -89,6 +90,10 @@ class FreeSpaceParams{
      
      });
 }
+
+
+
+
 
 class UseCaseParams {
   final String did;
@@ -119,9 +124,9 @@ class CreatProofParams{
 
 class VerifyParams{
   
-  final List<BigInt> a;
-  final List<List<BigInt>> b;
-  final List<BigInt> c;
+  final List<String> a;
+  final List<List<String>> b;
+  final List<String> c;
   final List<String> input;
   final String owner;
   final String did;
