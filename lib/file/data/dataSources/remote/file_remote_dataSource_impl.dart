@@ -146,6 +146,9 @@ Future<VerifyUploadModel> verifyUpload({
   print('Fetching verify upload');
 
   try {
+    print('did verify: $did');
+    print('batchHash verify: $BatchHash');
+    print('owner Did verify: $ownerDid');
     final response = await client.get(Uri.parse(
       '$BASE_URL/get-claim?Did=$did&BatchHash=$BatchHash&ownerAddress=$ownerDid'
     ));
