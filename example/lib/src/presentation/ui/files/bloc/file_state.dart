@@ -47,4 +47,55 @@ final class FileNameLoaded extends FileState {
   const FileNameLoaded(this.fileName);
 }
 
+final class UploadVerified extends FileState {
+  final VerifyUploadEntity verifyTxHash;
+
+  const UploadVerified(this.verifyTxHash);
+}
+
+final class Fileverifying extends FileState {}
+
+final class FileVerifyFailed extends FileState {
+  final String message;
+
+  const FileVerifyFailed(this.message);
+
+  @override
+  List<Object> get props => [message];
+}
+
+final class FileVerifySuccess extends FileState {
+  final String message;
+
+  const FileVerifySuccess(this.message);
+
+  @override
+  List<Object> get props => [message];
+}
+final class FileVerifyResponseSuccess extends FileState {
+  final String message;
+
+  const FileVerifyResponseSuccess(this.message);
+
+  @override
+  List<Object> get props => [message];
+}
+final class VerifyResponseloaded extends FileState {
+  final Iden3MessageEntity iden3message;
+
+  VerifyResponseloaded(this.iden3message);
+}
+
+final class VerifySuccess extends FileState {
+  final VerifyUploadEntity response;
+
+  const VerifySuccess( this.response);
+}
+
+ final class authenticated extends FileState {
+    const authenticated();
+  }
+
+
+
 

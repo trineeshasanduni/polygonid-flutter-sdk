@@ -150,12 +150,13 @@ void registerLoginDependencies() {
 
 void fileUploadDependencies() {
   getIt.registerFactory(() => FileBloc( getIt(),
-      getIt(),getIt()));
+      getIt(),getIt(),getIt(),getIt(),getIt()));
 
   // Use cases
   getIt.registerLazySingleton(() => FileUsecase(getIt()));
   getIt.registerLazySingleton(() => UseSpaceUsecase(getIt()));
   getIt.registerLazySingleton(() => FileNameUsecase(getIt()));
+  getIt.registerLazySingleton(() => VerifyUploadUsecase(getIt()));
 
   // // Repositories
   getIt.registerLazySingleton<FileRepository>(
@@ -168,7 +169,7 @@ void fileUploadDependencies() {
 
 ///
 void addPlansDependencies() {
-  getIt.registerFactory(() => AddPlansBloc( getIt(), getIt(), getIt(), getIt(), getIt()));
+  getIt.registerFactory(() => AddPlansBloc( getIt(), getIt(), getIt(), getIt(), getIt(),));
 
   // Use cases
   getIt.registerLazySingleton(() => AddUserUsecase(getIt()));

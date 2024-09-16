@@ -25,3 +25,16 @@ class GetFileNameEvent extends FileEvent {
   final String BatchHash;
   const GetFileNameEvent( {required this.BatchHash});
 }
+
+class VerifyUploadEvent extends FileEvent {
+  final String BatchHash;
+  final String ownerDid;
+  final String did;
+  const VerifyUploadEvent( {required this.BatchHash,required this.ownerDid, required this.did});
+}
+
+class onVerifyResponse extends FileEvent {
+  final String? verifyResponse;
+
+  const onVerifyResponse(this.verifyResponse);
+}

@@ -191,7 +191,6 @@ class _AddPlansState extends State<AddPlans> {
         }
 
         if (state is CreateProof) {
-         
           print('createProof a: ${state.ProofResponse.a}');
           print('createProof b: ${state.ProofResponse.b}');
           print('createProof c: ${state.ProofResponse.c}');
@@ -204,15 +203,22 @@ class _AddPlansState extends State<AddPlans> {
                 SizedBox(height: 20),
                 TextButton(
                   onPressed: () {
-                    // _checkProofTxHashStatus(state.ProofResponse.TXHash.toString(),state.ProofResponse.a as List<String>,state.ProofResponse.b as List<List<String>>,state.ProofResponse.c as List<String> ,state.ProofResponse.input as List<String>,owner1,widget.did!);
-                    _addPlansBloc.add(verifyuserEvent(
-                      A: state.ProofResponse.a as List<String>,
-                      B: state.ProofResponse.b as List<List<String>>,
-                      C: state.ProofResponse.c as List<String>,
-                      Inputs: state.ProofResponse.input as List<String>,
-                      Owner: owner1,
-                      Did: widget.did!, // change here
-                    ));
+                    _checkProofTxHashStatus(
+                        state.ProofResponse.TXHash.toString(),
+                        state.ProofResponse.a as List<String>,
+                        state.ProofResponse.b as List<List<String>>,
+                        state.ProofResponse.c as List<String>,
+                        state.ProofResponse.input as List<String>,
+                        owner1,
+                        widget.did!);
+                    // _addPlansBloc.add(verifyuserEvent(
+                    //   A: state.ProofResponse.a as List<String>,
+                    //   B: state.ProofResponse.b as List<List<String>>,
+                    //   C: state.ProofResponse.c as List<String>,
+                    //   Inputs: state.ProofResponse.input as List<String>,
+                    //   Owner: owner1,
+                    //   Did: widget.did!, // change here
+                    // ));
                   },
                   child: _buildButton(
                     name,
@@ -235,15 +241,17 @@ class _AddPlansState extends State<AddPlans> {
 
         if (state is VerifyProof) {
           print('verifyUser: ${state.VerifyResponse.TXHash}');
- WidgetsBinding.instance.addPostFrameCallback((_) {
-          ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('User Verified Successfully'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
-            ),
-          );
-        });
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('User Verified Successfully'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          });
+          _checkVeridfyTxHashStatus(
+              state.VerifyResponse.TXHash.toString(), owner1, widget.did!);
 
           // Update the verification state and save it after the build phase
 
@@ -251,15 +259,9 @@ class _AddPlansState extends State<AddPlans> {
           //   did: widget.did!,
           //   owner: owner1,
           // ));
-
-          
-
-         
         }
 
         if (state is FreeSpaceAdded) {
-         
-
           WidgetsBinding.instance.addPostFrameCallback((_) {
             setState(() {
               _isVerified = true;
@@ -268,13 +270,9 @@ class _AddPlansState extends State<AddPlans> {
             // Save the verified state to local storage
             final storage = GetStorage();
             storage.write('isVerified', true);
+            _checkFreeSpaceTxHashStatus(
+                state.freeSpaceResponse.TXHash.toString());
           });
-          return const Center(
-            child: Text(
-              'Free Space Added Successfully',
-              style: TextStyle(color: Colors.green),
-            ),
-          );
         }
 
         if (!_isVerified) {
@@ -302,6 +300,7 @@ class _AddPlansState extends State<AddPlans> {
       },
     );
   }
+  
 
   // Async function to check if the transaction hash is successful
   Future<void> _checkTxHashStatus(String txHash, String owner) async {
@@ -329,30 +328,78 @@ class _AddPlansState extends State<AddPlans> {
     }
   }
 
-  Future<void> _checkProofTxHashStatus(String txHash, List<String> A,List<List<String>> B,List<String>  C,List<String> Inputs , String Owner,  String Did) async {
+  Future<void> _checkProofTxHashStatus(
+      String txHash,
+      List<String> A,
+      List<List<String>> B,
+      List<String> C,
+      List<String> Inputs,
+      String Owner,
+      String Did) async {
     bool isSuccess = false;
 
     while (!isSuccess) {
-      
       isSuccess = await isTransactionSuccessful(txHash);
 
       if (isSuccess) {
         print('proof Transaction successful with hash: $txHash');
-         _addPlansBloc.add(verifyuserEvent(
-                      A: A,
-                      B: B,
-                      C: C,
-                      Inputs: Inputs,
-                      Owner: Owner,
-                      Did: Did, 
-                    ));
+        _addPlansBloc.add(verifyuserEvent(
+          A: A,
+          B: B,
+          C: C,
+          Inputs: Inputs,
+          Owner: Owner,
+          Did: Did,
+        ));
       } else {
         print('proof Transaction is not yet successful. Retrying...');
         await Future.delayed(Duration(seconds: 5)); // Poll every 5 seconds
       }
     }
   }
-  
+
+  Future<void> _checkVeridfyTxHashStatus(
+      String txHash, String Owner, String Did) async {
+    bool isSuccess = false;
+
+    while (!isSuccess) {
+      isSuccess = await isTransactionSuccessful(txHash);
+
+      if (isSuccess) {
+        print('Verify Transaction successful with hash: $txHash');
+
+        _addPlansBloc.add(freeSpaceEvent(
+          owner: Owner,
+          did: widget.did!,
+        ));
+      } else {
+        print('Verify Transaction is not yet successful. Retrying...');
+        await Future.delayed(Duration(seconds: 5)); // Poll every 5 seconds
+      }
+    }
+
+    
+  }
+  Future<void> _checkFreeSpaceTxHashStatus(String txHash) async {
+      bool isSuccess = false;
+
+      while (!isSuccess) {
+        isSuccess = await isTransactionSuccessful(txHash);
+
+        if (isSuccess) {
+          print('Verify Transaction successful with hash: $txHash');
+          const Center(
+            child: Text(
+              'Free Space Added Successfully',
+              style: TextStyle(color: Colors.green),
+            ),
+          );
+        } else {
+          print('Verify Transaction is not yet successful. Retrying...');
+          await Future.delayed(Duration(seconds: 5)); // Poll every 5 seconds
+        }
+      }
+    }
 
   Widget _buildHeader() {
     return ListTile(
@@ -425,7 +472,7 @@ class _AddPlansState extends State<AddPlans> {
             curve: Curves.easeInOut,
             width: MediaQuery.of(context).size.width * 0.9,
             height: isExpanded
-                ? MediaQuery.of(context).size.width*1.2
+                ? MediaQuery.of(context).size.width * 1.2
                 : MediaQuery.of(context).size.width * 0.3,
             decoration: isExpanded
                 ? BoxDecoration(
@@ -527,27 +574,22 @@ class _AddPlansState extends State<AddPlans> {
                       // Button will now trigger the event when clicked
                       if (title == "Basic Plan") ...[
                         _buildAddPlan(name1),
-
-                        TextButton(onPressed: 
-                        () {
-                          _addPlansBloc.add(freeSpaceEvent(
-                            owner: owner1,
-                            did: widget.did!,
-                          ));
-                        },
-                        
-
-                         child: 
-                        _buildButton(
-                          'free space',
-                          Theme.of(context).colorScheme.secondary,
-                          Theme.of(context).primaryColor,
-                          Theme.of(context).primaryColor,
-                        ),
+                        TextButton(
+                          onPressed: () {
+                            _addPlansBloc.add(freeSpaceEvent(
+                              owner: owner1,
+                              did: widget.did!,
+                            ));
+                          },
+                          child: _buildButton(
+                            'free space',
+                            Theme.of(context).colorScheme.secondary,
+                            Theme.of(context).primaryColor,
+                            Theme.of(context).primaryColor,
+                          ),
                         ),
                       ],
 
-                      
                       // _addSpaceBloc.add(freeSpaceEvent(
                       //   owner: owner1,
                       //   did: widget.did.toString(),

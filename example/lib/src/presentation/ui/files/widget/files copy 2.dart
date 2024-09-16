@@ -351,7 +351,7 @@ class _FilesState extends State<Files> {
         ],
       ),
       trailing: GestureDetector(
-        onTap: _deployContract,
+        // onTap: _deployContract,
         child: Container(
           width: 30,
           height: 30,

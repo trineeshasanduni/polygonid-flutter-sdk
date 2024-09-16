@@ -9,6 +9,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gradient_borders/box_borders/gradient_box_border.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
@@ -173,16 +174,6 @@ class _FilesState extends State<Files> {
     }
   }
 
-//   Future<void> _processContractResult(List<dynamic> dataResult) async {
-//   await _deployContract(); // Ensure wallet address is loaded
-//   // final debouncer = FileNameDebouncer(delay: Duration(seconds: 1));
-//   // debouncer.run(() {
-//     for (var batchDetails in dataResult) {
-//       final batchHash = batchDetails[1].toString();
-//       _fileBloc.add(GetFileNameEvent(BatchHash: batchHash));
-//     }
-//   // });
-// }
   Future<void> _processContractResult(List<dynamic> dataResult) async {
     if (_isRequestInProgress) {
       // If a request is already in progress, do nothing
@@ -216,6 +207,7 @@ class _FilesState extends State<Files> {
       // Loop through the dataResult and fetch file names
       for (var batchDetails in dataResult) {
         final batchHash = batchDetails[1].toString();
+        print('batchHash123: $batchHash');
         print("Total files: $totalFiles");
 
         // Wait for a short delay between each request
@@ -235,14 +227,92 @@ class _FilesState extends State<Files> {
     }
   }
 
+  Future<bool> isTransactionSuccessful(String txHash) async {
+    // Initialize the Web3Client using your Infura or Alchemy endpoint
+    final client = Web3Client(
+        "https://polygon-mainnet.g.alchemy.com/v2/SOxCgJzw6PLvC02g238nlDqJRq83_j3k",
+        Client());
+
+    try {
+      // Fetch the transaction receipt
+      final receipt = await client.getTransactionReceipt(txHash);
+      print('receipt: $receipt');
+
+      if (receipt != null && receipt.status == true) {
+        print("Transaction successful!");
+        return true;
+      } else {
+        print("Transaction failed or still pending.");
+        return false;
+      }
+    } catch (e) {
+      print("Error fetching transaction status: $e");
+      return false;
+    } finally {
+      client.dispose();
+    }
+  }
+
+  Future<void> _checkTxHashStatus(String txHash, String owner, int size) async {
+    bool isSuccess = false;
+
+    // Add logic to check the transaction status here.
+    // For example, calling a blockchain API to check the status of the txHash.
+
+    while (!isSuccess) {
+      // Call your blockchain transaction check method
+      // Example: checkTransaction(txHash) which returns true/false
+      isSuccess = await isTransactionSuccessful(txHash);
+
+      if (isSuccess) {
+        print('Transaction successful with hash: $txHash');
+        // Dispatch the event to create proof after the transaction is successful
+        _fileBloc.add(UseSpaceEvent(
+          did: jsonDecode(widget.did.toString()),
+          ownerDid: owner,
+          batchSize: size,
+        ));
+      } else {
+        print('Transaction is not yet successful. Retrying...');
+        await Future.delayed(Duration(seconds: 5)); // Poll every 5 seconds
+      }
+    }
+  }
+
+  Future<void> _checkUseSpaceTxHashStatus(String txHash) async {
+    bool isSuccess = false;
+
+    // Add logic to check the transaction status here.
+    // For example, calling a blockchain API to check the status of the txHash.
+
+    while (!isSuccess) {
+      // Call your blockchain transaction check method
+      // Example: checkTransaction(txHash) which returns true/false
+      isSuccess = await isTransactionSuccessful(txHash);
+
+      if (isSuccess) {
+        print('Transaction successful with hash: $txHash');
+        // Dispatch the event to create proof after the transaction is successful
+      } else {
+        print('Transaction is not yet successful. Retrying...');
+        await Future.delayed(Duration(seconds: 5)); // Poll every 5 seconds
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final storage = GetStorage();
+    // final getDID = storage.read('did');
+    final walletAddress = storage.read('walletAddress');
+    print('walletAddress : $walletAddress');
     return BlocProvider(
       create: (_) => _fileBloc,
       child: SafeArea(
         child: Scaffold(
           backgroundColor: Theme.of(context).primaryColor,
-          body: BlocConsumer<FileBloc, FileState>(listener: (context, state) {
+          body: BlocConsumer<FileBloc, FileState>(
+              listener: (context, state) async {
             // if (state is FileUploadFailed) {
             //   _showSnackbar('Failed to upload files: ${state.message}');
             // }
@@ -250,35 +320,33 @@ class _FilesState extends State<Files> {
               for (var file in dataResult) {
                 print('object file: $file');
               }
+              await _checkTxHashStatus(
+                  state.response.TXHash!, walletAddress, size);
 
               print('dataResult: $dataResult');
             }
             if (state is FileUsingSpaced) {
               print('fetching space state: ${state.txHash}');
+              String txHash = state.txHash.TXHash!;
+              await _checkUseSpaceTxHashStatus(txHash);
+
               Container(
                 child: Text('fetching space state12: ${state.txHash}'),
               );
-              // setState(() {
-              //   _isLoading = true;
-              // });
+
               print('usespace check: ${state.txHash.TXHash}');
               _showSnackbar(
                   'Files uploaded successfully: ${state.txHash.TXHash}');
             }
           }, builder: (context, state) {
-            // if (state is FileNameLoaded) {
-            //   print('fileName: ${state.fileName.fileName}');
-            //   // for (var file in dataResult) {
-            //     Text('fileName: ${state.fileName.fileName}');
-            //   // }
-            // }
             return Column(
               children: [
                 _buildHeader(),
+                const SizedBox(height: 10),
                 _buildFileSelectionButton(),
-                _buildFileList()
-                // Expanded(
-                //     child: _buildFileName()) // Display result
+                const SizedBox(height: 20),
+                _buildFileList(),
+                _buildBlocContent(context),
               ],
             );
           }),
@@ -294,12 +362,41 @@ class _FilesState extends State<Files> {
               itemCount: fileNames.length,
               itemBuilder: (context, index) {
                 return ListTile(
-                  title: Text(
-                    fileNames[index],
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontFamily: GoogleFonts.robotoMono().fontFamily,
-                    ),
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          fileNames[index],
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontFamily: GoogleFonts.robotoMono().fontFamily,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.2,
+                            child: _buildVerifyButton(index),
+                          ),
+                          SizedBox(width: 50),
+                          // Space between icons
+                          SizedBox(
+                            width: 40, // Adjust width as needed
+                            child: _buildIcon(
+                              Icons.download,
+                              Theme.of(context).colorScheme.secondary,
+                              Theme.of(context).colorScheme.secondary,
+                              Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 );
               },
@@ -314,6 +411,108 @@ class _FilesState extends State<Files> {
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildVerifyButton( int index) {
+    return GestureDetector(
+      onTap: () {
+        final batchHash = dataResult[index][1].toString();
+          final did = jsonDecode(widget.did.toString());
+          final storage = GetStorage();
+          // final getDID = storage.read('did');
+          final walletAddress = storage.read('walletAddress');
+          print('walletAddress123 : $walletAddress');
+          _fileBloc.add(VerifyUploadEvent(
+            BatchHash: batchHash,
+            ownerDid: walletAddress,
+            did: did,
+          ));
+      },
+      child: _buildButton(
+        "verify",
+        Theme.of(context).colorScheme.secondary,
+        Theme.of(context).colorScheme.secondary,
+        Theme.of(context).primaryColor,
+       
+      ),
+    );
+  }
+
+  Widget _buildBlocContent(BuildContext context) {
+    return BlocBuilder<FileBloc, FileState>(
+      bloc: _fileBloc,
+      builder: (context, state) {
+        if (state is Fileverifying) {
+          return CircularProgressIndicator(
+              color: Theme.of(context).secondaryHeaderColor);
+        }
+        if (state is FileVerifyFailed) {
+          return Text(state.message, style: const TextStyle(color: Colors.red));
+        }
+        if (state is VerifySuccess) {
+          final response = jsonEncode(state.response.claim?.toJson());
+          print("response verify: $response");
+          _handleVerifyResponseSuccess(state);
+        }
+        // if (state is StatusLoaded) {
+        //   _handleStatusLoaded(state);
+        // }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+  void _handleVerifyResponseSuccess(VerifySuccess state) {
+    final response = jsonEncode(state.response.toJson());
+    
+
+    // print('Login response: $response');
+    // _loginBloc.add(onLoginResponse(response));
+
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   _loginBloc.add(onGetStatusEvent(sessionId));
+    // });
+  }
+
+  Widget _buildIcon(
+      IconData icon, dynamic colorScheme, dynamic border, dynamic textColor) {
+    return Container(
+      // width: MediaQuery.of(context).size.width * 0.25,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Icon(
+        icon as IconData?,
+        color: textColor,
+      ),
+    );
+  }
+
+  Widget _buildButton(
+      String text, dynamic colorScheme, dynamic border, dynamic textColor,
+  ) {
+    return GestureDetector(
+     
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.5,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+        decoration: BoxDecoration(
+          color: colorScheme,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: border,
+            width: 2,
+          ),
+        ),
+        child: Text(
+          text,
+          style: GoogleFonts.robotoMono(
+            color: textColor,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
     );
   }
 
@@ -371,13 +570,14 @@ class _FilesState extends State<Files> {
   Widget _buildFileSelectionButton() {
     return SizedBox(
       width: MediaQuery.of(context).size.width,
-      height: MediaQuery.of(context).size.height / 10,
+      height: MediaQuery.of(context).size.height / 14,
       child: Center(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             _buildFileInfoColumn('0', 'Files'),
             _buildFileInfoColumn('0MiB', 'Usage'),
+            SizedBox(width: 10),
             GestureDetector(
               onTap: _isLoading ? null : openFile,
               child: Container(
@@ -385,7 +585,7 @@ class _FilesState extends State<Files> {
                 alignment: Alignment.bottomCenter,
                 decoration: BoxDecoration(
                   color: Theme.of(context).primaryColor,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(10),
                   border: const GradientBoxBorder(
                     gradient: LinearGradient(
                         colors: [Color(0xFFa3d902), Color(0xFF2CFFAE)]),

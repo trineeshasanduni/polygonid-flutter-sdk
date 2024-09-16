@@ -5,6 +5,7 @@ import 'package:polygonid_flutter_sdk/common/errors/server_failure.dart';
 import 'package:polygonid_flutter_sdk/common/usecase/usecase.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/fileName_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/file_entity.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/verify_upload_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/repositories/file_repo.dart';
 
 class UseCaseParams {
@@ -42,6 +43,19 @@ class FileNameParam {
     required this.BatchHash,
   });
 } 
+
+class VerifyUploadParam {
+  final String BatchHash;
+  final String ownerDid;
+  final String did;
+
+  VerifyUploadParam ({
+    required this.BatchHash,
+    required this.ownerDid,
+    required this.did,
+  });
+  
+}
 
 // Modify both UseCase implementations to use UseCaseParams:
 
@@ -88,5 +102,23 @@ class FileNameUsecase {
           print('fetching file name');
 
     return await fileRepository.getFileName(BatchHash: params.BatchHash);
+  }
+}
+
+class VerifyUploadUsecase {
+  final FileRepository fileRepository;
+
+  VerifyUploadUsecase(this.fileRepository);
+
+  Future<Either<Failure, VerifyUploadEntity>> call(
+    
+      VerifyUploadParam params) async {
+          print('fetching file name');
+
+    return await fileRepository.verifyUpload( 
+      BatchHash: params.BatchHash,
+      ownerDid: params.ownerDid,
+      did: params.did,
+    );
   }
 }
