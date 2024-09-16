@@ -92,9 +92,13 @@ final class VerifySuccess extends FileState {
   const VerifySuccess( this.response);
 }
 
- final class authenticated extends FileState {
-    const authenticated();
-  }
+
+
+final class VerifiedClaims extends FileState {
+  final List<ClaimModel> claimList;
+
+  VerifiedClaims(this.claimList);
+}
 
 
 

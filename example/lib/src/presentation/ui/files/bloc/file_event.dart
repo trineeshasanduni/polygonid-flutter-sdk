@@ -38,3 +38,17 @@ class onVerifyResponse extends FileEvent {
 
   const onVerifyResponse(this.verifyResponse);
 }
+
+final class fetchAndSaveUploadVerifyClaims extends FileEvent {
+  final Iden3MessageEntity iden3message;
+
+  fetchAndSaveUploadVerifyClaims({required this.iden3message});
+}
+
+final class getUploadVerifyClaims extends FileEvent {
+  final List<FilterEntity>? filters;
+
+  getUploadVerifyClaims({this.filters});
+}
+
+

@@ -150,7 +150,7 @@ void registerLoginDependencies() {
 
 void fileUploadDependencies() {
   getIt.registerFactory(() => FileBloc( getIt(),
-      getIt(),getIt(),getIt(),getIt(),getIt()));
+      getIt(),getIt(),getIt(),getIt(),getIt(),getIt()));
 
   // Use cases
   getIt.registerLazySingleton(() => FileUsecase(getIt()));
