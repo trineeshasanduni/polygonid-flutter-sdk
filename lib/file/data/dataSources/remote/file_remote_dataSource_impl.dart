@@ -123,8 +123,14 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
           final fileNameJson = fileNameList[0] as Map<String, dynamic>;
 
           final fileNameModel = FileNameModel.fromJson(fileNameJson);
+          final responsefileName = FileNameModel(
+            fileHash: fileNameModel.fileHash,
+            fileName: fileNameModel.fileName,
+            batchHash: BatchHash,
+            
+          );
           print("fileName response: $fileNameModel");
-          return fileNameModel;
+          return responsefileName;
         } else {
           throw Exception('No data found in the response');
         }

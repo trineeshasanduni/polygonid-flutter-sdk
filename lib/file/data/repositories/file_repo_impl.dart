@@ -70,6 +70,8 @@ class FileRepoImpl implements FileRepository {
           await fileRemoteDatasource.getFileName(BatchHash);
       return right(FileNameEntity(
          fileName: fileNameModel.fileName,
+         batchHash: fileNameModel.batchHash,
+
       ));
     } catch (e) {
       return Left(Failure());

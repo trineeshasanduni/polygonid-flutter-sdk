@@ -21,6 +21,14 @@ import 'package:web3dart/web3dart.dart';
 import 'package:web3modal_flutter/utils/debouncer.dart';
 import 'package:web_socket_channel/io.dart';
 
+class FileData {
+  final String fileName;
+  final String batchHash;
+
+  FileData(this.fileName, this.batchHash);
+}
+
+
 class Files extends StatefulWidget {
   final String? did;
   const Files({super.key, required this.did});
@@ -39,6 +47,8 @@ class _FilesState extends State<Files> {
   final walletAddress = '';
   bool _isRequestInProgress = false;
   List<String> fileNames = [];
+  List<FileData> fileDataList = [];
+
 
   List<dynamic> dataResult = []; // Store contract data as a list of lists
 
@@ -174,58 +184,115 @@ class _FilesState extends State<Files> {
     }
   }
 
+  // Future<void> _processContractResult(List<dynamic> dataResult) async {
+  //   if (_isRequestInProgress) {
+  //     // If a request is already in progress, do nothing
+  //     return;
+  //   }
+
+  //   setState(() {
+  //     _isRequestInProgress = true; // Set the flag to true when request starts
+  //   });
+
+  //   int filesFetched = 0; // Counter to track the number of files fetched
+  //   final totalFiles = dataResult.length; // Total number of files to be fetched
+
+  //   try {
+  //     // Start listening to the BLoC stream outside of the loop
+  //     _fileBloc.stream.listen((state) {
+  //       if (state is FileNameLoaded) {
+  //         setState(() {
+  //           // fileNames.add(state.fileName.fileName.toString());
+  //           fileDataList.add(FileData(state.fileName.fileName.toString(), state.fileName.batchHash.toString()));
+  //           print('fetching this  ;${fileDataList}');
+
+
+
+
+  //           filesFetched++; // Increment the counter for each loaded file
+
+  //           // Check if all files have been fetched
+  //           if (filesFetched == totalFiles) {
+  //             print('All files fetched successfully.');
+  //             _isRequestInProgress = false; // Stop requesting further files
+  //           }
+  //         });
+  //       }
+  //     });
+
+  //     // Loop through the dataResult and fetch file names
+  //     for (var batchDetails in dataResult) {
+  //       final batchHash = batchDetails[1].toString();
+  //       print('batchHash123: $batchHash');
+  //       print("Total files: $totalFiles");
+
+  //       // Wait for a short delay between each request
+  //       await Future.delayed(Duration(milliseconds: 500), () {
+  //         if (filesFetched < totalFiles) {
+  //           _fileBloc.add(
+  //               GetFileNameEvent(BatchHash: batchHash));
+  //                // Fetch the next file
+  //         }
+  //       });
+  //     }
+  //   } catch (e) {
+  //     print('Error processing contract result: $e');
+  //   } finally {
+  //     setState(() {
+  //       _isRequestInProgress = false; // Reset the flag when request completes
+  //     });
+  //   }
+  // }
   Future<void> _processContractResult(List<dynamic> dataResult) async {
-    if (_isRequestInProgress) {
-      // If a request is already in progress, do nothing
-      return;
-    }
+  if (_isRequestInProgress) {
+    return;
+  }
 
-    setState(() {
-      _isRequestInProgress = true; // Set the flag to true when request starts
-    });
+  setState(() {
+    _isRequestInProgress = true;
+  });
 
-    int filesFetched = 0; // Counter to track the number of files fetched
-    final totalFiles = dataResult.length; // Total number of files to be fetched
+  int filesFetched = 0;
+  final totalFiles = dataResult.length;
 
-    try {
-      // Start listening to the BLoC stream outside of the loop
-      _fileBloc.stream.listen((state) {
-        if (state is FileNameLoaded) {
-          setState(() {
-            fileNames.add(state.fileName.fileName.toString());
-            filesFetched++; // Increment the counter for each loaded file
+  try {
+    _fileBloc.stream.listen((state) {
+      if (state is FileNameLoaded) {
+        setState(() {
+          fileDataList.add(FileData(
+            state.fileName.fileName.toString(),
+            state.fileName.batchHash.toString(),
+          ));
+          print('File data added: ${fileDataList.last}');
+          filesFetched++;
 
-            // Check if all files have been fetched
-            if (filesFetched == totalFiles) {
-              print('All files fetched successfully.');
-              _isRequestInProgress = false; // Stop requesting further files
-            }
-          });
-        }
-      });
-
-      // Loop through the dataResult and fetch file names
-      for (var batchDetails in dataResult) {
-        final batchHash = batchDetails[1].toString();
-        print('batchHash123: $batchHash');
-        print("Total files: $totalFiles");
-
-        // Wait for a short delay between each request
-        await Future.delayed(Duration(milliseconds: 500), () {
-          if (filesFetched < totalFiles) {
-            _fileBloc.add(
-                GetFileNameEvent(BatchHash: batchHash)); // Fetch the next file
+          if (filesFetched == totalFiles) {
+            print('All files fetched successfully.');
+            _isRequestInProgress = false;
           }
         });
       }
-    } catch (e) {
-      print('Error processing contract result: $e');
-    } finally {
-      setState(() {
-        _isRequestInProgress = false; // Reset the flag when request completes
-      });
+    });
+
+    for (var batchDetails in dataResult) {
+      final batchHash = batchDetails[1].toString();
+      print('Requesting file for batchHash: $batchHash');
+      
+      if (filesFetched < totalFiles) {
+        await Future.delayed(Duration(milliseconds: 500), () {
+          _fileBloc.add(GetFileNameEvent(BatchHash: batchHash));
+        });
+      }
     }
+  } catch (e) {
+    print('Error processing contract result: $e');
+  } finally {
+    setState(() {
+      _isRequestInProgress = false;
+    });
   }
+}
+
 
   Future<bool> isTransactionSuccessful(String txHash) async {
     // Initialize the Web3Client using your Infura or Alchemy endpoint
@@ -313,9 +380,7 @@ class _FilesState extends State<Files> {
           backgroundColor: Theme.of(context).primaryColor,
           body: BlocConsumer<FileBloc, FileState>(
               listener: (context, state) async {
-            // if (state is FileUploadFailed) {
-            //   _showSnackbar('Failed to upload files: ${state.message}');
-            // }
+            
             if (state is FileUploaded) {
               for (var file in dataResult) {
                 print('object file: $file');
@@ -355,69 +420,134 @@ class _FilesState extends State<Files> {
     );
   }
 
+  // Widget _buildFileList() {
+    
+  //   return Expanded(
+  //     child: fileNames.isNotEmpty
+  //         ? ListView.builder(
+  //             itemCount: fileNames.length,
+  //             itemBuilder: (context, index) {
+  //               final fileData = fileDataList[index];
+  //               print('batch hash123: ${fileData.batchHash}');
+  //               print('filename123: ${fileData.fileName}');
+  //               return ListTile(
+  //                 title: Row(
+  //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                   children: [
+  //                     Flexible(
+  //                       child: Text(
+  //                         fileData.fileName,
+  //                         overflow: TextOverflow.ellipsis,
+  //                         style: TextStyle(
+  //                           color: Colors.white,
+  //                           fontFamily: GoogleFonts.robotoMono().fontFamily,
+  //                           fontSize: 12,
+  //                         ),
+  //                       ),
+  //                     ),
+  //                     SizedBox(width: 10),
+  //                     Row(
+  //                       children: [
+                          
+  //                         SizedBox(
+  //                           width: MediaQuery.of(context).size.width * 0.2,
+  //                           child: _buildVerifyButton(fileData.batchHash),
+  //                         ),
+  //                         SizedBox(width: 50),
+  //                         // Space between icons
+  //                         SizedBox(
+  //                           width: 40, // Adjust width as needed
+  //                           child: _buildIcon(
+  //                             Icons.download,
+  //                             Theme.of(context).colorScheme.secondary,
+  //                             Theme.of(context).colorScheme.secondary,
+  //                             Colors.white,
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ),
+  //                   ],
+  //                 ),
+  //               );
+  //             },
+  //           )
+  //         : Center(
+  //             child: Text(
+  //               'No files fetched',
+  //               style: TextStyle(
+  //                 color: Colors.white,
+  //                 fontSize: 16,
+  //                 fontFamily: GoogleFonts.robotoMono().fontFamily,
+  //               ),
+  //             ),
+  //           ),
+  //   );
+  // }
+
   Widget _buildFileList() {
-    return Expanded(
-      child: fileNames.isNotEmpty
-          ? ListView.builder(
-              itemCount: fileNames.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          fileNames[index],
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontFamily: GoogleFonts.robotoMono().fontFamily,
-                            fontSize: 12,
-                          ),
+  return Expanded(
+    child: fileDataList.isNotEmpty
+        ? ListView.builder(
+            itemCount: fileDataList.length,
+            itemBuilder: (context, index) {
+              final fileData = fileDataList[index];
+              return ListTile(
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        fileData.fileName,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontFamily: GoogleFonts.robotoMono().fontFamily,
+                          fontSize: 12,
                         ),
                       ),
-                      SizedBox(width: 10),
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.2,
-                            child: _buildVerifyButton(index),
+                    ),
+                    SizedBox(width: 10),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.2,
+                          child: _buildVerifyButton(fileData.batchHash),
+                        ),
+                        SizedBox(width: 50),
+                        SizedBox(
+                          width: 40,
+                          child: _buildIcon(
+                            Icons.download,
+                            Theme.of(context).colorScheme.secondary,
+                            Theme.of(context).colorScheme.secondary,
+                            Colors.white,
                           ),
-                          SizedBox(width: 50),
-                          // Space between icons
-                          SizedBox(
-                            width: 40, // Adjust width as needed
-                            child: _buildIcon(
-                              Icons.download,
-                              Theme.of(context).colorScheme.secondary,
-                              Theme.of(context).colorScheme.secondary,
-                              Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-            )
-          : Center(
-              child: Text(
-                'No files fetched',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontFamily: GoogleFonts.robotoMono().fontFamily,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
+              );
+            },
+          )
+        : Center(
+            child: Text(
+              'No files fetched',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontFamily: GoogleFonts.robotoMono().fontFamily,
               ),
             ),
-    );
-  }
+          ),
+  );
+}
 
-  Widget _buildVerifyButton( int index) {
+
+  Widget _buildVerifyButton( String batchHash) {
     return GestureDetector(
       onTap: () {
-        final batchHash = dataResult[index][1].toString();
+        // final batchHash = dataResult[index][1].toString();
           final did = jsonDecode(widget.did.toString());
           final storage = GetStorage();
           // final getDID = storage.read('did');
