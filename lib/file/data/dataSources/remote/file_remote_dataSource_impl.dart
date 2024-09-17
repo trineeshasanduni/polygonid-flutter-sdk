@@ -14,8 +14,8 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
 
   FileRemoteDatasourceImpl({required this.client});
 
-  static const BASE_URL = 'https://test.becx.io/api/v1';
-  // static const BASE_URL = 'http://192.168.1.42:9000/api/v1';
+  // static const BASE_URL = 'https://test.becx.io/api/v1';
+  static const BASE_URL = 'http://192.168.1.42:9000/api/v1';
 
   @override
   Future<FileModel> fileUpload(
