@@ -26,11 +26,7 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
   final storage = const FlutterSecureStorage();
-  // late final AnimationController _controller= AnimationController(vsync: this, duration: const Duration(seconds: 2),)..repeat(reverse: true);
-  // late Animation<Offset> _animation = Tween(
-  //   begin:  Offset.zero,
-  //   end:  const Offset(0, 0.08),
-  // ).animate(_controller);
+ 
 
   @override
   void initState() {
@@ -224,22 +220,7 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
     );
   }
 
-  // Widget _buildSubtitle() {
-  //   return Column(
-  //     children: [
-  //       const SizedBox(height: 4),
-  //       Text(
-  //         'Hack Proof Blockchain Based Secure Decentralized File Storage with Zero-Knowledge Proof (ZKP)',
-  //         textAlign: TextAlign.center,
-  //         style: GoogleFonts.robotoMono(
-  //           fontSize: 10,
-  //           color: Colors.white,
-  //         ),
-  //       ),
-  //       const SizedBox(height: 20),
-  //     ],
-  //   );
-  // }
+
   Widget _buildSubtitle() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

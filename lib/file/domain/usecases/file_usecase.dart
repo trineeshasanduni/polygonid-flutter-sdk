@@ -3,6 +3,9 @@ import 'dart:io';
 import 'package:fpdart/fpdart.dart';
 import 'package:polygonid_flutter_sdk/common/errors/server_failure.dart';
 import 'package:polygonid_flutter_sdk/common/usecase/usecase.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/download_status_model.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/downloadVerify_entity.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/download_status_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/fileName_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/file_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/verify_upload_entity.dart';
@@ -20,6 +23,16 @@ class UseCaseParams {
    required this.fileData,
     
   });
+}
+class DownloadParams {
+  final String batch_hash;
+   final    String file_hash;
+    final   String didU ;// Made optional since it might not be needed in every use case.
+  // Made optional since it might not be needed in every use case.
+
+  DownloadParams({required this.batch_hash,
+      required this.file_hash,
+      required  this.didU});
 }
 
 class UseSpaceParam {
@@ -55,6 +68,12 @@ class VerifyUploadParam {
     required this.did,
   });
   
+}
+
+class DownloadStatusParams {
+  final String sessionId;
+
+  DownloadStatusParams({required this.sessionId});
 }
 
 // Modify both UseCase implementations to use UseCaseParams:
@@ -120,5 +139,36 @@ class VerifyUploadUsecase {
       ownerDid: params.ownerDid,
       did: params.did,
     );
+  }
+}
+
+
+
+
+/////////////////////////download verify ////////////////////
+///
+class DownloadVerifyUsecase implements UseCase<DownloadVerifyEntity, DownloadParams> {
+  final FileRepository fileRepository;
+  const DownloadVerifyUsecase(this.fileRepository);
+
+  @override
+  Future<Either<Failure, DownloadVerifyEntity>> call(DownloadParams params) async {
+    // print('registering12: ${params.did}');
+    return await fileRepository.downloadVerify(
+     batch_hash: params.batch_hash,
+     file_hash: params.file_hash,
+     didU: params.didU
+    );
+  }
+}
+
+class DownloadStatusUsecase {
+  final FileRepository fileRepository;
+
+  DownloadStatusUsecase(this.fileRepository);
+
+  Future<Either<Failure, DownloadStatusResponseentity>> call(
+      DownloadStatusParams params) async {
+    return await fileRepository.fetchDownloadStatus(sessionId: params.sessionId);
   }
 }

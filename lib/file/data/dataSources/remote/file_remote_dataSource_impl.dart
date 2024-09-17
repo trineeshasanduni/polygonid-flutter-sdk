@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:polygonid_flutter_sdk/file/data/dataSources/file_remote_dataSource.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/downloadVerify_model.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/download_status_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/file_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/verify_upload_model.dart';
@@ -14,8 +16,8 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
 
   FileRemoteDatasourceImpl({required this.client});
 
-  static const BASE_URL = 'https://test.becx.io/api/v1';
-  // static const BASE_URL = 'http://192.168.1.42:9000/api/v1';
+  // static const BASE_URL = 'https://test.becx.io/api/v1';
+  static const BASE_URL = 'http://192.168.1.42:9000/api/v1';
 
   @override
   Future<FileModel> fileUpload(
@@ -127,7 +129,6 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
             fileHash: fileNameModel.fileHash,
             fileName: fileNameModel.fileName,
             batchHash: BatchHash,
-            
           );
           print("fileName response: $fileNameModel");
           return responsefileName;
@@ -144,53 +145,153 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
   }
 
   @override
-Future<VerifyUploadModel> verifyUpload({
-  required String BatchHash,
-  required String did,
-  required String ownerDid,
-}) async {
-  print('Fetching verify upload');
+  Future<VerifyUploadModel> verifyUpload({
+    required String BatchHash,
+    required String did,
+    required String ownerDid,
+  }) async {
+    print('Fetching verify upload');
 
-  try {
-    print('did verify: $did');
-    print('batchHash verify: $BatchHash');
-    print('owner Did verify: $ownerDid');
-    final response = await client.get(Uri.parse(
-      '$BASE_URL/get-claim?Did=$did&BatchHash=$BatchHash&ownerAddress=$ownerDid'
-    ));
+    try {
+      print('did verify: $did');
+      print('batchHash verify: $BatchHash');
+      print('owner Did verify: $ownerDid');
+      final response = await client.get(Uri.parse(
+          '$BASE_URL/get-claim?Did=$did&BatchHash=$BatchHash&ownerAddress=$ownerDid'));
 
-    print('Status Code: ${response.statusCode}');
-    print('Response Body: ${response.body}');
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> verify = jsonDecode(response.body);
-      print('Decoded JSON: $verify');
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> verify = jsonDecode(response.body);
+        print('Decoded JSON: $verify');
 
-      // Now we need to parse the `claim` field which is a string
-      final String claimString = verify['claim'];
-      final Map<String, dynamic> claim = jsonDecode(claimString);
-      print('Decoded Claim JSON: $claim');
+        // Now we need to parse the `claim` field which is a string
+        final String claimString = verify['claim'];
+        final Map<String, dynamic> claim = jsonDecode(claimString);
+        print('Decoded Claim JSON: $claim');
 
-      // Convert it back into your model
-      final verifyResponse = VerifyUploadModel(
-        claim: ClaimVerifyModel.fromJson(claim), // Use the parsed claim JSON
-        txHash: verify['txHash'],
-      );
+        // Convert it back into your model
+        final verifyResponse = VerifyUploadModel(
+          claim: ClaimVerifyModel.fromJson(claim), // Use the parsed claim JSON
+          txHash: verify['txHash'],
+        );
 
-      print('VerifyUploadModel: $verifyResponse');
-      return verifyResponse;
-    } else {
-      throw Exception('Failed to load verify: ${response.statusCode}');
+        print('VerifyUploadModel: $verifyResponse');
+        return verifyResponse;
+      } else {
+        throw Exception('Failed to load verify: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching verify upload: $e');
+      throw Exception('Failed to fetch verify upload');
     }
-  } catch (e) {
-    print('Error fetching verify upload: $e');
-    throw Exception('Failed to fetch verify upload');
   }
-}
+
+////////////////////////////Download verify///////////////////////////////
+
+  @override
+  Future<DownloadVerifyModel> downloadVerify(
+      {required String BatchHash,
+      required String FileHash,
+      required String Odid}) async {
+    print('Using space');
+    try {
+      Map<String, dynamic> data = {
+        "BatchHash": BatchHash,
+        "FileHash": FileHash,
+        "Odid": Odid
+      };
+      // Define the URI for the use-space API endpoint
+      final uri = Uri.parse('$BASE_URL/download-verify');
+
+      // Make the POST request with the proper headers and body
+      final response = await client.post(
+        uri,
+        // headers: {"Content-Type": "application/json"},
+        body: jsonEncode(data),
+      );
+      print('data Download Verify: $data');
+
+      print('Download Verify status code: ${response.statusCode}');
+      Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+      final headers = response.headers['x-iid'];
+      print('header downoload: $headers ');
+      final responsedown = DownloadVerifyModel.fromJson(jsonResponse);
+
+      final DownloadResponse = DownloadVerifyModel(
+          body: BodyDownload(
+              callbackUrl: responsedown.body?.callbackUrl!,
+              reason: responsedown.body?.reason,
+              scope: [
+            ScopeDownload(
+              circuitId: responsedown.body?.scope![0].circuitId,
+              id: responsedown.body?.scope![0].id,
+              query: QueryDownload(
+                allowedIssuers:
+                    responsedown.body?.scope![0].query?.allowedIssuers,
+                context: responsedown.body?.scope![0].query?.context,
+                credentialSubject: CredentialSubject(
+                  hash: Hash(
+                    $eq: responsedown
+                        .body?.scope![0].query?.credentialSubject?.hash?.$eq,
+                  ),
+                ),
+                type: responsedown.body?.scope![0].query?.type,
+              ),
+            ),
+          ]),
+          from: responsedown.from,
+            id: responsedown.id,
+            type: responsedown.type,
+            thid: responsedown.thid,
+            typ: responsedown.typ,
+            sessionId: headers
+          );
+
+      if (response.statusCode == 200) {
+        return DownloadResponse;
+      } else {
+        print('Failed to Download Verify');
+        throw Exception('Failed to Download Verify');
+      }
+    } catch (error) {
+      print('Error during Download Verify: $error');
+      throw Exception('Failed to Download Verify');
+    }
+  }
+
+  Future<DownloadStatusResponseModel> fetchDownloadStatus(String sessionId) async {
+    print('sessionId download check123: $sessionId');
+    int statusCode = 0;
+
+    while (statusCode != 200) {
+      try {
+        final response = await client
+            .get(Uri.parse('$BASE_URL/batchfilestatus?sessionId=$sessionId'));
+        print('download status1: ${response.statusCode}');
+        statusCode = response.statusCode;
+
+        // If the status is 200, break the loop and return the response
+        if (statusCode == 200) {
+          
+          return DownloadStatusResponseModel(
+            statusCode: statusCode
 
 
+          );
+        } else {
+          print('Waiting for status code 200, received: $statusCode');
+        }
 
+        // Wait for a few seconds before the next attempt
+        await Future.delayed(Duration(seconds: 5));
+      } catch (e) {
+        print('Error fetching download status: $e');
+        throw Exception('Failed to fetch download');
+      }
+    }
 
-
-
+    throw Exception('Failed to get status 200');
+  }
 }

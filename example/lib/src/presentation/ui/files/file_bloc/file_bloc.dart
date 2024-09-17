@@ -9,6 +9,7 @@ import 'package:polygonid_flutter_sdk/common/domain/entities/filter_entity.dart'
 import 'package:polygonid_flutter_sdk/common/domain/error_exception.dart';
 import 'package:polygonid_flutter_sdk/credential/domain/entities/claim_entity.dart';
 import 'package:polygonid_flutter_sdk/credential/domain/exceptions/credential_exceptions.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/downloadVerify_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/fileName_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/file_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/verify_upload_entity.dart';
@@ -40,6 +41,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
   final PolygonIdSdk _polygonIdSdk;
    final ClaimModelMapper _mapper;
 
+
   static const SelectedProfile _defaultProfile = SelectedProfile.public;
   SelectedProfile selectedProfile = _defaultProfile;
 
@@ -53,6 +55,10 @@ class FileBloc extends Bloc<FileEvent, FileState> {
     on<onVerifyResponse>(_handleVerifyUpload);
     on<fetchAndSaveUploadVerifyClaims>(_fetchAndSaveClaims);
     on<getUploadVerifyClaims>(_getUploadVerifyClaims);
+
+
+    /////////download//////
+    
   }
 
   void _handleFileUpload(FileuploadEvent event, Emitter<FileState> emit) async {
@@ -241,4 +247,9 @@ class FileBloc extends Bloc<FileEvent, FileState> {
       emit(FileVerifyFailed("generic error"));
     }
   }
+
+
+
+
+  
 }

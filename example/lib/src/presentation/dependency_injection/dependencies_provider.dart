@@ -37,7 +37,8 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/claims_
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/mappers/claim_model_mapper.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/mappers/claim_model_state_mapper.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/mappers/proof_model_type_mapper.dart';
-import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/bloc/file_bloc.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/download_bloc/download_bloc.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/file_bloc/file_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/login/bloc/login_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/bloc/add_plans_bloc.dart';
@@ -69,6 +70,7 @@ Future<void> init() async {
   registerLoginDependencies();
   fileUploadDependencies();
   addPlansDependencies();
+  DownloadDependencies();
   _initGetit();
 }
 
@@ -165,6 +167,16 @@ void fileUploadDependencies() {
   // // Data sources
   getIt.registerFactory<FileRemoteDatasource>(
       () => FileRemoteDatasourceImpl(client: getIt()));
+}
+
+void DownloadDependencies() {
+  getIt.registerFactory(() => DownloadBloc( getIt(),
+      getIt(),getIt(),getIt()));
+
+      // Use cases
+  getIt.registerLazySingleton(() => DownloadStatusUsecase(getIt()));
+   getIt.registerLazySingleton(() => DownloadVerifyUsecase(getIt()));
+
 }
 
 ///

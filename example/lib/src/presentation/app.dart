@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:polygonid_flutter_sdk/registers/domain/usecases/register_usecase.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/routes.dart';
-import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/bloc/file_bloc.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/download_bloc/download_bloc.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/file_bloc/file_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/login/bloc/login_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/bloc/register_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/themes/theme_data.dart';
@@ -22,6 +23,7 @@ class AppState extends State<App> {
   late final RegisterBloc _registerBloc;
   late final LoginBloc _loginBloc;
   late final FileBloc _fileBloc;
+  late final DownloadBloc _downloadBloc;
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +37,9 @@ class AppState extends State<App> {
         ),
         BlocProvider<FileBloc>(
           create: (context) => _fileBloc,
+        ),
+        BlocProvider<DownloadBloc>(
+          create: (context) => _downloadBloc,
         ),
       ],
       child: MaterialApp(

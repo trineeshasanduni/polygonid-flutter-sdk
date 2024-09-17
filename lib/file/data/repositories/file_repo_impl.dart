@@ -3,9 +3,13 @@ import 'dart:io';
 import 'package:fpdart/fpdart.dart';
 import 'package:polygonid_flutter_sdk/common/errors/server_failure.dart';
 import 'package:polygonid_flutter_sdk/file/data/dataSources/file_remote_dataSource.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/downloadVerify_model.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/download_status_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/file_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/verify_upload_model.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/downloadVerify_entity.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/download_status_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/fileName_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/file_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/verify_upload_entity.dart';
@@ -108,6 +112,73 @@ class FileRepoImpl implements FileRepository {
         
          
       ));
+    } catch (e) {
+      return Left(Failure());
+    }
+  }
+
+
+
+  ///////////////////////////Download Verify///////////////////////////
+  ///
+  @override
+  Future<Either<Failure, DownloadVerifyEntity>> downloadVerify({required String batch_hash,
+      required String file_hash,
+      required String didU}) async {
+    try {
+      DownloadVerifyModel downloadVerifyModel = await fileRemoteDatasource.downloadVerify(
+        BatchHash: batch_hash,
+        FileHash: file_hash,
+        Odid: didU
+
+      
+        
+      );
+      print('object234: ${downloadVerifyModel.body?.callbackUrl!}');
+      return right(DownloadVerifyEntity(
+        body: BodyDownloadEntity(
+            callbackUrl: downloadVerifyModel.body?.callbackUrl,
+            reason: downloadVerifyModel.body?.reason,
+            scope: downloadVerifyModel.body?.scope
+                ?.map((scope) => Scope(
+                      circuitId: scope.circuitId,
+                      id: scope.id,
+                      query: Query(
+                        allowedIssuers: scope.query?.allowedIssuers,
+                        context: scope.query?.context,
+                        credentialSubject: CredentialSubjectEntity(
+                          hash: HashEntity(
+                            $eq: scope.query?.credentialSubject?.hash?.$eq,
+                          ),
+                        ),
+                        type: scope.query?.type,
+                      ),
+                    ))
+                .toList(),
+          ),
+          from: downloadVerifyModel.from,
+          id: downloadVerifyModel.id,
+          type: downloadVerifyModel.type,
+          thid: downloadVerifyModel.thid,
+          typ: downloadVerifyModel.typ,
+          sessionId: downloadVerifyModel.sessionId
+
+
+       
+      ));
+    } catch (error) {
+      return left(Failure('Failed to upload: $error'));
+    }
+  }
+@override
+   Future<Either<Failure, DownloadStatusResponseentity>> fetchDownloadStatus(
+      {required String sessionId}) async {
+    try {
+      final DownloadStatusResponseModel downloadStatusResponseModel =
+          await fileRemoteDatasource.fetchDownloadStatus(sessionId);
+      return right(DownloadStatusResponseentity(
+        statusCode: downloadStatusResponseModel.statusCode
+          ));
     } catch (e) {
       return Left(Failure());
     }

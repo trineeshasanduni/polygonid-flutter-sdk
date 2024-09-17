@@ -15,7 +15,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
 import 'package:polygonid_flutter_sdk/iden3comm/domain/entities/common/iden3_message_entity.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
-import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/bloc/file_bloc.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/download_bloc/download_bloc.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/file_bloc/file_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_event.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_state.dart';
@@ -45,11 +46,19 @@ class _FilesState extends State<Files> {
   bool _isLoading = false;
   late final FileBloc _fileBloc;
   late final HomeBloc _homeBloc;
+  late final DownloadBloc _downloadBloc;
   String identity = '';
   final walletAddress = '';
   bool _isRequestInProgress = false;
   List<String> fileNames = [];
   List<FileData> fileDataList = [];
+  var httpClient = http.Client();
+  Web3Client? _web3Client;
+  var rpcUrl =
+      'https://polygon-mainnet.g.alchemy.com/v2/pHKWzuctaLCPxAKYc0c8bKQA8d85oPlk';
+
+  final _contractAddress =
+      EthereumAddress.fromHex('0x665e346D9c68587Bd51C53eAd71e0F5367E7950C');
 
   List<dynamic> dataResult = []; // Store contract data as a list of lists
 
@@ -58,6 +67,7 @@ class _FilesState extends State<Files> {
     super.initState();
     _fileBloc = getIt<FileBloc>();
     _homeBloc = getIt<HomeBloc>();
+    _downloadBloc = getIt<DownloadBloc>();
 
     final storage = GetStorage();
     _deployContract();
@@ -136,11 +146,7 @@ class _FilesState extends State<Files> {
   }
 
   Future<void> _deployContract() async {
-    var httpClient = http.Client();
-    Web3Client? _web3Client;
     try {
-      var rpcUrl =
-          'https://polygon-mainnet.g.alchemy.com/v2/pHKWzuctaLCPxAKYc0c8bKQA8d85oPlk';
       _web3Client = Web3Client(rpcUrl, httpClient);
 
       final abiFile =
@@ -151,23 +157,65 @@ class _FilesState extends State<Files> {
       final _abiCode =
           ContractAbi.fromJson(jsonEncode(jsonAbi['abi']), 'FileStorage');
 
-      final _contractAddress =
-          EthereumAddress.fromHex('0x665e346D9c68587Bd51C53eAd71e0F5367E7950C');
-
       final _contract = DeployedContract(_abiCode, _contractAddress);
       final _getAllBatchesFunction = _contract.function('getAllBatches');
 
       final storage = GetStorage();
       final walletAddress1 = storage.read('walletAddress');
 
-      final result = await _web3Client.call(
+      final result = await _web3Client?.call(
         contract: _contract,
         function: _getAllBatchesFunction,
         params: [],
         sender: EthereumAddress.fromHex(walletAddress1),
       );
 
-      if (result.isNotEmpty && result[0] is List) {
+      if (result!.isNotEmpty && result?[0] is List) {
+        setState(() {
+          dataResult = List<dynamic>.from(result[0]);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            // Store the result
+            _processContractResult(result[0]);
+          });
+        });
+      } else {
+        print('No data returned from contract or result format is unexpected');
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+    } finally {
+      httpClient.close();
+    }
+  }
+
+  Future<void> _deployBatchFileContract() async {
+    try {
+      _web3Client = Web3Client(rpcUrl, httpClient);
+
+      final abiFile =
+          await rootBundle.loadString('assets/abi/FileStorage.json');
+      if (abiFile.isEmpty) throw FormatException('ABI file is empty');
+
+      final jsonAbi = jsonDecode(abiFile);
+      final _abiCode =
+          ContractAbi.fromJson(jsonEncode(jsonAbi['abi']), 'FileStorage');
+
+      final _contract = DeployedContract(_abiCode, _contractAddress);
+      final _getAllBatchesFunction = _contract.function('getBatchFile');
+
+      final storage = GetStorage();
+      final walletAddress1 = storage.read('walletAddress');
+
+      final did = jsonDecode(widget.did.toString());
+
+      final result = await _web3Client?.call(
+        contract: _contract,
+        function: _getAllBatchesFunction,
+        params: [did],
+        sender: EthereumAddress.fromHex(walletAddress1),
+      );
+
+      if (result!.isNotEmpty && result?[0] is List) {
         setState(() {
           dataResult = List<dynamic>.from(result[0]);
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -321,6 +369,12 @@ class _FilesState extends State<Files> {
           backgroundColor: Theme.of(context).primaryColor,
           body: BlocConsumer<FileBloc, FileState>(
               listener: (context, state) async {
+            if (state is FileUploading) {
+              const CircularProgressIndicator();
+            }
+            if (state is FileUploadFailed) {
+              _showSnackbar("File Upload Failed");
+            }
             if (state is FileUploaded) {
               for (var file in dataResult) {
                 print('object file: $file');
@@ -352,6 +406,7 @@ class _FilesState extends State<Files> {
                 const SizedBox(height: 20),
                 _buildFileList(),
                 _buildBlocContent(context),
+                _buildDownloadBlocContent(context),
               ],
             );
           }),
@@ -393,14 +448,7 @@ class _FilesState extends State<Files> {
                           SizedBox(width: 50),
                           SizedBox(
                             width: 40,
-                            child: _buildIcon(
-                              Icons.download,
-                              Theme.of(context).colorScheme.secondary,
-                              Theme.of(context).colorScheme.secondary,
-                              Colors.white,
-                              
-
-                            ),
+                            child: _buildDownloadIcon(fileData.batchHash),
                           ),
                         ],
                       ),
@@ -421,6 +469,66 @@ class _FilesState extends State<Files> {
             ),
     );
   }
+void _handleDownloadVerifyButton(DownloadSuccess state) async {
+  final response = jsonEncode(state.response.toJson());
+  final sessionId = state.response.sessionId.toString();
+  print('sessionId download : $sessionId');
+  print('download response: $response');
+
+  // First, add the download response to the bloc
+  _downloadBloc.add(onDownloadResponse(response));
+
+  // Use WidgetsBinding to schedule the next event in the next frame
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    // After the first event is processed, add the download status event
+    _downloadBloc.add(onGetDownloadStatusEvent(sessionId));
+  });
+}
+
+
+
+
+  Widget _buildDownloadIcon(String BatchHash) {
+    return GestureDetector(
+      onTap: () {
+        _downloadBloc.add(onClickDownload(
+            batch_hash: BatchHash,
+            file_hash: BatchHash,
+            didU: jsonDecode(widget.did.toString())));
+      },
+      child:  _buildIcon(
+            Icons.download,
+            Theme.of(context).colorScheme.secondary,
+            Theme.of(context).colorScheme.secondary,
+            Colors.white,
+          ),
+    );
+  }
+
+  Widget _buildDownloadBlocContent(BuildContext context) {
+    return  BlocBuilder<DownloadBloc, DownloadState>(
+        bloc: _downloadBloc,
+        builder: (BuildContext context, DownloadState state) {
+          if (state is Downloading) {
+            const CircularProgressIndicator(
+              color: Colors.redAccent,
+            );
+          }
+          if (state is DownloadSuccess) {
+            _handleDownloadVerifyButton(state);
+          }
+          
+          if (state is StatusLoaded) {
+            print('status loaded in download');
+          _showSnackbar('status loaded');
+        }
+
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+
 
   Widget _buildVerifyButton(String batchHash, bool isVerified) {
     return GestureDetector(
@@ -445,6 +553,7 @@ class _FilesState extends State<Files> {
       ),
     );
   }
+  
 
   Widget _buildBlocContent(BuildContext context) {
     return BlocBuilder<FileBloc, FileState>(
@@ -465,13 +574,11 @@ class _FilesState extends State<Files> {
         if (state is VerifyResponseloaded) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _handleVerified(state.iden3message);
-
           });
         }
         if (state is VerifiedClaims) {
           _showSnackbar('File id Verified successfully:');
-          // _buildFileList(true); 
-          
+          // _buildFileList(true);
         }
 
         return const SizedBox.shrink();
