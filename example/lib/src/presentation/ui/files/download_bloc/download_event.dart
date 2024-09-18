@@ -28,6 +28,15 @@ class onDownloadResponse extends DownloadEvent {
 
 final class onGetDownloadStatusEvent extends DownloadEvent {
   final String sessionId;
+  final String batch_hash;
 
-  const onGetDownloadStatusEvent(this.sessionId);
+  const onGetDownloadStatusEvent(this.sessionId, this.batch_hash);
+}
+
+class GetCidsEvent extends DownloadEvent {
+  final dynamic index;
+  final String did;
+  final String owner;
+
+  const GetCidsEvent( {required this.index,required this.did, required this.owner});
 }

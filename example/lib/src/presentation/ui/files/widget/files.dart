@@ -27,9 +27,11 @@ import 'package:web_socket_channel/io.dart';
 class FileData {
   final String fileName;
   final String batchHash;
+  final String fileHash;
   bool isVerified;
 
-  FileData(this.fileName, this.batchHash, {this.isVerified = false});
+  FileData(this.fileName, this.batchHash, this.fileHash,
+      {this.isVerified = false});
 }
 
 class Files extends StatefulWidget {
@@ -183,12 +185,11 @@ class _FilesState extends State<Files> {
       }
     } catch (e) {
       print('An error occurred: $e');
-    } finally {
-      httpClient.close();
     }
   }
 
-  Future<void> _deployBatchFileContract() async {
+  Future<void> _deployBatchFileContract(
+      String batch_hash, String file_hash) async {
     try {
       _web3Client = Web3Client(rpcUrl, httpClient);
 
@@ -211,25 +212,35 @@ class _FilesState extends State<Files> {
       final result = await _web3Client?.call(
         contract: _contract,
         function: _getAllBatchesFunction,
-        params: [did],
+        params: [did, batch_hash, file_hash],
         sender: EthereumAddress.fromHex(walletAddress1),
       );
+      final walletAddress = storage.read('walletAddress');
+    print('walletAddress : $walletAddress');
 
-      if (result!.isNotEmpty && result?[0] is List) {
-        setState(() {
-          dataResult = List<dynamic>.from(result[0]);
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            // Store the result
-            _processContractResult(result[0]);
-          });
-        });
+      if (result!.isNotEmpty) {
+      // Handle result based on its type
+      final index = result[0];
+
+      // Check if result[0] is of type BigInt and convert it to String
+      if (index is BigInt) {
+        final indexString = index.toString();
+        print('Fetched index: $indexString');
+
+        // Dispatch event with index and wallet address
+        _downloadBloc.add(GetCidsEvent(
+          index: indexString,
+          did: did,
+          owner: walletAddress,
+        ));
       } else {
-        print('No data returned from contract or result format is unexpected');
+        print('Unexpected result type: ${index.runtimeType}');
       }
+    } else {
+      print('No data returned from contract or result format is unexpected');
+    }
     } catch (e) {
       print('An error occurred: $e');
-    } finally {
-      httpClient.close();
     }
   }
 
@@ -250,9 +261,9 @@ class _FilesState extends State<Files> {
         if (state is FileNameLoaded) {
           setState(() {
             fileDataList.add(FileData(
-              state.fileName.fileName.toString(),
-              state.fileName.batchHash.toString(),
-            ));
+                state.fileName.fileName.toString(),
+                state.fileName.batchHash.toString(),
+                state.fileName.fileHash.toString()));
             print('File data added: ${fileDataList.last}');
             filesFetched++;
 
@@ -406,7 +417,7 @@ class _FilesState extends State<Files> {
                 const SizedBox(height: 20),
                 _buildFileList(),
                 _buildBlocContent(context),
-                _buildDownloadBlocContent(context),
+                // _buildDownloadBlocContent(context),
               ],
             );
           }),
@@ -448,7 +459,8 @@ class _FilesState extends State<Files> {
                           SizedBox(width: 50),
                           SizedBox(
                             width: 40,
-                            child: _buildDownloadIcon(fileData.batchHash),
+                            child: _buildDownloadIcon(
+                                fileData.batchHash, fileData.fileHash),
                           ),
                         ],
                       ),
@@ -469,68 +481,85 @@ class _FilesState extends State<Files> {
             ),
     );
   }
-void _handleDownloadVerifyButton(DownloadSuccess state) async {
-  final response = jsonEncode(state.response.toJson());
-  final sessionId = state.response.sessionId.toString();
-  print('sessionId download : $sessionId');
-  print('download response: $response');
 
-  // First, add the download response to the bloc
-  _downloadBloc.add(onDownloadResponse(response));
+  void _handleDownloadVerifyButton(DownloadSuccess state ,String batchHash) async {
+    final response = jsonEncode(state.response.toJson());
+    final sessionId = state.response.sessionId.toString();
+    print('sessionId download : $sessionId');
+    print('download response: $response');
 
-  // Use WidgetsBinding to schedule the next event in the next frame
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    // After the first event is processed, add the download status event
-    _downloadBloc.add(onGetDownloadStatusEvent(sessionId));
-  });
-}
+    _downloadBloc.add(onDownloadResponse(response));
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _downloadBloc.add(onGetDownloadStatusEvent(sessionId, batchHash));
+    });
+  }
 
+  Widget _buildDownloadIcon(String BatchHash, String FileHash) {
+    return BlocBuilder<DownloadBloc, DownloadState>(
+      bloc: _downloadBloc,
+      builder: (BuildContext context, DownloadState state) {
+        if (state is Downloading) {
+          const CircularProgressIndicator(
+            color: Colors.redAccent,
+          );
+        }
+        if (state is DownloadSuccess && state.batchhash == BatchHash) {
+          print('state batch:${state.batchhash}');
+          _handleDownloadVerifyButton(state,state.batchhash);
+        }
 
-
-  Widget _buildDownloadIcon(String BatchHash) {
-    return GestureDetector(
-      onTap: () {
-        _downloadBloc.add(onClickDownload(
-            batch_hash: BatchHash,
-            file_hash: BatchHash,
-            didU: jsonDecode(widget.did.toString())));
-      },
-      child:  _buildIcon(
+        if (state is StatusLoaded && state.batchhash == BatchHash) {
+          print('status loaded in download');
+          print('state batch1:${state.batchhash}');
+          _showSnackbar('status loaded');
+          _deployBatchFileContract(BatchHash, FileHash);
+        }
+        return GestureDetector(
+          onTap: () {
+            _downloadBloc.add(onClickDownload(
+                batch_hash: BatchHash,
+                file_hash: BatchHash,
+                didU: jsonDecode(widget.did.toString())));
+          },
+          child: _buildIcon(
             Icons.download,
             Theme.of(context).colorScheme.secondary,
             Theme.of(context).colorScheme.secondary,
             Colors.white,
           ),
-    );
-  }
-
-  Widget _buildDownloadBlocContent(BuildContext context) {
-    return  BlocBuilder<DownloadBloc, DownloadState>(
-        bloc: _downloadBloc,
-        builder: (BuildContext context, DownloadState state) {
-          if (state is Downloading) {
-            const CircularProgressIndicator(
-              color: Colors.redAccent,
-            );
-          }
-          if (state is DownloadSuccess) {
-            _handleDownloadVerifyButton(state);
-          }
-          
-          if (state is StatusLoaded) {
-            print('status loaded in download');
-          _showSnackbar('status loaded');
-        }
-
-        return const SizedBox.shrink();
+        );
       },
     );
   }
 
 
+  // Widget _buildDownloadBlocContent(BuildContext context) {
+  //   return BlocBuilder<DownloadBloc, DownloadState>(
+  //     bloc: _downloadBloc,
+  //     builder: (BuildContext context, DownloadState state) {
+  //       if (state is Downloading) {
+  //         const CircularProgressIndicator(
+  //           color: Colors.redAccent,
+  //         );
+  //       }
+  //       if (state is DownloadSuccess) {
+  //         _handleDownloadVerifyButton(state);
+  //       }
+
+  //       if (state is StatusLoaded ) {
+  //         print('status loaded in download');
+  //         _showSnackbar('status loaded');
+  //         // _deployBatchFileContract(batch_hash, file_hash);
+  //       }
+
+  //       return const SizedBox.shrink();
+  //     },
+  //   );
+  // }
 
   Widget _buildVerifyButton(String batchHash, bool isVerified) {
+    print('bathash: $batchHash');
     return GestureDetector(
       onTap: isVerified
           ? null
@@ -553,7 +582,6 @@ void _handleDownloadVerifyButton(DownloadSuccess state) async {
       ),
     );
   }
-  
 
   Widget _buildBlocContent(BuildContext context) {
     return BlocBuilder<FileBloc, FileState>(
@@ -587,7 +615,7 @@ void _handleDownloadVerifyButton(DownloadSuccess state) async {
   }
 
   Future<void> _handleVerified(Iden3MessageEntity iden3message) async {
-    debugPrint('User is registered');
+    debugPrint('File is verified');
     _fileBloc.add(fetchAndSaveUploadVerifyClaims(iden3message: iden3message));
   }
 
@@ -678,7 +706,7 @@ void _handleDownloadVerifyButton(DownloadSuccess state) async {
         ],
       ),
       trailing: GestureDetector(
-        onTap: _deployContract,
+        // onTap: _deployBatchFileContract,
         child: Container(
           width: 30,
           height: 30,

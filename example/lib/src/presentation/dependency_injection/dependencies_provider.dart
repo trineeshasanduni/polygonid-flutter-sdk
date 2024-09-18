@@ -171,11 +171,12 @@ void fileUploadDependencies() {
 
 void DownloadDependencies() {
   getIt.registerFactory(() => DownloadBloc( getIt(),
-      getIt(),getIt(),getIt()));
+      getIt(),getIt(),getIt(),getIt()));
 
       // Use cases
   getIt.registerLazySingleton(() => DownloadStatusUsecase(getIt()));
    getIt.registerLazySingleton(() => DownloadVerifyUsecase(getIt()));
+   getIt.registerLazySingleton(() => CidsUsecase(getIt()));
 
 }
 

@@ -14,8 +14,8 @@ class LoginRemoteDatasourceImpl implements LoginRemoteDatasource {
   final http.Client client;
 
   LoginRemoteDatasourceImpl({required this.client});
-  // static const BASE_URL = 'https://test.becx.io/api/v1';
-  static const BASE_URL = 'http://192.168.1.42:9000/api/v1';
+  static const BASE_URL = 'https://test.becx.io/api/v1';
+  // static const BASE_URL = 'http://192.168.1.42:9000/api/v1';
 
   @override
   Future<LoginModal> loginDone() async {

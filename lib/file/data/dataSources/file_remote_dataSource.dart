@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:polygonid_flutter_sdk/file/data/model/cid_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/downloadVerify_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/download_status_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
@@ -38,6 +39,8 @@ abstract class FileRemoteDatasource {
   );
 
   Future<DownloadStatusResponseModel> fetchDownloadStatus(String sessionId);
+
+  Future<CidModel>getCids(dynamic index,String did, String owner);
 
  
 }

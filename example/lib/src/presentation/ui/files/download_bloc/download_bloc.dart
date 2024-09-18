@@ -4,6 +4,7 @@ import 'package:polygonid_flutter_sdk/common/domain/domain_constants.dart';
 import 'package:polygonid_flutter_sdk/common/domain/entities/chain_config_entity.dart';
 import 'package:polygonid_flutter_sdk/common/domain/entities/env_entity.dart';
 import 'package:polygonid_flutter_sdk/common/domain/error_exception.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/cid_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/downloadVerify_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/download_status_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/usecases/file_usecase.dart';
@@ -26,16 +27,19 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
   final QrcodeParserUtils _qrcodeParserUtils;
   final PolygonIdSdk _polygonIdSdk;
   final DownloadStatusUsecase statusUsecase;
+  final CidsUsecase cidsUsecase;
+
 
   static const SelectedProfile _defaultProfile = SelectedProfile.public;
   SelectedProfile selectedProfile = _defaultProfile;
 
-  DownloadBloc(this.downloadVerify, this._qrcodeParserUtils, this._polygonIdSdk,this.statusUsecase)
+  DownloadBloc(this.downloadVerify, this._qrcodeParserUtils, this._polygonIdSdk,
+      this.statusUsecase,this.cidsUsecase)
       : super(DownloadInitial()) {
     on<onClickDownload>(_handleDownloadVerify);
     on<onDownloadResponse>(_handleDownloadResponse);
     on<onGetDownloadStatusEvent>(_handleDownloadStatus);
-
+    on<GetCidsEvent>(_handleGetCids);
   }
 
   Future<void> _handleDownloadVerify(
@@ -47,7 +51,7 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
         didU: event.didU));
     failureOrdownload.fold(
         (failure) => emit(DownloadFailed(failure.toString())),
-        (download) => emit(DownloadSuccess(download)));
+        (download) => emit(DownloadSuccess(download,event.batch_hash )));
   }
 
   Future<void> _handleDownloadResponse(
@@ -153,24 +157,41 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     }
   }
 
-   Future<void> _handleDownloadStatus(onGetDownloadStatusEvent event, Emitter<DownloadState> emit) async {
-  emit(Downloading());
+  Future<void> _handleDownloadStatus(
+      onGetDownloadStatusEvent event, Emitter<DownloadState> emit) async {
+    emit(Downloading());
 
-  final status = await statusUsecase(DownloadStatusParams(sessionId: event.sessionId));
-  print('status downloaddd get: $status');
+    final status =
+        await statusUsecase(DownloadStatusParams(sessionId: event.sessionId));
+    print('status downloaddd get: $status');
 
-  status.fold(
-    (failure) {
-      print('failure downloaddd get: $failure');
-      emit(DownloadFailed(failure.toString()));
-    },
-    
-    (did) {
-      print('Emitting StatusLoaded downloaddd with DID: $did');
-      emit(StatusLoaded(did));
-    },
-  );
+    status.fold(
+      (failure) {
+        print('failure get: $failure');
+        emit(DownloadFailed(failure.toString()));
+      },
+      (did) {
+        print('Emitting StatusLoaded downloaddd with DID: $did');
+        emit(StatusLoaded(did,event.batch_hash ));
+      },
+    );
+  }
+
+  void _handleGetCids(
+      GetCidsEvent event, Emitter<DownloadState> emit) async {
+    emit(GettingCids());
+    final fileNameResponse =
+        await cidsUsecase(CidsParams(index: event.index,did: event.did,owner: event.owner));
+    fileNameResponse.fold(
+      (failure) {
+        print('failure get: $failure');
+        emit(DownloadFailed(failure.toString()));
+      },
+      (fileName) {
+        print('Emitting StatusLoaded with DID15: $fileName');
+        emit(CidsGot(fileName));
+      },
+    );
+  }
+
 }
-}
-
-

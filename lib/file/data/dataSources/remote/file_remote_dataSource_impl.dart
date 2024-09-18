@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:polygonid_flutter_sdk/file/data/dataSources/file_remote_dataSource.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/cid_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/downloadVerify_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/download_status_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
@@ -16,8 +17,8 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
 
   FileRemoteDatasourceImpl({required this.client});
 
-  // static const BASE_URL = 'https://test.becx.io/api/v1';
-  static const BASE_URL = 'http://192.168.1.42:9000/api/v1';
+  static const BASE_URL = 'https://test.becx.io/api/v1';
+  // static const BASE_URL = 'http://192.168.1.42:9000/api/v1';
 
   @override
   Future<FileModel> fileUpload(
@@ -195,7 +196,7 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
       {required String BatchHash,
       required String FileHash,
       required String Odid}) async {
-    print('Using space');
+    print('Using space dowload');
     try {
       Map<String, dynamic> data = {
         "BatchHash": BatchHash,
@@ -294,4 +295,124 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
 
     throw Exception('Failed to get status 200');
   }
+
+@override
+  Future<CidModel> getCids(dynamic index,String did, String owner) async {
+    print('fetching cids');
+    try {
+      final response = await client
+          .get(Uri.parse('$BASE_URL/get-cid?Index=$index&Did=$did&OwnerAddress=$owner'));
+      // print('cids status: ${response.body}');
+
+      print('cids status1: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        print('fetch cids status code: ${response.statusCode}');
+        final dynamic CidsList = jsonDecode(response.body);
+        print('cids: $CidsList');
+
+        List<Map<String, dynamic>> ListCid = CidsList ;
+        print('cid3: $ListCid');
+
+
+
+        // Assuming the response is a list of objects, use the first item
+        if (ListCid.isNotEmpty) {
+          // final fileNameJson = ListCid as Map<String, dynamic>;
+          // print('cid 1: $fileNameJson');
+
+          List<Map<String, dynamic>> youngUsers = ListCid.where((Cid) => Cid['Cid']).toList();
+          print("cid 2: $youngUsers");
+
+          final CidsModel = CidModel.fromJson(youngUsers as Map<String, dynamic>);
+          final responsefileName = CidModel(
+            cid: CidsModel.cid,
+            queueId: CidsModel.queueId
+            
+          );
+          print("CidsModel response: $CidsModel");
+          return responsefileName;
+        } else {
+          throw Exception('No data found in the response');
+        }
+      } else {
+        throw Exception('Failed to load cids: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching cids: $e');
+      throw Exception('Failed to fetch cids');
+    }
+  }
+
+   @override
+  Future<DownloadVerifyModel> download(
+      {required String BatchHash,
+      required String FileHash,
+      required String Odid}) async {
+    print('Using space dowload');
+    try {
+      Map<String, dynamic> data = {
+        "BatchHash": BatchHash,
+        "FileHash": FileHash,
+        "Odid": Odid
+      };
+      // Define the URI for the use-space API endpoint
+      final uri = Uri.parse('$BASE_URL/download-verify');
+
+      // Make the POST request with the proper headers and body
+      final response = await client.post(
+        uri,
+        // headers: {"Content-Type": "application/json"},
+        body: jsonEncode(data),
+      );
+      print('data Download Verify: $data');
+
+      print('Download Verify status code: ${response.statusCode}');
+      Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+      final headers = response.headers['x-iid'];
+      print('header downoload: $headers ');
+      final responsedown = DownloadVerifyModel.fromJson(jsonResponse);
+
+      final DownloadResponse = DownloadVerifyModel(
+          body: BodyDownload(
+              callbackUrl: responsedown.body?.callbackUrl!,
+              reason: responsedown.body?.reason,
+              scope: [
+            ScopeDownload(
+              circuitId: responsedown.body?.scope![0].circuitId,
+              id: responsedown.body?.scope![0].id,
+              query: QueryDownload(
+                allowedIssuers:
+                    responsedown.body?.scope![0].query?.allowedIssuers,
+                context: responsedown.body?.scope![0].query?.context,
+                credentialSubject: CredentialSubject(
+                  hash: Hash(
+                    $eq: responsedown
+                        .body?.scope![0].query?.credentialSubject?.hash?.$eq,
+                  ),
+                ),
+                type: responsedown.body?.scope![0].query?.type,
+              ),
+            ),
+          ]),
+          from: responsedown.from,
+            id: responsedown.id,
+            type: responsedown.type,
+            thid: responsedown.thid,
+            typ: responsedown.typ,
+            sessionId: headers
+          );
+
+      if (response.statusCode == 200) {
+        return DownloadResponse;
+      } else {
+        print('Failed to Download Verify');
+        throw Exception('Failed to Download Verify');
+      }
+    } catch (error) {
+      print('Error during Download Verify: $error');
+      throw Exception('Failed to Download Verify');
+    }
+  }
+  
 }

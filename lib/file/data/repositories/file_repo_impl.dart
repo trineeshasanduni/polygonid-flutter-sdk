@@ -3,11 +3,13 @@ import 'dart:io';
 import 'package:fpdart/fpdart.dart';
 import 'package:polygonid_flutter_sdk/common/errors/server_failure.dart';
 import 'package:polygonid_flutter_sdk/file/data/dataSources/file_remote_dataSource.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/cid_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/downloadVerify_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/download_status_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/file_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/verify_upload_model.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/cid_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/downloadVerify_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/download_status_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/fileName_entity.dart';
@@ -73,9 +75,9 @@ class FileRepoImpl implements FileRepository {
       final FileNameModel fileNameModel =
           await fileRemoteDatasource.getFileName(BatchHash);
       return right(FileNameEntity(
-         fileName: fileNameModel.fileName,
-         batchHash: fileNameModel.batchHash,
-
+        fileName: fileNameModel.fileName,
+        batchHash: fileNameModel.batchHash,
+        fileHash: fileNameModel.fileHash,
       ));
     } catch (e) {
       return Left(Failure());
@@ -84,59 +86,52 @@ class FileRepoImpl implements FileRepository {
 
   @override
   Future<Either<Failure, VerifyUploadEntity>> verifyUpload(
-      {required String BatchHash, required String ownerDid , required String did }) async {
+      {required String BatchHash,
+      required String ownerDid,
+      required String did}) async {
     try {
-      final VerifyUploadModel verifyUploadModel =
-          await fileRemoteDatasource.verifyUpload(BatchHash: BatchHash, ownerDid : ownerDid, did: did);
+      final VerifyUploadModel verifyUploadModel = await fileRemoteDatasource
+          .verifyUpload(BatchHash: BatchHash, ownerDid: ownerDid, did: did);
       return right(VerifyUploadEntity(
         claim: ClaimVerifyEntity(
-              body: BodyVerifyEntity(
-                credentials: [
-                  CredentialsVerifyEntity(
-                    description:
-                        verifyUploadModel.claim?.body?.credentials![0].description,
-                    id: verifyUploadModel.claim?.body?.credentials![0].id,
-                  ),
-                ],
-                url: verifyUploadModel.claim?.body?.url,
+          body: BodyVerifyEntity(
+            credentials: [
+              CredentialsVerifyEntity(
+                description:
+                    verifyUploadModel.claim?.body?.credentials![0].description,
+                id: verifyUploadModel.claim?.body?.credentials![0].id,
               ),
-              from: verifyUploadModel.claim?.from,
-              id: verifyUploadModel.claim?.id,
-              thid: verifyUploadModel.claim?.thid,
-              to: verifyUploadModel.claim?.to,
-              typ: verifyUploadModel.claim?.typ,
-              type: verifyUploadModel.claim?.type,
-            ),
-            txHash: verifyUploadModel.txHash,
-        
-        
-         
+            ],
+            url: verifyUploadModel.claim?.body?.url,
+          ),
+          from: verifyUploadModel.claim?.from,
+          id: verifyUploadModel.claim?.id,
+          thid: verifyUploadModel.claim?.thid,
+          to: verifyUploadModel.claim?.to,
+          typ: verifyUploadModel.claim?.typ,
+          type: verifyUploadModel.claim?.type,
+        ),
+        txHash: verifyUploadModel.txHash,
       ));
     } catch (e) {
       return Left(Failure());
     }
   }
 
-
-
   ///////////////////////////Download Verify///////////////////////////
   ///
   @override
-  Future<Either<Failure, DownloadVerifyEntity>> downloadVerify({required String batch_hash,
+  Future<Either<Failure, DownloadVerifyEntity>> downloadVerify(
+      {required String batch_hash,
       required String file_hash,
       required String didU}) async {
     try {
-      DownloadVerifyModel downloadVerifyModel = await fileRemoteDatasource.downloadVerify(
-        BatchHash: batch_hash,
-        FileHash: file_hash,
-        Odid: didU
-
-      
-        
-      );
+      DownloadVerifyModel downloadVerifyModel =
+          await fileRemoteDatasource.downloadVerify(
+              BatchHash: batch_hash, FileHash: file_hash, Odid: didU);
       print('object234: ${downloadVerifyModel.body?.callbackUrl!}');
       return right(DownloadVerifyEntity(
-        body: BodyDownloadEntity(
+          body: BodyDownloadEntity(
             callbackUrl: downloadVerifyModel.body?.callbackUrl,
             reason: downloadVerifyModel.body?.reason,
             scope: downloadVerifyModel.body?.scope
@@ -161,24 +156,35 @@ class FileRepoImpl implements FileRepository {
           type: downloadVerifyModel.type,
           thid: downloadVerifyModel.thid,
           typ: downloadVerifyModel.typ,
-          sessionId: downloadVerifyModel.sessionId
-
-
-       
-      ));
+          sessionId: downloadVerifyModel.sessionId));
     } catch (error) {
       return left(Failure('Failed to upload: $error'));
     }
   }
-@override
-   Future<Either<Failure, DownloadStatusResponseentity>> fetchDownloadStatus(
+
+  @override
+  Future<Either<Failure, DownloadStatusResponseentity>> fetchDownloadStatus(
       {required String sessionId}) async {
     try {
       final DownloadStatusResponseModel downloadStatusResponseModel =
           await fileRemoteDatasource.fetchDownloadStatus(sessionId);
       return right(DownloadStatusResponseentity(
-        statusCode: downloadStatusResponseModel.statusCode
-          ));
+          statusCode: downloadStatusResponseModel.statusCode));
+    } catch (e) {
+      return Left(Failure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, CidEntity>> getCids(
+      {required dynamic index,required String did,required String owner}) async {
+    try {
+      final CidModel cidModel =
+          await fileRemoteDatasource.getCids(index,did,owner);
+      return right(CidEntity(
+        cid: cidModel.cid,
+        queueId: cidModel.queueId
+      ));
     } catch (e) {
       return Left(Failure());
     }

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:fpdart/fpdart.dart';
 import 'package:polygonid_flutter_sdk/common/errors/server_failure.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/cid_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/downloadVerify_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/download_status_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/fileName_entity.dart';
@@ -40,6 +41,10 @@ abstract class FileRepository {
   });
   Future<Either<Failure,DownloadStatusResponseentity>> fetchDownloadStatus(
     {required String sessionId}
+  );
+
+  Future<Either<Failure,CidEntity>> getCids(
+    {required dynamic index,required String did, required String owner}
   );
 
 

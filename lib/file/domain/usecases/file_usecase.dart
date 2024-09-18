@@ -4,6 +4,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:polygonid_flutter_sdk/common/errors/server_failure.dart';
 import 'package:polygonid_flutter_sdk/common/usecase/usecase.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/download_status_model.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/cid_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/downloadVerify_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/download_status_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/fileName_entity.dart';
@@ -54,6 +55,16 @@ class FileNameParam {
 
   FileNameParam({
     required this.BatchHash,
+  });
+} 
+
+class CidsParams {
+  final String index;
+  final String did;
+  final String owner;
+
+  CidsParams({
+    required this.index,required this.did, required this.owner,
   });
 } 
 
@@ -170,5 +181,19 @@ class DownloadStatusUsecase {
   Future<Either<Failure, DownloadStatusResponseentity>> call(
       DownloadStatusParams params) async {
     return await fileRepository.fetchDownloadStatus(sessionId: params.sessionId);
+  }
+}
+
+class CidsUsecase {
+  final FileRepository fileRepository;
+
+  CidsUsecase(this.fileRepository);
+
+  Future<Either<Failure, CidEntity>> call(
+    
+      CidsParams params) async {
+          print('fetching cids');
+
+    return await fileRepository.getCids(index: params.index, did: params.did, owner: params.owner);
   }
 }
