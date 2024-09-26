@@ -35,20 +35,26 @@ class VerifyUploadEvent extends FileEvent {
 
 class onVerifyResponse extends FileEvent {
   final String? verifyResponse;
+  final String? batchHash;
 
-  const onVerifyResponse(this.verifyResponse);
+  const onVerifyResponse(this.verifyResponse,this.batchHash);
 }
 
 final class fetchAndSaveUploadVerifyClaims extends FileEvent {
   final Iden3MessageEntity iden3message;
+  final String? batchHash;
 
-  fetchAndSaveUploadVerifyClaims({required this.iden3message});
+  const fetchAndSaveUploadVerifyClaims({required this.iden3message,required this.batchHash});
 }
-
+class ResetFileStateEvent extends FileEvent {
+  @override
+  List<Object> get props => [];
+}
 final class getUploadVerifyClaims extends FileEvent {
   final List<FilterEntity>? filters;
+  final String? batchHash;
 
-  getUploadVerifyClaims({this.filters});
+  getUploadVerifyClaims(this.batchHash, {this.filters});
 }
 
 

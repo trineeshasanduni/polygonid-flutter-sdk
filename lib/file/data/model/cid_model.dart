@@ -1,22 +1,14 @@
 class CidModel {
-  String cid;
-  int queueId;
+  final List<String> cids;
+  String? batchhash;
 
-  CidModel({required this.cid, required this.queueId});
+  CidModel({required this.cids, this.batchhash});
 
-  // Factory method to create a CidModel object from a JSON map
-  factory CidModel.fromJson(Map<String, dynamic> json) {
+  // If you need to parse from JSON to List<String>
+  factory CidModel.fromJson(List<dynamic> json) {
     return CidModel(
-      cid: json['Cid'],
-      queueId: json['QueueId'],
-    );
-  }
+      cids: json.map((item) => item['Cid'].toString()).toList(),
 
-  // Method to convert a FileData object to a JSON map
-  Map<String, dynamic> toJson() {
-    return {
-      'Cid': cid,
-      'QueueId': queueId,
-    };
+    );
   }
 }

@@ -39,6 +39,7 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/mappers
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/mappers/proof_model_type_mapper.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/download_bloc/download_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/file_bloc/file_bloc.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/share_bloc/share_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/login/bloc/login_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/bloc/add_plans_bloc.dart';
@@ -71,6 +72,7 @@ Future<void> init() async {
   fileUploadDependencies();
   addPlansDependencies();
   DownloadDependencies();
+  ShareDependencies();
   _initGetit();
 }
 
@@ -171,12 +173,22 @@ void fileUploadDependencies() {
 
 void DownloadDependencies() {
   getIt.registerFactory(() => DownloadBloc( getIt(),
-      getIt(),getIt(),getIt(),getIt()));
+      getIt(),getIt(),getIt(),getIt(),getIt()));
 
       // Use cases
   getIt.registerLazySingleton(() => DownloadStatusUsecase(getIt()));
    getIt.registerLazySingleton(() => DownloadVerifyUsecase(getIt()));
    getIt.registerLazySingleton(() => CidsUsecase(getIt()));
+   getIt.registerLazySingleton(() => DownloadUsecase(getIt()));
+
+}
+
+void ShareDependencies() {
+  getIt.registerFactory(() => ShareBloc( getIt()));
+
+      // Use cases
+  getIt.registerLazySingleton(() => ShareUsecase(getIt()));
+ 
 
 }
 

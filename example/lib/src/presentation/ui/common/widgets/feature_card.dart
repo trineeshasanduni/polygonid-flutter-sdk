@@ -42,28 +42,28 @@ class FeatureCard extends StatelessWidget {
               children: [
                 Text(
                   methodName,
-                  style: const TextStyle(
+                  style:  TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black,
+                    color: Theme.of(context).secondaryHeaderColor,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   title,
-                  style: const TextStyle(
+                  style:  TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black,
+                    color: Theme.of(context).secondaryHeaderColor,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   description,
-                  style: const TextStyle(
+                  style:  TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: Colors.black,
+                    color: Theme.of(context).secondaryHeaderColor,
                   ),
                 ),
               ],

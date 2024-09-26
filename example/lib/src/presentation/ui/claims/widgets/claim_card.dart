@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/models/claim_model.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_colors.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_dimensions.dart';
@@ -21,7 +22,7 @@ class ClaimCard extends StatelessWidget {
       child: Stack(
         children: [
           _buildBackground(),
-          _buildContent(),
+          _buildContent(context),
         ],
       ),
     );
@@ -47,7 +48,7 @@ class ClaimCard extends StatelessWidget {
   }
 
   ///
-  Widget _buildContent() {
+  Widget _buildContent(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(18),
       child: Column(
@@ -64,10 +65,11 @@ class ClaimCard extends StatelessWidget {
                   children: [
                     Text(
                       claimModel.name,
-                      style: const TextStyle(
+                      style:  TextStyle(
                         fontWeight: FontWeight.w500,
-                        color: Colors.red,
-                        fontSize: 26,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        fontSize: 20,
+                        fontFamily: GoogleFonts.robotoMono().fontFamily,
                       ),
                     ),
                   ],
@@ -87,7 +89,7 @@ class ClaimCard extends StatelessWidget {
                     Text(
                       CustomStrings.claimCardIssuerLabel,
                       textAlign: TextAlign.center,
-                      style: CustomTextStyles.claimCardIssuerTextStyle,
+                      style: TextStyle(color: Theme.of(context).primaryColor,fontFamily: GoogleFonts.robotoMono().fontFamily,),
                     ),
                     const SizedBox(
                       height: 4,

@@ -41,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: CustomColors.background,
+      backgroundColor: Theme.of(context).secondaryHeaderColor,
       body: SafeArea(
         child: SizedBox(
           child: Column(
@@ -52,8 +52,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 50),
-                      _buildLogo(),
+                      // const SizedBox(height: 50),
+                      // _buildLogo(),
                       const SizedBox(height: 13),
                       _buildDescription(),
                       const SizedBox(height: 24),
@@ -148,7 +148,8 @@ class _HomeScreenState extends State<HomeScreen> {
             CustomStrings.homeButtonRemoveIdentityCTA,
             textAlign: TextAlign.center,
             style: CustomTextStyles.primaryButtonTextStyle.copyWith(
-              color: CustomColors.primaryButton,
+              // color: CustomColors.primaryButton,
+            color:  Theme.of(context).primaryColor,
             ),
           ),
         ),

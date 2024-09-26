@@ -5,7 +5,7 @@ import 'package:equatable/equatable.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/entities/addPlans_entity.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/entities/freeSpace_entity.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/usecases/addPlans_usecase.dart';
-import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/bloc/dashboard_bloc.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard_bloc/dashboard_bloc.dart';
 
 part 'add_plans_event.dart';
 part 'add_plans_state.dart';

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_colors.dart';
 
 class CustomTextStyles {
@@ -41,14 +42,15 @@ class CustomTextStyles {
       descriptionTextStyle.copyWith(color: CustomColors.redError);
 
   static TextStyle claimCardIssuerTextStyle = TextStyle(
-    color: CustomColors.proofCardSubtitle.withOpacity(0.8),
+    color: CustomColors.proofCardSubtitle.withOpacity(0.2),
     fontSize: 14,
     fontWeight: FontWeight.w400,
   );
 
-  static TextStyle claimCardIssuerNameTextStyle = const TextStyle(
-    color: Colors.white,
+  static TextStyle claimCardIssuerNameTextStyle =  TextStyle(
+    color: Colors.black,
     fontSize: 16,
     fontWeight: FontWeight.w500,
+    fontFamily: GoogleFonts.robotoMono().fontFamily,
   );
 }

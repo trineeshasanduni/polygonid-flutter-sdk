@@ -21,19 +21,7 @@ class _DashboardNavState extends State<DashboardNav> {
         return MaterialPageRoute(
           settings: settings,
           builder: (BuildContext context) {
-            // if (settings.name == "/myFiles") {
-            //   return const MyFiles();
-            // }
-            // if( settings.name == "/storageLogin"){
-            //   return const SetupPasswordScreen();
-            // }
-            // if( settings.name == "/register"){
-            //   return const Signup();
-            // }
-            // if( settings.name == "/dashboard"){
-            //   return const Dashboard();
-            // }
-            // return const HomePage();
+           
             return  Dashboard( did: widget.did,);
           },
         );

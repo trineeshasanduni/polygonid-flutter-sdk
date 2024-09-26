@@ -9,7 +9,12 @@ sealed class DownloadState extends Equatable {
 
 final class DownloadInitial extends DownloadState {}
 
-final class Downloading extends DownloadState {}
+final class Downloading extends DownloadState {
+    final String batchhash;
+    
+    const Downloading(this.batchhash);
+
+}
 
 final class DownloadFailed extends DownloadState {
   final String message;
@@ -33,19 +38,27 @@ final class DownloadSuccess extends DownloadState {
 
   const DownloadSuccess(this.response,this.batchhash);
 }
+final class DownloadUrlSuccess extends DownloadState {
+  final DownloadUrlEntity response;
+  final String batchhash;
+  // final String batchhash;
+
+  const DownloadUrlSuccess(this.response,this.batchhash);
+}
 
 final class StatusLoaded extends DownloadState {
   final DownloadStatusResponseentity did;
    final String batchhash;
 
-  StatusLoaded(this.did,this.batchhash);
+ const StatusLoaded(this.did,this.batchhash);
 }
 
 final class GettingCids extends DownloadState {}
 
 final class CidsGot extends DownloadState {
   final CidEntity cids;
+  final String batchhash;
 
-  CidsGot(this.cids);
+ const CidsGot(this.cids,this.batchhash);
 }
 

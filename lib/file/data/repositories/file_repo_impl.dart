@@ -4,16 +4,20 @@ import 'package:fpdart/fpdart.dart';
 import 'package:polygonid_flutter_sdk/common/errors/server_failure.dart';
 import 'package:polygonid_flutter_sdk/file/data/dataSources/file_remote_dataSource.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/cid_model.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/downloadUrl_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/downloadVerify_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/download_status_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/file_model.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/share_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/verify_upload_model.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/cid_entity.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/downloadUrl_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/downloadVerify_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/download_status_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/fileName_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/file_entity.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/share_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/verify_upload_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/repositories/file_repo.dart';
 import 'package:polygonid_flutter_sdk/registers/data/dataSources/register_remote_dataSource.dart';
@@ -177,16 +181,72 @@ class FileRepoImpl implements FileRepository {
 
   @override
   Future<Either<Failure, CidEntity>> getCids(
-      {required dynamic index,required String did,required String owner}) async {
+      {required dynamic index,
+      required String did,
+      required String owner,
+      required String BatchHash}) async {
     try {
       final CidModel cidModel =
-          await fileRemoteDatasource.getCids(index,did,owner);
+          await fileRemoteDatasource.getCids(index, did, owner, BatchHash);
       return right(CidEntity(
-        cid: cidModel.cid,
-        queueId: cidModel.queueId
+        cids: cidModel.cids,
+        batchhash: cidModel.batchhash,
       ));
     } catch (e) {
       return Left(Failure());
+    }
+  }
+
+  Future<Either<Failure, DownloadUrlEntity>> download(
+      {required String BatchHash,
+      required String FileHash,
+      required String Odid,
+      required String FileName,
+      required String Cids}) async {
+    try {
+      DownloadUrlModel downloadModel = await fileRemoteDatasource.download(
+          BatchHash: BatchHash,
+          FileHash: FileHash,
+          Odid: Odid,
+          FileName: FileName,
+          Cids: Cids);
+
+      return right(DownloadUrlEntity(
+        dID: downloadModel.dID,
+        uRL: downloadModel.uRL,
+      ));
+    } catch (error) {
+      return left(Failure('Failed to download: $error'));
+    }
+  }
+
+
+  /////////////////share/////////////////
+  ///
+   Future<Either<Failure, ShareEntity>> share(
+      {required String BatchHash,
+      required String FileHash,
+      required String OwnerDid,
+      required String FileName,
+      required String ShareDid,
+      required String Owner}) async {
+    try {
+      ShareModel shareModel = await fileRemoteDatasource.share(
+        BatchHash: BatchHash,
+        FileHash:FileHash,
+        OwnerDid:OwnerDid,
+        ShareDid: ShareDid,
+        Owner: Owner,
+        FileName: FileName);
+
+      return right(ShareEntity(
+        tXHash: shareModel.tXHash,
+        ownerDid: shareModel.ownerDid,
+
+        
+      ));
+    } catch (error) {
+      return left(Failure('Failed to share: $error'));
     }
   }
 }

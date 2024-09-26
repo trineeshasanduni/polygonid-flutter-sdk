@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gradient_borders/box_borders/gradient_box_border.dart';
@@ -15,11 +16,15 @@ import 'package:path_provider/path_provider.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
 import 'package:polygonid_flutter_sdk/iden3comm/domain/entities/common/iden3_message_entity.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/common/widgets/circularProgress.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/download_bloc/download_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/file_bloc/file_bloc.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/share_bloc/share_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_event.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_state.dart';
+import 'package:polygonid_flutter_sdk_example/utils/deploayContract.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:web3dart/web3dart.dart';
 import 'package:web3modal_flutter/utils/debouncer.dart';
 import 'package:web_socket_channel/io.dart';
@@ -49,20 +54,33 @@ class _FilesState extends State<Files> {
   late final FileBloc _fileBloc;
   late final HomeBloc _homeBloc;
   late final DownloadBloc _downloadBloc;
+  late final ShareBloc _shareBloc;
   String identity = '';
   final walletAddress = '';
   bool _isRequestInProgress = false;
   List<String> fileNames = [];
   List<FileData> fileDataList = [];
+  List<String> sharedFileNames = [];
+  List<FileData> fileSharedDataList = [];
+  List<dynamic> sharedDataResult = [];
   var httpClient = http.Client();
   Web3Client? _web3Client;
   var rpcUrl =
       'https://polygon-mainnet.g.alchemy.com/v2/pHKWzuctaLCPxAKYc0c8bKQA8d85oPlk';
 
+  final _abiPath   = 'assets/abi/FileStorage.json';
+  final _invoiceAbiPath = 'assets/abi/BethelInvoice.json'; 
+
   final _contractAddress =
       EthereumAddress.fromHex('0x665e346D9c68587Bd51C53eAd71e0F5367E7950C');
 
+  final _ContractAddress = '0x665e346D9c68587Bd51C53eAd71e0F5367E7950C';
+  final _InvoidContractAddress = '0xB05c8A8c54DDA3E4e785FD033AB63a50e09b9521';
+
   List<dynamic> dataResult = []; // Store contract data as a list of lists
+
+  String _fileCount = '0';
+  String _fileUsage = '0MiB';
 
   @override
   void initState() {
@@ -70,10 +88,12 @@ class _FilesState extends State<Files> {
     _fileBloc = getIt<FileBloc>();
     _homeBloc = getIt<HomeBloc>();
     _downloadBloc = getIt<DownloadBloc>();
+    _shareBloc = getIt<ShareBloc>();
 
     final storage = GetStorage();
     _deployContract();
     _initGetIdentifier();
+    _deployFileCount();
   }
 
   void _initGetIdentifier() {
@@ -134,10 +154,13 @@ class _FilesState extends State<Files> {
     }
   }
 
-  void _showSnackbar(String message) {
+  void _showSnackbar(String message, Color? backgroundColor) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 5),
+        backgroundColor: backgroundColor,
+      ));
     });
   }
 
@@ -165,6 +188,12 @@ class _FilesState extends State<Files> {
       final storage = GetStorage();
       final walletAddress1 = storage.read('walletAddress');
 
+      // ** Clear the current file list before fetching new data **
+      setState(() {
+        dataResult.clear(); // Clear the list to prevent duplication
+        fileDataList.clear(); // Also clear any fileDataList if used
+      });
+
       final result = await _web3Client?.call(
         contract: _contract,
         function: _getAllBatchesFunction,
@@ -187,6 +216,46 @@ class _FilesState extends State<Files> {
       print('An error occurred: $e');
     }
   }
+
+  Future<void> _deployShredFiles() async {
+    final fileStorageService = FileStorageService(rpcUrl, _ContractAddress,_abiPath);
+
+    try {
+      await fileStorageService.initializeWeb3Client();
+      final did = jsonDecode(widget.did.toString());
+      final contract = await fileStorageService.loadContract('FileStorage');
+      final sharedFiles = await fileStorageService
+          .callContractFunction(contract, 'getAllSharedFiles', []);
+      print('result11:${sharedFiles![0]}');
+
+      if (sharedFiles!.isNotEmpty && sharedFiles?[0] is List) {
+        setState(() {
+          sharedDataResult = List<dynamic>.from(sharedFiles[0]);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            // Store the result
+            for (var batchDetails in sharedDataResult) {
+              final batchHash = batchDetails[2].toString();
+              print('Requesting shared file for batchHash: $batchHash');
+
+              // Only fetch if this batchHash hasn't been fetched already
+              // if (!fetchedBatchHashes.contains(batchHash) &&
+              //     filesFetched < totalFiles) {
+              //   await Future.delayed(const Duration(milliseconds: 500), () {
+              //     _fileBloc.add(GetFileNameEvent(BatchHash: batchHash));
+              //   });
+              // }
+            }
+          });
+        });
+      } else {
+        print('No data returned from contract or result format is unexpected');
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+    }
+  }
+
+  
 
   Future<void> _deployBatchFileContract(
       String batch_hash, String file_hash) async {
@@ -216,29 +285,54 @@ class _FilesState extends State<Files> {
         sender: EthereumAddress.fromHex(walletAddress1),
       );
       final walletAddress = storage.read('walletAddress');
-    print('walletAddress : $walletAddress');
+      print('walletAddress : $walletAddress');
 
       if (result!.isNotEmpty) {
-      // Handle result based on its type
-      final index = result[0];
+        // Handle result based on its type
+        final index = result[0];
 
-      // Check if result[0] is of type BigInt and convert it to String
-      if (index is BigInt) {
-        final indexString = index.toString();
-        print('Fetched index: $indexString');
+        // Check if result[0] is of type BigInt and convert it to String
+        if (index is BigInt) {
+          final indexString = index.toString();
+          print('Fetched index: $indexString');
 
-        // Dispatch event with index and wallet address
-        _downloadBloc.add(GetCidsEvent(
-          index: indexString,
-          did: did,
-          owner: walletAddress,
-        ));
+          // Dispatch event with index and wallet address
+          _downloadBloc.add(GetCidsEvent(
+            index: indexString,
+            did: did,
+            owner: walletAddress,
+            batch_hash: batch_hash,
+          ));
+        } else {
+          print('Unexpected result type: ${index.runtimeType}');
+        }
       } else {
-        print('Unexpected result type: ${index.runtimeType}');
+        print('No data returned from contract or result format is unexpected');
       }
-    } else {
-      print('No data returned from contract or result format is unexpected');
+    } catch (e) {
+      print('An error occurred: $e');
     }
+  }
+
+  Future<void> _deployFileCount() async {
+    final fileStorageService = FileStorageService(rpcUrl, _ContractAddress, _abiPath);
+
+    try {
+      await fileStorageService.initializeWeb3Client();
+      final did = jsonDecode(widget.did.toString());
+      final contract = await fileStorageService.loadContract('FileStorage');
+      final result = await fileStorageService
+          .callContractFunction(contract, 'getTotalFilesCount', []);
+      print('result:${result![0]}');
+
+      final fileSizeInBytes = (result[1] as BigInt).toInt();
+      final fileSizeInMiB = fileSizeInBytes / (1024 * 1024);
+      print('${fileSizeInMiB.toStringAsFixed(2)} MiB');
+
+      setState(() {
+        _fileCount = result![0].toString();
+        _fileUsage = '${fileSizeInMiB.toStringAsFixed(2)}'+ 'MiB';
+      });
     } catch (e) {
       print('An error occurred: $e');
     }
@@ -251,36 +345,61 @@ class _FilesState extends State<Files> {
 
     setState(() {
       _isRequestInProgress = true;
+      fileDataList.clear(); // Clear the list before adding new data
     });
 
+    // Set to store unique batch hashes and avoid duplicate requests
+    Set<String> fetchedBatchHashes = {};
+
+    // Keep track of the number of files fetched
     int filesFetched = 0;
     final totalFiles = dataResult.length;
+    print('total files: $totalFiles');
 
-    try {
-      _fileBloc.stream.listen((state) {
-        if (state is FileNameLoaded) {
+    // Cancel previous listeners and use StreamSubscription to properly manage the stream
+    StreamSubscription? fileBlocSubscription;
+
+    // Subscribe to the stream and process file names
+    fileBlocSubscription = _fileBloc.stream.listen((state) {
+      if (state is FileNameLoaded) {
+        final batchHash = state.fileName.batchHash.toString();
+
+        // Check if the file has already been added based on batch hash
+        if (!fetchedBatchHashes.contains(batchHash)) {
           setState(() {
             fileDataList.add(FileData(
-                state.fileName.fileName.toString(),
-                state.fileName.batchHash.toString(),
-                state.fileName.fileHash.toString()));
-            print('File data added: ${fileDataList.last}');
-            filesFetched++;
-
-            if (filesFetched == totalFiles) {
-              print('All files fetched successfully.');
-              _isRequestInProgress = false;
-            }
+              state.fileName.fileName.toString(),
+              batchHash,
+              state.fileName.fileHash.toString(),
+            ));
           });
-        }
-      });
 
+          // Mark this batch hash as fetched to prevent duplicates
+          fetchedBatchHashes.add(batchHash);
+          filesFetched++;
+          print('File data added: ${fileDataList.last}');
+        }
+
+        // Check if all files have been fetched
+        if (filesFetched >= totalFiles) {
+          print('All files fetched successfully.');
+          _isRequestInProgress = false;
+
+          // Cancel the stream subscription to avoid further unnecessary listening
+          fileBlocSubscription?.cancel();
+        }
+      }
+    });
+
+    try {
       for (var batchDetails in dataResult) {
         final batchHash = batchDetails[1].toString();
         print('Requesting file for batchHash: $batchHash');
 
-        if (filesFetched < totalFiles) {
-          await Future.delayed(Duration(milliseconds: 500), () {
+        // Only fetch if this batchHash hasn't been fetched already
+        if (!fetchedBatchHashes.contains(batchHash) &&
+            filesFetched < totalFiles) {
+          await Future.delayed(const Duration(milliseconds: 500), () {
             _fileBloc.add(GetFileNameEvent(BatchHash: batchHash));
           });
         }
@@ -323,12 +442,7 @@ class _FilesState extends State<Files> {
   Future<void> _checkTxHashStatus(String txHash, String owner, int size) async {
     bool isSuccess = false;
 
-    // Add logic to check the transaction status here.
-    // For example, calling a blockchain API to check the status of the txHash.
-
     while (!isSuccess) {
-      // Call your blockchain transaction check method
-      // Example: checkTransaction(txHash) which returns true/false
       isSuccess = await isTransactionSuccessful(txHash);
 
       if (isSuccess) {
@@ -349,16 +463,42 @@ class _FilesState extends State<Files> {
   Future<void> _checkUseSpaceTxHashStatus(String txHash) async {
     bool isSuccess = false;
 
-    // Add logic to check the transaction status here.
-    // For example, calling a blockchain API to check the status of the txHash.
-
     while (!isSuccess) {
-      // Call your blockchain transaction check method
-      // Example: checkTransaction(txHash) which returns true/false
       isSuccess = await isTransactionSuccessful(txHash);
 
       if (isSuccess) {
         print('Transaction successful with hash: $txHash');
+      } else {
+        print('Transaction is not yet successful. Retrying...');
+        await Future.delayed(Duration(seconds: 5)); // Poll every 5 seconds
+      }
+    }
+  }
+
+  Future<void> _checkSharedTxHashStatus(
+      String txHash, String OwnerDid, BuildContext dialogContext) async {
+    bool isSuccess = false;
+
+    while (!isSuccess) {
+      isSuccess = await isTransactionSuccessful(txHash);
+
+      if (isSuccess) {
+        print('Transaction successful with hash: $txHash');
+        print('shared did: $OwnerDid');
+        print('my did: ${jsonDecode(widget.did.toString())}');
+        final String did = jsonDecode(widget.did.toString());
+
+        if (OwnerDid.characters == did.characters) {
+          print('ok');
+          _showSnackbar('File shared successfully',
+              Theme.of(context).colorScheme.secondary);
+          // Close the AlertDialog after DIDs match
+          Navigator.of(dialogContext).pop(); // Close the dialog
+        } else {
+          print('not ok');
+          _showSnackbar('File is not shared successfully', Colors.red);
+        }
+
         // Dispatch the event to create proof after the transaction is successful
       } else {
         print('Transaction is not yet successful. Retrying...');
@@ -370,263 +510,598 @@ class _FilesState extends State<Files> {
   @override
   Widget build(BuildContext context) {
     final storage = GetStorage();
-    // final getDID = storage.read('did');
     final walletAddress = storage.read('walletAddress');
     print('walletAddress : $walletAddress');
+
     return BlocProvider(
       create: (_) => _fileBloc,
       child: SafeArea(
         child: Scaffold(
           backgroundColor: Theme.of(context).primaryColor,
           body: BlocConsumer<FileBloc, FileState>(
-              listener: (context, state) async {
-            if (state is FileUploading) {
-              const CircularProgressIndicator();
-            }
-            if (state is FileUploadFailed) {
-              _showSnackbar("File Upload Failed");
-            }
-            if (state is FileUploaded) {
-              for (var file in dataResult) {
-                print('object file: $file');
+            listener: (context, state) async {
+              if (state is FileUploadFailed) {
+                _showSnackbar("File Upload Failed", Colors.red);
               }
-              await _checkTxHashStatus(
-                  state.response.TXHash!, walletAddress, size);
+              if (state is FileUploaded) {
+                for (var file in dataResult) {
+                  print('object file: $file');
+                }
+                await _checkTxHashStatus(
+                    state.response.TXHash!, walletAddress, size);
 
-              print('dataResult: $dataResult');
-            }
-            if (state is FileUsingSpaced) {
-              print('fetching space state: ${state.txHash}');
-              String txHash = state.txHash.TXHash!;
-              await _checkUseSpaceTxHashStatus(txHash);
+                print('dataResult: $dataResult');
+              }
+              if (state is FileUsingSpaced) {
+                print('fetching space state: ${state.txHash}');
+                String txHash = state.txHash.TXHash!;
+                await _checkUseSpaceTxHashStatus(txHash);
 
-              Container(
-                child: Text('fetching space state12: ${state.txHash}'),
+                _showSnackbar(
+                    'Files uploaded successfully: ${state.txHash.TXHash}',
+                    Theme.of(context).colorScheme.secondary);
+
+                setState(() {
+                  fileDataList.clear(); // Clear old file data
+                });
+
+                // // Wait for a few seconds before re-fetching contract data
+                // await Future.delayed(Duration(seconds: 3));
+
+                // Fetch new files from the contract
+                _deployContract();
+                _deployFileCount();
+              }
+            },
+            builder: (context, state) {
+              return Column(
+                children: [
+                  _buildHeader(),
+                  const SizedBox(height: 10),
+                  _buildFileSelectionButton(),
+                  const SizedBox(height: 20),
+                  DefaultTabController(
+                      length: 2,
+                      animationDuration: Duration(milliseconds: 500),
+                      child: _buildTabView()),
+                  // _buildFileList(),
+                  const SizedBox(height: 20),
+                  _fileUpoading(),
+                  const SizedBox(height: 20),
+                ],
               );
-
-              print('usespace check: ${state.txHash.TXHash}');
-              _showSnackbar(
-                  'Files uploaded successfully: ${state.txHash.TXHash}');
-            }
-          }, builder: (context, state) {
-            return Column(
-              children: [
-                _buildHeader(),
-                const SizedBox(height: 10),
-                _buildFileSelectionButton(),
-                const SizedBox(height: 20),
-                _buildFileList(),
-                _buildBlocContent(context),
-                // _buildDownloadBlocContent(context),
-              ],
-            );
-          }),
+            },
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildFileList() {
+  Widget _buildTabView() {
     return Expanded(
-      child: fileDataList.isNotEmpty
-          ? ListView.builder(
-              itemCount: fileDataList.length,
-              itemBuilder: (context, index) {
-                final fileData = fileDataList[index];
-                return ListTile(
-                  title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          fileData.fileName,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontFamily: GoogleFonts.robotoMono().fontFamily,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.2,
-                            child: _buildVerifyButton(
-                                fileData.batchHash, fileData.isVerified),
-                          ),
-                          SizedBox(width: 50),
-                          SizedBox(
-                            width: 40,
-                            child: _buildDownloadIcon(
-                                fileData.batchHash, fileData.fileHash),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-            )
-          : Center(
-              child: Text(
-                'No files fetched',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontFamily: GoogleFonts.robotoMono().fontFamily,
-                ),
-              ),
+      child: Column(
+        children: [
+          const TabBar(
+            indicatorSize: TabBarIndicatorSize.label,
+            dividerColor: Colors.black,
+            tabs: [
+              Tab(text: 'Uploaded'),
+              Tab(text: 'Shared'),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                _buildFileList(),
+                _buildFileList(), // You may change the second one if shared list logic is different
+              ],
             ),
+          ),
+        ],
+      ),
     );
   }
 
-  void _handleDownloadVerifyButton(DownloadSuccess state ,String batchHash) async {
+  Widget _fileUpoading() {
+    return BlocBuilder<FileBloc, FileState>(
+      bloc: _fileBloc,
+      builder: (context, state) {
+        if (state is FileUploading) {
+          return Center(
+            child: Loading(
+              Loadingcolor: Theme.of(context).primaryColor,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  Widget _buildFileList() {
+    return fileDataList.isNotEmpty
+        ? ListView.builder(
+            itemCount: fileDataList.length,
+            itemBuilder: (context, index) {
+              final fileData = fileDataList[index];
+              return ListTile(
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        fileData.fileName,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontFamily: GoogleFonts.robotoMono().fontFamily,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.2,
+                          child: _buildVerifyButton(
+                              fileData.batchHash,
+                              fileData.isVerified,
+                              fileData.fileHash,
+                              fileData.fileName),
+                        ),
+                        // SizedBox(width: 20),
+                        // SizedBox(
+                        //   // width: 20,
+                        //   child: _buildDownloadIcon(fileData.batchHash,
+                        //       fileData.fileHash, fileData.fileName),
+                        // ),
+                        SizedBox(width: 20),
+                        SizedBox(
+                          // width: 10,
+                          child: _buildShareIcon(fileData.batchHash,
+                              fileData.fileHash, fileData.fileName),
+                        ),
+                        // SizedBox(width: 10),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          )
+        : Center(
+            child: Text(
+              'No files fetched',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontFamily: GoogleFonts.robotoMono().fontFamily,
+              ),
+            ),
+          );
+  }
+
+  Widget _buildSharedFileList() {
+    return fileDataList.isNotEmpty
+        ? ListView.builder(
+            itemCount: fileDataList.length,
+            itemBuilder: (context, index) {
+              final fileData = fileDataList[index];
+              return ListTile(
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        fileData.fileName,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontFamily: GoogleFonts.robotoMono().fontFamily,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.2,
+                          child: _buildVerifyButton(
+                              fileData.batchHash,
+                              fileData.isVerified,
+                              fileData.fileHash,
+                              fileData.fileName),
+                        ),
+                        // SizedBox(width: 20),
+                        // SizedBox(
+                        //   // width: 20,
+                        //   child: _buildDownloadIcon(fileData.batchHash,
+                        //       fileData.fileHash, fileData.fileName),
+                        // ),
+                        SizedBox(width: 20),
+                        SizedBox(
+                          // width: 10,
+                          child: _buildShareIcon(fileData.batchHash,
+                              fileData.fileHash, fileData.fileName),
+                        ),
+                        // SizedBox(width: 10),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          )
+        : Center(
+            child: Text(
+              'No files fetched',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontFamily: GoogleFonts.robotoMono().fontFamily,
+              ),
+            ),
+          );
+  }
+
+  void _handleDownloadVerifyButton(
+      DownloadSuccess state, String batchHash) async {
     final response = jsonEncode(state.response.toJson());
     final sessionId = state.response.sessionId.toString();
     print('sessionId download : $sessionId');
     print('download response: $response');
 
-    _downloadBloc.add(onDownloadResponse(response));
+    _downloadBloc.add(onDownloadResponse(response, batchHash));
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _downloadBloc.add(onGetDownloadStatusEvent(sessionId, batchHash));
     });
   }
 
-  Widget _buildDownloadIcon(String BatchHash, String FileHash) {
-    return BlocBuilder<DownloadBloc, DownloadState>(
-      bloc: _downloadBloc,
-      builder: (BuildContext context, DownloadState state) {
-        if (state is Downloading) {
-          const CircularProgressIndicator(
-            color: Colors.redAccent,
-          );
-        }
-        if (state is DownloadSuccess && state.batchhash == BatchHash) {
-          print('state batch:${state.batchhash}');
-          _handleDownloadVerifyButton(state,state.batchhash);
-        }
+  Widget _buildShareIcon(String BatchHash, String FileHash, String FileName) {
+    return GestureDetector(
+      onTap: () {
+        print('tap share');
+        _showShareInput(context, BatchHash, FileHash, FileName);
+      },
+      child: _buildIcon(
+        Icons.share,
+        Theme.of(context).colorScheme.secondary,
+        Theme.of(context).colorScheme.secondary,
+        Colors.white,
+      ),
+    );
+  }
 
-        if (state is StatusLoaded && state.batchhash == BatchHash) {
-          print('status loaded in download');
-          print('state batch1:${state.batchhash}');
-          _showSnackbar('status loaded');
-          _deployBatchFileContract(BatchHash, FileHash);
-        }
-        return GestureDetector(
-          onTap: () {
-            _downloadBloc.add(onClickDownload(
-                batch_hash: BatchHash,
-                file_hash: BatchHash,
-                didU: jsonDecode(widget.did.toString())));
-          },
-          child: _buildIcon(
-            Icons.download,
-            Theme.of(context).colorScheme.secondary,
-            Theme.of(context).colorScheme.secondary,
-            Colors.white,
+  Future<void> _showShareInput(BuildContext context, String BatchHash,
+      String FileHash, String FileName) async {
+    var pasteDid = TextEditingController();
+    final storage = GetStorage();
+    final walletAddress = storage.read('walletAddress');
+    print('walletAddress : $walletAddress');
+
+    BuildContext dialogContext;
+
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        dialogContext = context; // Save the context
+        return AlertDialog(
+          title: Column(
+            children: [
+              Align(
+                alignment: Alignment.topRight,
+                child: IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Paste Your Share DID',
+                  style: TextStyle(
+                    color: Theme.of(context).secondaryHeaderColor,
+                    fontFamily: GoogleFonts.robotoMono().fontFamily,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ],
           ),
+          content: TextFormField(
+            controller: pasteDid,
+            enabled: true,
+            decoration: InputDecoration(
+              labelText: 'Paste your Share DID here',
+              labelStyle: TextStyle(
+                color: Colors.white.withOpacity(0.4),
+                fontFamily: GoogleFonts.robotoMono().fontFamily,
+                fontSize: 13,
+              ),
+              border: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: Colors.red.withOpacity(0.4),
+                ),
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            BlocBuilder<ShareBloc, ShareState>(
+              bloc: _shareBloc,
+              builder: (context, state) {
+                if (state is Sharing) {
+                  return Center(
+                      child: Loading(
+                          Loadingcolor: Theme.of(context).primaryColor,
+                          color: Theme.of(context).colorScheme.secondary));
+                }
+                if (state is ShareFailed) {
+                  _showSnackbar('Share failed: ${state.message}', Colors.red);
+                }
+                if (state is Shared) {
+                  // Call the transaction hash check method
+                  _checkSharedTxHashStatus(state.response.tXHash!,
+                      state.response.ownerDid!, dialogContext);
+                }
+                return TextButton(
+                  child: const Text('Share'),
+                  onPressed: () {
+                    _shareBloc.add(onClickShare(
+                      FileName: FileName,
+                      OwnerDid: jsonDecode(widget.did.toString()),
+                      ShareDid: pasteDid.text,
+                      Owner: walletAddress,
+                      file_hash: FileHash,
+                      batch_hash: BatchHash,
+                    ));
+                  },
+                );
+              },
+            ),
+          ],
         );
       },
     );
   }
 
-
-  // Widget _buildDownloadBlocContent(BuildContext context) {
-  //   return BlocBuilder<DownloadBloc, DownloadState>(
-  //     bloc: _downloadBloc,
-  //     builder: (BuildContext context, DownloadState state) {
-  //       if (state is Downloading) {
-  //         const CircularProgressIndicator(
-  //           color: Colors.redAccent,
-  //         );
-  //       }
-  //       if (state is DownloadSuccess) {
-  //         _handleDownloadVerifyButton(state);
-  //       }
-
-  //       if (state is StatusLoaded ) {
-  //         print('status loaded in download');
-  //         _showSnackbar('status loaded');
-  //         // _deployBatchFileContract(batch_hash, file_hash);
-  //       }
-
-  //       return const SizedBox.shrink();
-  //     },
-  //   );
-  // }
-
-  Widget _buildVerifyButton(String batchHash, bool isVerified) {
-    print('bathash: $batchHash');
-    return GestureDetector(
-      onTap: isVerified
-          ? null
-          : () {
-              final did = jsonDecode(widget.did.toString());
-              final storage = GetStorage();
-              final walletAddress = storage.read('walletAddress');
-              _fileBloc.add(VerifyUploadEvent(
-                BatchHash: batchHash,
-                ownerDid: walletAddress,
-                did: did,
-              ));
-            },
-      child: _buildButton(
-        "verify",
-        Theme.of(context).colorScheme.secondary,
-        Theme.of(context).colorScheme.secondary,
-        Theme.of(context).primaryColor,
-        isEnabled: !isVerified, // Disable button if verified
-      ),
-    );
-  }
-
-  Widget _buildBlocContent(BuildContext context) {
-    return BlocBuilder<FileBloc, FileState>(
-      bloc: _fileBloc,
-      builder: (context, state) {
-        if (state is Fileverifying) {
-          return CircularProgressIndicator(
-              color: Theme.of(context).secondaryHeaderColor);
-        }
-        if (state is FileVerifyFailed) {
-          return Text(state.message, style: const TextStyle(color: Colors.red));
-        }
-        if (state is VerifySuccess) {
-          final response = jsonEncode(state.response.claim?.toJson());
-          print("response verify: $response");
-          _handleVerifyResponseSuccess(state);
-        }
-        if (state is VerifyResponseloaded) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _handleVerified(state.iden3message);
-          });
-        }
-        if (state is VerifiedClaims) {
-          _showSnackbar('File id Verified successfully:');
-          // _buildFileList(true);
-        }
-
-        return const SizedBox.shrink();
+  Future<void> _showDownloadUrl(BuildContext context, Uri url) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: TextButton(
+              onPressed: () => setState(() {
+                    launchUrl(url, mode: LaunchMode.externalApplication);
+                  }),
+              child: Text('Click here to Download File')),
+        );
       },
     );
   }
 
-  Future<void> _handleVerified(Iden3MessageEntity iden3message) async {
-    debugPrint('File is verified');
-    _fileBloc.add(fetchAndSaveUploadVerifyClaims(iden3message: iden3message));
+  void _showCountdownSnackbar(BuildContext context, int remainingTime) {
+    // Clear existing snackbar before showing a new one
+    ScaffoldMessenger.of(context).clearSnackBars();
+
+    // Show snackbar with the remaining time
+    final snackBar = SnackBar(
+      content: Text('State will reset in $remainingTime seconds.'),
+      duration: Duration(seconds: 1), // Snackbar will be visible for 1 second
+    );
+
+    // Show the snackbar
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
-  void _handleVerifyResponseSuccess(VerifySuccess state) async {
+  Widget _buildurlLink(String url) {
+    return GestureDetector(
+      onTap: () {
+        print('url: $url');
+      },
+      child: _buildIcon(
+        Icons.link,
+        Theme.of(context).colorScheme.secondary,
+        Theme.of(context).colorScheme.secondary,
+        Colors.white,
+      ),
+    );
+  }
+
+  Widget _buildVerifyButton(
+      String batchHash, bool isVerified, String fileHash, String fileName) {
+    print('bathash: $batchHash');
+    return BlocBuilder<FileBloc, FileState>(
+      bloc: _fileBloc,
+      builder: (context, filestate) {
+        return BlocBuilder<DownloadBloc, DownloadState>(
+          bloc: _downloadBloc,
+          builder: (context, downloadState) {
+            if (filestate is Fileverifying &&
+                filestate.batchhash == batchHash) {
+              return Center(
+                child: Loading(
+                    Loadingcolor: Theme.of(context).primaryColor,
+                    color: Theme.of(context).colorScheme.secondary),
+              );
+            }
+            if (filestate is FileVerifyFailed) {
+              _showSnackbar('Verify failed: ${filestate.message}', Colors.red);
+            }
+            if (filestate is VerifySuccess &&
+                filestate.batchhash == batchHash) {
+              final response = jsonEncode(filestate.response.claim?.toJson());
+              print("response verify: $response");
+              _handleVerifyResponseSuccess(filestate, filestate.batchhash);
+            }
+            if (filestate is VerifyResponseloaded &&
+                filestate.batchhash == batchHash) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _handleVerified(filestate.iden3message, filestate.batchhash);
+              });
+            }
+            if (filestate is VerifiedClaims &&
+                filestate.batchhash == batchHash) {
+              _showSnackbar('File id Verified successfully:',
+                  Theme.of(context).colorScheme.secondary);
+              // _buildFileList(true);
+
+              isVerified = true;
+            }
+
+            if (downloadState is Downloading &&
+                downloadState.batchhash == batchHash) {
+              // Return CircularProgressIndicator when downloading
+              return Center(
+                  child: Loading(
+                      Loadingcolor: Theme.of(context).primaryColor,
+                      color: Theme.of(context).colorScheme.secondary));
+            }
+
+            if (downloadState is DownloadSuccess &&
+                downloadState.batchhash == batchHash) {
+              print('downloadState batch:${downloadState.batchhash}');
+              _handleDownloadVerifyButton(
+                  downloadState, downloadState.batchhash);
+            }
+            if (downloadState is DownloadFailed) {
+              _showSnackbar('Download failed', Colors.red);
+            }
+
+            if (downloadState is StatusLoaded &&
+                downloadState.batchhash == batchHash) {
+              print('status loaded in download');
+              print('downloadState batch1:${downloadState.batchhash}');
+              _showSnackbar(
+                  'status loaded', Theme.of(context).colorScheme.secondary);
+              _deployBatchFileContract(batchHash, fileHash);
+            }
+
+            if (downloadState is CidsGot &&
+                downloadState.batchhash == batchHash) {
+              print('cids got');
+              final cidString = downloadState.cids.cids;
+              final cidList = jsonEncode(cidString);
+              final cidGot = jsonEncode(cidList);
+
+              print('responsse cids got1: $cidGot');
+              print('responsse cids got: $cidList');
+
+              print('download1 : $batchHash');
+              print('download2 : $batchHash');
+              print('download3 : $fileName');
+              print('download4 : $cidList');
+              print('download5 : ${jsonDecode(widget.did.toString())}');
+
+              _downloadBloc.add(onClickDownloadUrl(
+                  BatchHash: batchHash,
+                  FileHash: batchHash,
+                  Odid: jsonDecode(widget.did.toString()),
+                  FileName: fileName.toString(),
+                  Cids: cidList));
+
+              _showSnackbar(
+                  'cids got', Theme.of(context).colorScheme.secondary);
+            }
+
+            if (downloadState is DownloadUrlSuccess &&
+                downloadState.batchhash == batchHash) {
+              // Timer(Duration(seconds: 30), () {
+              //   _downloadBloc.add(ResetDownloadStateEvent());
+              //   _fileBloc.add(ResetFileStateEvent());
+              //   _showSnackbar('Time out', Colors.red);
+              // });
+
+              final url = downloadState.response.uRL;
+              final downloadLink = Uri.parse(url as String);
+              _showSnackbar('${downloadState.response.uRL}',
+                  Theme.of(context).colorScheme.secondary);
+              print('download url success: ${downloadState.response.uRL}');
+
+              // Start a 30-second timer
+              int remainingTime = 15; // 30 seconds countdown
+              Timer? countdownTimer;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                // Show countdown UI (e.g., Snackbar)
+                _showCountdownSnackbar(context, remainingTime);
+              });
+              // Timer for updating the countdown every second
+              countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+                remainingTime--;
+                if (remainingTime > 0) {
+                  // Update countdown UI
+                  _showCountdownSnackbar(context, remainingTime);
+                } else {
+                  // Timer is finished, reset the states
+                  _downloadBloc.add(ResetDownloadStateEvent());
+                  _fileBloc.add(ResetFileStateEvent());
+                  countdownTimer?.cancel(); // Stop the timer
+                }
+              });
+              // Show download URL after URL is ready
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                await _showDownloadUrl(context, downloadLink);
+              });
+            }
+
+            return GestureDetector(
+              onTap: isVerified
+                  ? () {
+                      _downloadBloc.add(onClickDownload(
+                          batch_hash: batchHash,
+                          file_hash: batchHash,
+                          didU: jsonDecode(widget.did.toString())));
+                    }
+                  : () {
+                      final did = jsonDecode(widget.did.toString());
+                      final storage = GetStorage();
+                      final walletAddress = storage.read('walletAddress');
+                      _fileBloc.add(VerifyUploadEvent(
+                        BatchHash: batchHash,
+                        ownerDid: walletAddress,
+                        did: did,
+                      ));
+                    },
+              child: _buildButton(
+                isVerified ? "Download" : "Verify",
+                isVerified
+                    ? Theme.of(context).colorScheme.secondary
+                    : Colors.red,
+                isVerified
+                    ? Theme.of(context).colorScheme.secondary
+                    : Colors.red,
+                Theme.of(context).primaryColor,
+                // isEnabled: !isVerified, // Disable button if verified
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _handleVerified(
+      Iden3MessageEntity iden3message, String batchHash) async {
+    debugPrint('File is verified');
+    _fileBloc.add(fetchAndSaveUploadVerifyClaims(
+        iden3message: iden3message, batchHash: batchHash));
+  }
+
+  void _handleVerifyResponseSuccess(
+      VerifySuccess state, String batchHash) async {
     final response = jsonEncode(state.response.claim?.toJson());
     final txhashResponse = state.response.txHash;
     await _checkUseSpaceTxHashStatus(txhashResponse!);
 
     print('get verify response: $response');
 
-    _fileBloc.add(onVerifyResponse(response));
+    _fileBloc.add(onVerifyResponse(response, batchHash));
   }
 
   Widget _buildIcon(
@@ -646,16 +1121,16 @@ class _FilesState extends State<Files> {
     String text,
     dynamic colorScheme,
     dynamic border,
-    dynamic textColor, {
-    bool isEnabled = true,
-  }) {
+    dynamic textColor,
+    // bool isEnabled = true,
+  ) {
     return GestureDetector(
       child: Container(
         width: MediaQuery.of(context).size.width * 0.5,
         alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
         decoration: BoxDecoration(
-          color: isEnabled ? colorScheme : Colors.grey, // Grey out if disabled
+          color: colorScheme, // Grey out if disabled
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: border,
@@ -665,9 +1140,7 @@ class _FilesState extends State<Files> {
         child: Text(
           text,
           style: GoogleFonts.robotoMono(
-            color: isEnabled
-                ? textColor
-                : Colors.grey[800], // Grey text if disabled
+            color: textColor, // Grey text if disabled
             fontSize: 10,
             fontWeight: FontWeight.bold,
           ),
@@ -706,7 +1179,7 @@ class _FilesState extends State<Files> {
         ],
       ),
       trailing: GestureDetector(
-        // onTap: _deployBatchFileContract,
+        // onTap:_deployFileCount ,
         child: Container(
           width: 30,
           height: 30,
@@ -735,8 +1208,8 @@ class _FilesState extends State<Files> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _buildFileInfoColumn('0', 'Files'),
-            _buildFileInfoColumn('0MiB', 'Usage'),
+            _buildFileInfoColumn(_fileCount, 'Files'),
+            _buildFileInfoColumn(_fileUsage, 'Usage'),
             SizedBox(width: 10),
             GestureDetector(
               onTap: _isLoading ? null : openFile,
@@ -754,7 +1227,10 @@ class _FilesState extends State<Files> {
                 ),
                 child: Center(
                   child: _isLoading
-                      ? CircularProgressIndicator(color: Colors.white)
+                      ? Center(
+                          child: Loading(
+                              Loadingcolor: Theme.of(context).primaryColor,
+                              color: Theme.of(context).colorScheme.secondary))
                       : Text(
                           'Select Files',
                           style: TextStyle(

@@ -23,9 +23,9 @@ class _PlanNavState extends State<PlanNav> {
         return MaterialPageRoute(
           settings: settings,
           builder: (BuildContext context) {
-            // if (settings.name == "/myFiles") {
-            //   return const MyFiles();
-            // }
+            if (settings.name == "/addPlans") {
+              return  AddPlans( did: widget.did);
+            }
             // if( settings.name == "/storageLogin"){
             //   return const SetupPasswordScreen();
             // }

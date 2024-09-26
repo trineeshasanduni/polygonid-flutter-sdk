@@ -15,9 +15,10 @@ class CustomColors {
 
   static const Color subtitleText = Color(0xff7C7E96);
 
-  static const Color background = Color(0xffF0F1F6);
+  static const Color background = Color.fromARGB(255, 0, 0, 0);
 
-  static const Color textGrayDark = Color(0xff2C374E);
+  // static const Color textGrayDark = Color(0xff2C374E);
+  static const Color textGrayDark = Color.fromARGB(255, 255, 255, 255);
 
   static const Color redError = Color(0xffFF4B40);
 
@@ -25,7 +26,7 @@ class CustomColors {
 
   static const Color backButtonPressed = Color(0xffE1E1E1);
 
-  static const Color proofCardSubtitle = Color(0xffEBEDF3);
+  static const Color proofCardSubtitle = Color.fromARGB(255, 0, 0, 0);
 
   static const int _whitePrimaryValue = 0xFFFFFFFF;
   static const MaterialColor primaryWhite = MaterialColor(
@@ -61,8 +62,8 @@ class CustomColors {
     },
   );
 
-  static const Color claimCardStartColor = Color(0xff7B3FE4);
-  static const Color claimCardEndColor = Color(0xff5D12E1);
+  static const Color claimCardStartColor = Color(0xFF2CFFAE);
+  static const Color claimCardEndColor = Color(0xFFa3d902);
 
   static const LinearGradient claimCardBackground = LinearGradient(
     begin: Alignment.topLeft,

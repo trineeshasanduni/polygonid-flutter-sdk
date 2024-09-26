@@ -55,6 +55,9 @@ class FileBloc extends Bloc<FileEvent, FileState> {
     on<onVerifyResponse>(_handleVerifyUpload);
     on<fetchAndSaveUploadVerifyClaims>(_fetchAndSaveClaims);
     on<getUploadVerifyClaims>(_getUploadVerifyClaims);
+    on<ResetFileStateEvent>((event, emit) {
+  emit(FileInitial());  // Reset state to initial
+});
 
 
     /////////download//////
@@ -113,7 +116,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
 
   Future<void> _handleVerifyClick(
       VerifyUploadEvent event, Emitter<FileState> emit) async {
-    emit(Fileverifying());
+    emit(Fileverifying(event.BatchHash));
     final failureOrVerify = await verifyUploadUsecase(
       VerifyUploadParam(
         BatchHash: event.BatchHash,
@@ -124,12 +127,13 @@ class FileBloc extends Bloc<FileEvent, FileState> {
 
     failureOrVerify.fold(
         (failure) => emit(FileVerifyFailed(failure.toString())),
-        (response) => emit(VerifySuccess(response)));
+        (response) => emit(VerifySuccess(response,event.BatchHash)));
   }
 
   Future<void> _handleVerifyUpload(
       onVerifyResponse event, Emitter<FileState> emit) async {
     String? qrCodeResponse = event.verifyResponse;
+    String? batchHash = event.batchHash;
     print('qrCodeResponse1: $qrCodeResponse');
     if (qrCodeResponse == null || qrCodeResponse.isEmpty) {
       emit(FileVerifyFailed("Scanned code is not valid"));
@@ -139,7 +143,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
       final Iden3MessageEntity iden3message =
           await _qrcodeParserUtils.getIden3MessageFromQrCode(qrCodeResponse!);
       print('iden3message res1: $iden3message');
-      emit(VerifyResponseloaded(iden3message));
+      emit(VerifyResponseloaded(iden3message,event.batchHash! ));
       print('state23: ${state}');
       print('get fetch1 ');
     } catch (error) {
@@ -151,6 +155,8 @@ class FileBloc extends Bloc<FileEvent, FileState> {
       fetchAndSaveUploadVerifyClaims event, Emitter<FileState> emit) async {
     String? privateKey =
         await SecureStorage.read(key: SecureStorageKeys.privateKey);
+
+        String batchHash = event.batchHash!;
     print('privateKey1: $privateKey');
     if (privateKey == null) {
       emit(FileVerifyFailed("Private key not found"));
@@ -167,7 +173,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
 
     print('didIdentifier: $didIdentifier');
 
-    emit(Fileverifying());
+    emit(Fileverifying(batchHash));
 
     Iden3MessageEntity iden3message = event.iden3message;
     print('iden3message fetch: $iden3message');
@@ -194,7 +200,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
       print('claimList: ${claimList}.');
 
       if (claimList.isNotEmpty) {
-        add(getUploadVerifyClaims());
+        add(getUploadVerifyClaims(batchHash));
         // add(event)
       }
     } catch (exception) {
@@ -203,7 +209,8 @@ class FileBloc extends Bloc<FileEvent, FileState> {
   }
 
   Future<void> _getUploadVerifyClaims(getUploadVerifyClaims event, Emitter<FileState> emit) async {
-    emit(Fileverifying());
+String batchHash = event.batchHash!;
+    emit(Fileverifying(batchHash));
 
     List<FilterEntity>? filters = event.filters;
 
@@ -239,7 +246,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
 
       List<ClaimModel> claimModelList =
           claimList.map((claimEntity) => _mapper.mapFrom(claimEntity)).toList();
-      emit(VerifiedClaims(claimModelList));
+      emit(VerifiedClaims(claimModelList,batchHash));
       print('loadedClaims: ${claimModelList}');
     } on GetClaimsException catch (_) {
       emit(FileVerifyFailed("error while retrieving claims"));

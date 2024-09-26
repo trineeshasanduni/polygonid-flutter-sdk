@@ -21,19 +21,19 @@ class ProfileRadio extends StatelessWidget {
     return Column(
       children: <Widget>[
         _makeRadioListTile(
-            CustomStrings.authPublicProfile, SelectedProfile.public),
+            CustomStrings.authPublicProfile, SelectedProfile.public,context),
         _makeRadioListTile(
-            CustomStrings.authPrivateProfile, SelectedProfile.private),
+            CustomStrings.authPrivateProfile, SelectedProfile.private,context),
       ],
     );
   }
 
-  Widget _makeRadioListTile(String text, SelectedProfile value) {
+  Widget _makeRadioListTile(String text, SelectedProfile value ,BuildContext context) {
     return RadioListTile(
-        title: Text(text),
+        title: Text(text,style: TextStyle(color: Theme.of(context).primaryColor),),
         value: value,
         groupValue: _profile,
-        activeColor: CustomColors.primaryButton,
+        activeColor: Theme.of(context).colorScheme.secondary,
         onChanged: (SelectedProfile? value) {
           _profileCallback(value!);
         });

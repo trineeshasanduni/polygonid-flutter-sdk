@@ -9,6 +9,7 @@ import 'package:gradient_borders/box_borders/gradient_box_border.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/bethelBottomBar.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/routes.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/common/widgets/circularProgress.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/login/bloc/login_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/widgets/register.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_colors.dart';
@@ -136,7 +137,8 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
       bloc: _loginBloc,
       builder: (context, state) {
         if (state is LoginLoading) {
-          return  CircularProgressIndicator(color: Theme.of(context).secondaryHeaderColor);
+          // return  CircularProgressIndicator(color: Theme.of(context).secondaryHeaderColor);
+          return Loading(Loadingcolor:Theme.of(context).primaryColor,color:Theme.of(context).colorScheme.secondary);
         }
         if (state is LoginFailure) {
           return Text(state.error, style: const TextStyle(color: Colors.red));

@@ -1,22 +1,14 @@
 class CidEntity {
-  String cid;
-  int queueId;
+  final List<String> cids;
+  String? batchhash;
+  
 
-  CidEntity({required this.cid, required this.queueId});
+  CidEntity({required this.cids, this.batchhash});
 
-  // Factory method to create a CidEntity object from a JSON map
-  factory CidEntity.fromJson(Map<String, dynamic> json) {
+  // If you need to parse from JSON to List<String>
+  factory CidEntity.fromJson(List<dynamic> json) {
     return CidEntity(
-      cid: json['Cid'],
-      queueId: json['QueueId'],
+      cids: json.map((item) => item['Cid'].toString()).toList(),
     );
-  }
-
-  // Method to convert a FileData object to a JSON map
-  Map<String, dynamic> toJson() {
-    return {
-      'Cid': cid,
-      'QueueId': queueId,
-    };
   }
 }

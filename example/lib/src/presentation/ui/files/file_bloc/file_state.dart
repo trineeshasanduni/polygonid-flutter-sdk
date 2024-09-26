@@ -53,8 +53,10 @@ final class UploadVerified extends FileState {
   const UploadVerified(this.verifyTxHash);
 }
 
-final class Fileverifying extends FileState {}
-
+class Fileverifying extends FileState {
+  final String batchhash;
+  Fileverifying(this.batchhash);
+}
 final class FileVerifyFailed extends FileState {
   final String message;
 
@@ -82,22 +84,26 @@ final class FileVerifyResponseSuccess extends FileState {
 }
 final class VerifyResponseloaded extends FileState {
   final Iden3MessageEntity iden3message;
+  final String batchhash; 
+  
 
-  VerifyResponseloaded(this.iden3message);
+  VerifyResponseloaded(this.iden3message,this.batchhash);
 }
 
 final class VerifySuccess extends FileState {
   final VerifyUploadEntity response;
+  final String batchhash; 
 
-  const VerifySuccess( this.response);
+  const VerifySuccess( this.response,this.batchhash);
 }
 
 
 
 final class VerifiedClaims extends FileState {
   final List<ClaimModel> claimList;
+  final String batchhash; 
 
-  VerifiedClaims(this.claimList);
+  VerifiedClaims(this.claimList,this.batchhash);
 }
 
 

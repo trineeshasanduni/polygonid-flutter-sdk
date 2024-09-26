@@ -13,6 +13,7 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/route
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/claims_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/claims_event.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/widgets/claims.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/common/widgets/circularProgress.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_event.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_state.dart';
@@ -371,8 +372,7 @@ class _SignupState extends State<Signup> {
                         ),
                         child: Center(
                           child: state is RegisterLoading
-                              ? const CircularProgressIndicator(
-                                  color: Colors.white)
+                              ? Loading(Loadingcolor:Theme.of(context).primaryColor,color:Theme.of(context).colorScheme.secondary)
                               : Text(
                                   'Submit',
                                   style: TextStyle(
@@ -424,17 +424,17 @@ class _SignupState extends State<Signup> {
 
   ///
 
-  ///
-  Widget _buildCircularProgress() {
-    return const SizedBox(
-      height: 20,
-      width: 20,
-      child: CircularProgressIndicator(
-        strokeWidth: 2,
-        backgroundColor: Colors.white,
-      ),
-    );
-  }
+  // ///
+  // Widget _buildCircularProgress() {
+  //   return const SizedBox(
+  //     height: 20,
+  //     width: 20,
+  //     child: CircularProgressIndicator(
+  //       strokeWidth: 2,
+  //       backgroundColor: Colors.white,
+  //     ),
+  //   );
+  // }
 
   ///
   Widget _buildTitle() {
@@ -511,7 +511,7 @@ class _SignupState extends State<Signup> {
               },
               // style: CustomButtonStyle.primaryButtonStyle,
               child: loading
-                  ? _buildCircularProgress()
+                  ? Loading(Loadingcolor:Theme.of(context).primaryColor,color:Theme.of(context).colorScheme.secondary)
                   : _buildButton(
                       'Register Using QR',
                       Theme.of(context).colorScheme.secondary,

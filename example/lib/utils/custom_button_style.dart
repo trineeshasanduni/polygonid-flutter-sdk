@@ -9,7 +9,7 @@ class CustomButtonStyle {
     enableFeedback: false,
     padding:
         const EdgeInsets.only(top: 18.0, bottom: 18.0, right: 24.0, left: 24.0),
-    backgroundColor: CustomColors.primaryButton,
+    backgroundColor: Color(0xFF2CFFAE),
     shadowColor: CustomColors.transparent,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(10),
@@ -21,7 +21,7 @@ class CustomButtonStyle {
     enableFeedback: false,
     padding:
         const EdgeInsets.only(top: 8.0, bottom: 8.0, right: 12.0, left: 12.0),
-    backgroundColor: CustomColors.primaryButton,
+    backgroundColor: Color(0xFF2CFFAE),
     shadowColor: CustomColors.transparent,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(6),
@@ -33,10 +33,10 @@ class CustomButtonStyle {
     enableFeedback: false,
     padding:
         const EdgeInsets.only(top: 18.0, bottom: 18.0, right: 24.0, left: 24.0),
-    backgroundColor: CustomColors.background,
+    backgroundColor: Color.fromARGB(255, 0, 0, 0),
     shadowColor: CustomColors.transparent,
     shape: RoundedRectangleBorder(
-      side: const BorderSide(color: CustomColors.primaryButton),
+      // side: const BorderSide(color: Color(0xFF2CFFAE)),
       borderRadius: BorderRadius.circular(10),
     ),
   );
@@ -46,7 +46,7 @@ class CustomButtonStyle {
     enableFeedback: false,
     padding:
         const EdgeInsets.only(top: 18.0, bottom: 18.0, right: 24.0, left: 24.0),
-    backgroundColor: CustomColors.primaryButton.withOpacity(0.5),
+    backgroundColor: Color(0xFF2CFFAE).withOpacity(0.5),
     shadowColor: CustomColors.transparent,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(10),

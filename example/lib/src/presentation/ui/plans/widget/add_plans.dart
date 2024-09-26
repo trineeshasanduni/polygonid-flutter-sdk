@@ -3,12 +3,15 @@ import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart';
 import 'package:polygonid_flutter_sdk_example/src/data/secure_storage.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/bloc/add_plans_bloc.dart';
+import 'package:polygonid_flutter_sdk_example/utils/deploayContract.dart';
+import 'package:polygonid_flutter_sdk_example/utils/image_resource.dart';
 import 'package:polygonid_flutter_sdk_example/utils/secure_storage_keys.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
 
@@ -25,9 +28,22 @@ class _AddPlansState extends State<AddPlans> {
   bool isExpanded1 = false;
   bool isExpanded2 = false;
   bool isExpanded3 = false;
+  bool _hasCheckedTxHash = false;
+  bool _hasLoggedNullTxHash = false;
 
+//
+
+  var rpcUrl =
+      'https://polygon-mainnet.g.alchemy.com/v2/pHKWzuctaLCPxAKYc0c8bKQA8d85oPlk';
+
+  final _invoiceAbiPath = 'assets/abi/BethelInvoice.json';
+
+  final _InvoidContractAddress = '0xB05c8A8c54DDA3E4e785FD033AB63a50e09b9521';
   // Variable to track verification status
   bool _isVerified = false;
+  String _displayText = "Initial Text";
+
+  bool _isFreePlanActivated = false;
 
   @override
   void initState() {
@@ -38,6 +54,40 @@ class _AddPlansState extends State<AddPlans> {
     // Retrieve saved verification status from storage
     final storage = GetStorage();
     _isVerified = storage.read('isVerified') ?? false;
+
+    _deployPlans();
+  }
+
+  void _refreshApp() {
+    setState(() {
+      _displayText = "App refreshed at ${DateTime.now()}";
+    });
+  }
+
+  Future<void> _deployPlans() async {
+    final fileStorageService =
+        FileStorageService(rpcUrl, _InvoidContractAddress, _invoiceAbiPath);
+
+    try {
+      await fileStorageService.initializeWeb3Client();
+      final did = jsonDecode(widget.did.toString());
+      final contract = await fileStorageService.loadContract('BethelInvoice');
+      final freePlanActivate = await fileStorageService
+          .callContractFunction(contract, 'isActivatedFreePlan', [did]);
+      print('result11:${freePlanActivate}');
+
+      if (freePlanActivate![0] == true) {
+        setState(() {
+          _isFreePlanActivated = true;
+        });
+        print('free plan activated');
+      } else {
+        _isFreePlanActivated = false;
+        print('free plan not activated');
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+    }
   }
 
   Future<bool> isTransactionSuccessful(String txHash) async {
@@ -70,76 +120,125 @@ class _AddPlansState extends State<AddPlans> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
-      // appBar: AppBar(title: Text("Add Plans")),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildHeader(),
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    // _buildAddPlan(),
-                    SizedBox(height: 40),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildAnimatedContainer(isExpanded1, "Basic Plan", () {
-                          setState(() {
-                            isExpanded1 = !isExpanded1;
-                          });
-                        },
-                            'Features for creators and developers who need more storage ',
-                            [
-                              'Unlimited Uploads',
-                              '5GB storage',
-                              '100GB Bandwidth',
-                              'IPFS Gateways',
-                              'IPFS Pinning Service API'
-                            ],
-                            'ADD 0\$ PER MONTH'),
-                        SizedBox(height: 20),
-                        _buildAnimatedContainer(isExpanded2, "Starter Plan",
-                            () {
-                          setState(() {
-                            isExpanded2 = !isExpanded2;
-                          });
-                        },
-                            'Perfect for those managing large files or extensive data, ensuring your information is safely stored across multiple locations',
-                            [
-                              'Unlimited Uploads',
-                              'Upto 1000GB storage space',
-                              'Hack-Proof',
-                              'Blockchain-Based Secure',
-                              'Decentralized Data Protection'
-                            ],
-                            'ADD 10\$ PER MONTH'),
-                        SizedBox(height: 20),
-                        _buildAnimatedContainer(isExpanded3, "Advance Plan",
-                            () {
-                          setState(() {
-                            isExpanded3 = !isExpanded3;
-                          });
-                        },
-                            'This plan is perfect for those needing large-scale, high-security storage solutions, ensuring that all your data is protected',
-                            [
-                              'Unlimited Uploads',
-                              'Upto 5000GB storage space',
-                              'Hack-Proof',
-                              'Blockchain-Based Secure',
-                              'Decentralized Data Protection'
-                            ],
-                            'ADD 30\$ PER MONTH'),
-                      ],
-                    ),
-                  ],
-                ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            _buildHeader(),
+            SizedBox(height: 20),
+            Expanded(
+              // Only use Expanded here for the TabBarView
+              child: DefaultTabController(
+                length: 4,
+                child: _buildTabView(),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabView() {
+    return Column(
+      children: [
+        const TabBar(
+          indicatorSize: TabBarIndicatorSize.label,
+          dividerColor: Colors.black,
+          tabs: [
+            Tab(text: '1 Month'),
+            Tab(text: '3 Month'),
+            Tab(text: '6 Month'),
+            Tab(text: '1 Year'),
+          ],
+        ),
+        Expanded(
+          // Keep this Expanded, as TabBarView should fill available space
+          child: TabBarView(
+            children: [
+              _handleOneMonth(),
+              _handleOneMonth(), // Adjust as necessary for the "Shared" tab
+              _handleOneMonth(),
+              _handleOneMonth(),
             ],
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _handleOneMonth() {
+    return SingleChildScrollView(
+      // Scrollable content for large expanded plans
+      child: Padding(
+        padding: const EdgeInsets.all(16.0), // Add some padding if necessary
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(height: 40),
+            _buildAnimatedContainer(
+              isExpanded1,
+              "Basic Plan",
+              "0\$ ",
+              () {
+                setState(() {
+                  isExpanded1 = !isExpanded1;
+                });
+              },
+              'Features for creators and developers who need more storage',
+              [
+                'Unlimited Uploads',
+                '5GB storage',
+                '100GB Bandwidth',
+                'IPFS Gateways',
+                'IPFS Pinning Service API'
+              ],
+              _isFreePlanActivated ? 'Activated' : 'ADD 0\$ PER MONTH',
+              'assets/images/paperPlane.png'
+            ),
+            SizedBox(height: 20),
+            _buildAnimatedContainer(
+              isExpanded2,
+              "Starter Plan",
+              "10\$",
+              () {
+                setState(() {
+                  isExpanded2 = !isExpanded2;
+                });
+              },
+              'Perfect for those managing large files or extensive data...',
+              [
+                'Unlimited Uploads',
+                'Upto 1000GB storage space',
+                'Hack-Proof',
+                'Blockchain-Based Secure',
+                'Decentralized Data Protection'
+              ],
+              'ADD 10\$',
+              'assets/images/rocket2.png',
+            ),
+            SizedBox(height: 20),
+            _buildAnimatedContainer(
+              isExpanded3,
+              "Advance Plan",
+              "30\$",
+              () {
+                setState(() {
+                  isExpanded3 = !isExpanded3;
+                });
+              },
+              'This plan is perfect for those needing large-scale...',
+              [
+                'Unlimited Uploads',
+                'Upto 5000GB storage space',
+                'Hack-Proof',
+                'Blockchain-Based Secure',
+                'Decentralized Data Protection'
+              ],
+              'ADD 30\$ PER MONTH',
+              'assets/images/plane.png'
+            ),
+          ],
         ),
       ),
     );
@@ -203,22 +302,22 @@ class _AddPlansState extends State<AddPlans> {
                 SizedBox(height: 20),
                 TextButton(
                   onPressed: () {
-                    _checkProofTxHashStatus(
-                        state.ProofResponse.TXHash.toString(),
-                        state.ProofResponse.a as List<String>,
-                        state.ProofResponse.b as List<List<String>>,
-                        state.ProofResponse.c as List<String>,
-                        state.ProofResponse.input as List<String>,
-                        owner1,
-                        widget.did!);
-                    // _addPlansBloc.add(verifyuserEvent(
-                    //   A: state.ProofResponse.a as List<String>,
-                    //   B: state.ProofResponse.b as List<List<String>>,
-                    //   C: state.ProofResponse.c as List<String>,
-                    //   Inputs: state.ProofResponse.input as List<String>,
-                    //   Owner: owner1,
-                    //   Did: widget.did!, // change here
-                    // ));
+                    // _checkProofTxHashStatus(
+                    //     state.ProofResponse.TXHash.toString(),
+                    //     state.ProofResponse.a as List<String>,
+                    //     state.ProofResponse.b as List<List<String>>,
+                    //     state.ProofResponse.c as List<String>,
+                    //     state.ProofResponse.input as List<String>,
+                    //     owner1,
+                    //     widget.did!);
+                    _addPlansBloc.add(verifyuserEvent(
+                      A: state.ProofResponse.a as List<String>,
+                      B: state.ProofResponse.b as List<List<String>>,
+                      C: state.ProofResponse.c as List<String>,
+                      Inputs: state.ProofResponse.input as List<String>,
+                      Owner: owner1,
+                      Did: widget.did!, // change here
+                    ));
                   },
                   child: _buildButton(
                     name,
@@ -249,29 +348,49 @@ class _AddPlansState extends State<AddPlans> {
                 duration: Duration(seconds: 2),
               ),
             );
+
+            _addPlansBloc.add(freeSpaceEvent(
+              did: widget.did!,
+              owner: owner1,
+            ));
           });
-          _checkVeridfyTxHashStatus(
-              state.VerifyResponse.TXHash.toString(), owner1, widget.did!);
+          // _checkVeridfyTxHashStatus(
+          //     state.VerifyResponse.TXHash.toString(), owner1, widget.did!);
 
           // Update the verification state and save it after the build phase
-
-          // _addPlansBloc.add(freeSpaceEvent(
-          //   did: widget.did!,
-          //   owner: owner1,
-          // ));
         }
+
+        // Declare this variable in your class
+// New flag for logging
 
         if (state is FreeSpaceAdded) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return; // Check if the widget is still mounted
+
             setState(() {
               _isVerified = true;
             });
 
             // Save the verified state to local storage
             final storage = GetStorage();
-            storage.write('isVerified', true);
-            _checkFreeSpaceTxHashStatus(
-                state.freeSpaceResponse.TXHash.toString());
+            try {
+              storage.write('isVerified', true);
+            } catch (e) {
+              // Handle storage write error (optional logging)
+              print('Error saving to local storage: $e');
+            }
+
+            final txHash = state.freeSpaceResponse.TXHash;
+            if (txHash != null && !_hasCheckedTxHash) {
+              print('fetching tx hash');
+              _checkFreeSpaceTxHashStatus(txHash.toString());
+              _hasCheckedTxHash = true; // Mark as checked
+              _hasLoggedNullTxHash = false; // Reset the logging flag
+            } else if (txHash == null && !_hasLoggedNullTxHash) {
+              // Log the case where TXHash is null only once
+              print('Transaction hash is null');
+              _hasLoggedNullTxHash = true; // Mark that null was logged
+            }
           });
         }
 
@@ -279,11 +398,17 @@ class _AddPlansState extends State<AddPlans> {
           return Center(
             child: TextButton(
               onPressed: () {
-                _addPlansBloc.add(GenerateSecretsEvent());
+                _isFreePlanActivated
+                    ? null
+                    : () {
+                        _addPlansBloc.add(GenerateSecretsEvent());
+                      };
               },
               child: _buildButton(
                 name,
-                Theme.of(context).colorScheme.secondary,
+                _isFreePlanActivated
+                    ? Colors.red
+                    : Theme.of(context).colorScheme.secondary,
                 Theme.of(context).primaryColor,
                 Theme.of(context).primaryColor,
               ),
@@ -300,7 +425,6 @@ class _AddPlansState extends State<AddPlans> {
       },
     );
   }
-  
 
   // Async function to check if the transaction hash is successful
   Future<void> _checkTxHashStatus(String txHash, String owner) async {
@@ -366,7 +490,7 @@ class _AddPlansState extends State<AddPlans> {
       isSuccess = await isTransactionSuccessful(txHash);
 
       if (isSuccess) {
-        print('Verify Transaction successful with hash: $txHash');
+        print('Verify Transaction successful with hash1: $txHash');
 
         _addPlansBloc.add(freeSpaceEvent(
           owner: Owner,
@@ -377,29 +501,38 @@ class _AddPlansState extends State<AddPlans> {
         await Future.delayed(Duration(seconds: 5)); // Poll every 5 seconds
       }
     }
-
-    
   }
+
   Future<void> _checkFreeSpaceTxHashStatus(String txHash) async {
-      bool isSuccess = false;
+    bool isSuccess = false;
 
-      while (!isSuccess) {
-        isSuccess = await isTransactionSuccessful(txHash);
+    // Polling until the transaction is successful
+    while (!isSuccess) {
+      isSuccess = await isTransactionSuccessful(txHash);
 
-        if (isSuccess) {
-          print('Verify Transaction successful with hash: $txHash');
-          const Center(
-            child: Text(
+      if (isSuccess) {
+        print('Verify Transaction successful with hash: $txHash');
+
+        // Show a success message with a Snackbar
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
               'Free Space Added Successfully',
               style: TextStyle(color: Colors.green),
             ),
-          );
-        } else {
-          print('Verify Transaction is not yet successful. Retrying...');
-          await Future.delayed(Duration(seconds: 5)); // Poll every 5 seconds
-        }
+          ),
+        );
+
+        // Exit the function after transaction success
+        return;
+      } else {
+        print('Verify Transaction is not yet successful. Retrying...');
+
+        // Wait for 5 seconds before trying again
+        await Future.delayed(const Duration(seconds: 5));
       }
     }
+  }
 
   Widget _buildHeader() {
     return ListTile(
@@ -430,19 +563,18 @@ class _AddPlansState extends State<AddPlans> {
           ),
         ],
       ),
-      trailing: Container(
-        width: 30,
-        height: 30,
-        decoration: BoxDecoration(
-          // color: Theme.of(context).colorScheme.primary,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-              color: Theme.of(context).colorScheme.secondary, width: 1),
-        ),
-        child: GestureDetector(
-          onTap: () {
-            // _showWelcomeDialog();
-          },
+      trailing: GestureDetector(
+        onTap: _deployPlans,
+        child: Container(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.secondary,
+              width: 1,
+            ),
+          ),
           child: Icon(
             Icons.wallet,
             color: Theme.of(context).secondaryHeaderColor,
@@ -456,10 +588,12 @@ class _AddPlansState extends State<AddPlans> {
   Widget _buildAnimatedContainer(
       bool isExpanded,
       String title,
+      String subtitle,     
       VoidCallback onTap,
       String description,
       List<String> features,
-      String name1) {
+      String name1,
+      String icon) {
     return BlocBuilder<AddPlansBloc, AddPlansState>(
       bloc: _addPlansBloc,
       builder: (context, state) {
@@ -473,7 +607,7 @@ class _AddPlansState extends State<AddPlans> {
             width: MediaQuery.of(context).size.width * 0.9,
             height: isExpanded
                 ? MediaQuery.of(context).size.width * 1.2
-                : MediaQuery.of(context).size.width * 0.3,
+                : MediaQuery.of(context).size.width * 0.4,
             decoration: isExpanded
                 ? BoxDecoration(
                     gradient: LinearGradient(
@@ -508,23 +642,79 @@ class _AddPlansState extends State<AddPlans> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Text(
-                      title, // Display title text
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: GoogleFonts.robotoMono().fontFamily),
+                    Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          
+                          Image.asset(icon, width: 50, height: 50, fit: BoxFit.fill),
+                          SizedBox(width: 30),
+                          Text(
+                            title, // Display title text
+                            style: isExpanded
+                                ? TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily:
+                                        GoogleFonts.robotoMono().fontFamily)
+                                : TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.secondary,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily:
+                                        GoogleFonts.robotoMono().fontFamily),
+                          ),
+                        ],
+                      ),
                     ),
                     const Divider(
                       color: Colors.white,
                       thickness: 2,
+                    ),
+                    Center(
+                      child: Column(
+                        children: [
+                          Text(
+                            subtitle, // Display title text
+                            style: isExpanded
+                                ? TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: GoogleFonts.robotoMono().fontFamily)
+                                : TextStyle(
+                                    color: Theme.of(context).colorScheme.secondary,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily:
+                                        GoogleFonts.robotoMono().fontFamily),
+                          ),
+                          Text(
+                            'Per Month', // Display title text
+                            style: isExpanded
+                                ? TextStyle(
+                                    color: Theme.of(context).secondaryHeaderColor,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: GoogleFonts.robotoMono().fontFamily)
+                                : TextStyle(
+                                    color: Theme.of(context).secondaryHeaderColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily:
+                                        GoogleFonts.robotoMono().fontFamily),
+                          ),
+                        ],
+                      ),
                     ),
                     if (isExpanded) ...[
                       Column(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          const SizedBox(height: 30),
                           Text(
                             description,
                             style: TextStyle(
@@ -574,20 +764,20 @@ class _AddPlansState extends State<AddPlans> {
                       // Button will now trigger the event when clicked
                       if (title == "Basic Plan") ...[
                         _buildAddPlan(name1),
-                        TextButton(
-                          onPressed: () {
-                            _addPlansBloc.add(freeSpaceEvent(
-                              owner: owner1,
-                              did: widget.did!,
-                            ));
-                          },
-                          child: _buildButton(
-                            'free space',
-                            Theme.of(context).colorScheme.secondary,
-                            Theme.of(context).primaryColor,
-                            Theme.of(context).primaryColor,
-                          ),
-                        ),
+                        // TextButton(
+                        //   onPressed: () {
+                        //     _addPlansBloc.add(freeSpaceEvent(
+                        //       owner: owner1,
+                        //       did: widget.did!,
+                        //     ));
+                        //   },
+                        //   child: _buildButton(
+                        //     'free space',
+                        //     Theme.of(context).colorScheme.secondary,
+                        //     Theme.of(context).primaryColor,
+                        //     Theme.of(context).primaryColor,
+                        //   ),
+                        // ),
                       ],
 
                       // _addSpaceBloc.add(freeSpaceEvent(
@@ -606,14 +796,14 @@ class _AddPlansState extends State<AddPlans> {
     );
   }
 
-  Widget _buildDashboardButton(String name, VoidCallback onTap) {
-    return GestureDetector(
-      onTap:
-          onTap, // Now the onTap function will only be called when the button is tapped
-      child: _buildButton(name, Theme.of(context).colorScheme.secondary,
-          Theme.of(context).primaryColor, Theme.of(context).primaryColor),
-    );
-  }
+  // Widget _buildDashboardButton(String name, VoidCallback onTap) {
+  //   return GestureDetector(
+  //     onTap:
+  //         onTap, // Now the onTap function will only be called when the button is tapped
+  //     child: _buildButton(name, Theme.of(context).colorScheme.secondary,
+  //         Theme.of(context).primaryColor, Theme.of(context).primaryColor),
+  //   );
+  // }
 
   // void _showWelcomeDialog() {
   //   showDialog(
@@ -631,7 +821,11 @@ class _AddPlansState extends State<AddPlans> {
   // }
 
   Widget _buildButton(
-      String text, dynamic colorScheme, dynamic border, dynamic textColor) {
+    String text,
+    dynamic colorScheme,
+    dynamic border,
+    dynamic textColor,
+  ) {
     return Container(
       width: MediaQuery.of(context).size.width,
       alignment: Alignment.center,

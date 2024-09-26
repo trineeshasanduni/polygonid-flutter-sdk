@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:polygonid_flutter_sdk/iden3comm/domain/entities/common/iden3_message_entity.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/routes.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claim_detail/widgets/claim_detail.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/claims_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/claims_event.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/claims_state.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/models/claim_model.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/widgets/claim_card.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/qrcode_scanner/widgets/qrcode_scanner.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/bloc/register_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_button_style.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_colors.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_strings.dart';
@@ -36,7 +40,7 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: CustomColors.background,
+      backgroundColor: Theme.of(context).primaryColor,
       appBar: _buildAppBar(),
       body: _buildBody(),
     );
@@ -46,7 +50,8 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       elevation: 0.0,
-      backgroundColor: CustomColors.background,
+      // backgroundColor: CustomColors.background,
+      foregroundColor: Theme.of(context).secondaryHeaderColor,
     );
   }
 
@@ -91,7 +96,10 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Text(
         CustomStrings.claimsTitle,
-        style: CustomTextStyles.titleTextStyle.copyWith(fontSize: 20),
+        style: TextStyle(color: Theme.of(context).secondaryHeaderColor,fontFamily: GoogleFonts.robotoMono().fontFamily,fontSize: 20,
+    height: 1.8,
+    fontWeight: FontWeight.w500 ),
+        // style: CustomTextStyles.titleTextStyle.copyWith(fontSize: 20),
       ),
     );
   }
@@ -115,7 +123,7 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildRemoveAllClaimsButton(),
+          // _buildRemoveAllClaimsButton(),
           _buildClaimsConnectButton(),
         ],
       ),
@@ -146,9 +154,10 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
                 child: Center(
                   child: loading
                       ? _buildCircularProgress()
-                      : const Text(
+                      :  Text(
                           CustomStrings.authButtonCTA,
-                          style: CustomTextStyles.primaryButtonTextStyle,
+                          // style: CustomTextStyles.primaryButtonTextStyle,
+                          style: TextStyle(color: Theme.of(context).primaryColor),
                         ),
                 ),
               ),
@@ -172,6 +181,7 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
                 }
               },
               style: CustomButtonStyle.outlinedPrimaryButtonStyle,
+              // style:  ,
               child: Container(
                 constraints: const BoxConstraints(
                   minWidth: 120,
@@ -182,8 +192,7 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
                   child: FittedBox(
                     child: Text(
                       CustomStrings.deleteAllClaimsButtonCTA,
-                      style: CustomTextStyles.primaryButtonTextStyle
-                          .copyWith(color: CustomColors.primaryButton),
+                      style: TextStyle(color: Theme.of(context).primaryColor),
                     ),
                   ),
                 ),
@@ -206,8 +215,8 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: claimWidgetList,
                 )
-              : const Center(
-                  child: Text(CustomStrings.claimsListNoResult),
+              :  Center(
+                  child: Text(CustomStrings.claimsListNoResult,style: TextStyle(color: Theme.of(context).secondaryHeaderColor),),
                 );
         }
         return const SizedBox.shrink();
@@ -262,7 +271,8 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
   ///
   Future<void> _handleNavigateToQrCodeScannerClaimsState() async {
     String? qrCodeScanningResult =
-        await Navigator.pushNamed(context, Routes.qrCodeScannerPath) as String?;
+        // await Navigator.pushNamed(context, Routes.qrCodeScannerPath) as String?;
+        await Navigator.push(context, MaterialPageRoute(builder: (context) => const QRCodeScannerPage())) ;
     widget._bloc.add(ClaimsEvent.onScanQrCodeResponse(qrCodeScanningResult));
     print('qrCodeScanningResult: $qrCodeScanningResult');
   }
@@ -274,8 +284,6 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
   //   print('qrCodeScanningResult: $qrCodeScanningResult');
   // }
 
-
-
   ///
   void _handleQrCodeScanned(Iden3MessageEntity iden3message) {
     print('iden3message23: $iden3message');
@@ -285,11 +293,12 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
 
   ///
   Future<void> _handleNavigationToClaimDetail(ClaimModel claimModel) async {
-    bool? deleted = await Navigator.pushNamed(
-      context,
-      Routes.claimDetailPath,
-      arguments: claimModel,
-    ) as bool?;
+    // bool? deleted = await Navigator.pushNamed(
+    //   context,
+    //   Routes.claimDetailPath,
+    //   arguments: claimModel,
+    // ) as bool?;
+    bool? deleted = await Navigator.push(context, MaterialPageRoute(builder: (context) => ClaimDetailScreen(claimModel: claimModel,))) as bool?;
 
     widget._bloc.add(ClaimsEvent.onClaimDetailRemoveResponse(deleted));
   }

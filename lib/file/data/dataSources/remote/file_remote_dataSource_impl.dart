@@ -4,10 +4,12 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:polygonid_flutter_sdk/file/data/dataSources/file_remote_dataSource.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/cid_model.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/downloadUrl_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/downloadVerify_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/download_status_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/file_model.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/share_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/verify_upload_model.dart';
 import 'package:polygonid_flutter_sdk/registers/data/dataSources/register_remote_dataSource.dart';
 import 'package:polygonid_flutter_sdk/registers/data/model/register_model.dart';
@@ -225,30 +227,29 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
               callbackUrl: responsedown.body?.callbackUrl!,
               reason: responsedown.body?.reason,
               scope: [
-            ScopeDownload(
-              circuitId: responsedown.body?.scope![0].circuitId,
-              id: responsedown.body?.scope![0].id,
-              query: QueryDownload(
-                allowedIssuers:
-                    responsedown.body?.scope![0].query?.allowedIssuers,
-                context: responsedown.body?.scope![0].query?.context,
-                credentialSubject: CredentialSubject(
-                  hash: Hash(
-                    $eq: responsedown
-                        .body?.scope![0].query?.credentialSubject?.hash?.$eq,
+                ScopeDownload(
+                  circuitId: responsedown.body?.scope![0].circuitId,
+                  id: responsedown.body?.scope![0].id,
+                  query: QueryDownload(
+                    allowedIssuers:
+                        responsedown.body?.scope![0].query?.allowedIssuers,
+                    context: responsedown.body?.scope![0].query?.context,
+                    credentialSubject: CredentialSubject(
+                      hash: Hash(
+                        $eq: responsedown.body?.scope![0].query
+                            ?.credentialSubject?.hash?.$eq,
+                      ),
+                    ),
+                    type: responsedown.body?.scope![0].query?.type,
                   ),
                 ),
-                type: responsedown.body?.scope![0].query?.type,
-              ),
-            ),
-          ]),
+              ]),
           from: responsedown.from,
-            id: responsedown.id,
-            type: responsedown.type,
-            thid: responsedown.thid,
-            typ: responsedown.typ,
-            sessionId: headers
-          );
+          id: responsedown.id,
+          type: responsedown.type,
+          thid: responsedown.thid,
+          typ: responsedown.typ,
+          sessionId: headers);
 
       if (response.statusCode == 200) {
         return DownloadResponse;
@@ -262,7 +263,8 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
     }
   }
 
-  Future<DownloadStatusResponseModel> fetchDownloadStatus(String sessionId) async {
+  Future<DownloadStatusResponseModel> fetchDownloadStatus(
+      String sessionId) async {
     print('sessionId download check123: $sessionId');
     int statusCode = 0;
 
@@ -275,12 +277,7 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
 
         // If the status is 200, break the loop and return the response
         if (statusCode == 200) {
-          
-          return DownloadStatusResponseModel(
-            statusCode: statusCode
-
-
-          );
+          return DownloadStatusResponseModel(statusCode: statusCode);
         } else {
           print('Waiting for status code 200, received: $statusCode');
         }
@@ -296,123 +293,149 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
     throw Exception('Failed to get status 200');
   }
 
-@override
-  Future<CidModel> getCids(dynamic index,String did, String owner) async {
-    print('fetching cids');
+  @override
+  Future<CidModel> getCids(
+      dynamic index, String did, String owner, String BatchHash) async {
+    print('Fetching CIDs');
     try {
-      final response = await client
-          .get(Uri.parse('$BASE_URL/get-cid?Index=$index&Did=$did&OwnerAddress=$owner'));
-      // print('cids status: ${response.body}');
+      final response = await http.get(Uri.parse(
+          '$BASE_URL/get-cid?Index=$index&Did=$did&OwnerAddress=$owner'));
 
-      print('cids status1: ${response.statusCode}');
+      // Log the response body
+      print('Response body: ${response.body}');
 
+      // Check if the response is successful
       if (response.statusCode == 200) {
-        print('fetch cids status code: ${response.statusCode}');
-        final dynamic CidsList = jsonDecode(response.body);
-        print('cids: $CidsList');
+        print('Fetch CIDs status code: ${response.statusCode}');
 
-        List<Map<String, dynamic>> ListCid = CidsList ;
-        print('cid3: $ListCid');
+        // Decode the response body (which should be a JSON string)
+        dynamic decodedResponse = await jsonDecode(response.body);
 
-
-
-        // Assuming the response is a list of objects, use the first item
-        if (ListCid.isNotEmpty) {
-          // final fileNameJson = ListCid as Map<String, dynamic>;
-          // print('cid 1: $fileNameJson');
-
-          List<Map<String, dynamic>> youngUsers = ListCid.where((Cid) => Cid['Cid']).toList();
-          print("cid 2: $youngUsers");
-
-          final CidsModel = CidModel.fromJson(youngUsers as Map<String, dynamic>);
-          final responsefileName = CidModel(
-            cid: CidsModel.cid,
-            queueId: CidsModel.queueId
-            
-          );
-          print("CidsModel response: $CidsModel");
-          return responsefileName;
-        } else {
-          throw Exception('No data found in the response');
+        // If the decoded response is a string, decode it again
+        if (decodedResponse is String) {
+          print('Decoded response is a String, parsing again');
+          decodedResponse = await jsonDecode(decodedResponse);
         }
+
+        // Ensure that `decodedResponse` is a List of dynamic objects
+        List<dynamic> data = decodedResponse as List<dynamic>;
+        print('Data: ${data.runtimeType}');
+
+        // Extract the 'Cid' field from each object and store them in a List<String>
+        List<String> cids = data.map((item) => item['Cid'].toString()).toList();
+
+        // Print the extracted CIDs
+        print('CIDs: $cids');
+
+        // Return a CidModel containing the list of CIDs
+        return CidModel(cids: cids, batchhash: BatchHash);
       } else {
-        throw Exception('Failed to load cids: ${response.statusCode}');
+        throw Exception('Failed to load CIDs: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching cids: $e');
-      throw Exception('Failed to fetch cids');
+      print('Error fetching CIDs: $e');
+      throw Exception('Failed to fetch CIDs');
     }
   }
 
-   @override
-  Future<DownloadVerifyModel> download(
+  @override
+  Future<DownloadUrlModel> download(
       {required String BatchHash,
       required String FileHash,
-      required String Odid}) async {
+      required String Odid,
+      required String FileName,
+      required String Cids}) async {
     print('Using space dowload');
     try {
       Map<String, dynamic> data = {
         "BatchHash": BatchHash,
         "FileHash": FileHash,
-        "Odid": Odid
+        "FileName": FileName,
+        "Odid": Odid,
+        "Cids": Cids
       };
       // Define the URI for the use-space API endpoint
-      final uri = Uri.parse('$BASE_URL/download-verify');
+      final uri = Uri.parse('$BASE_URL/download');
 
       // Make the POST request with the proper headers and body
       final response = await client.post(
         uri,
-        // headers: {"Content-Type": "application/json"},
         body: jsonEncode(data),
       );
-      print('data Download Verify: $data');
+      print('data Download : $data');
 
-      print('Download Verify status code: ${response.statusCode}');
+      print('Download  status code: ${response.statusCode}');
       Map<String, dynamic> jsonResponse = jsonDecode(response.body);
-      final headers = response.headers['x-iid'];
-      print('header downoload: $headers ');
-      final responsedown = DownloadVerifyModel.fromJson(jsonResponse);
 
-      final DownloadResponse = DownloadVerifyModel(
-          body: BodyDownload(
-              callbackUrl: responsedown.body?.callbackUrl!,
-              reason: responsedown.body?.reason,
-              scope: [
-            ScopeDownload(
-              circuitId: responsedown.body?.scope![0].circuitId,
-              id: responsedown.body?.scope![0].id,
-              query: QueryDownload(
-                allowedIssuers:
-                    responsedown.body?.scope![0].query?.allowedIssuers,
-                context: responsedown.body?.scope![0].query?.context,
-                credentialSubject: CredentialSubject(
-                  hash: Hash(
-                    $eq: responsedown
-                        .body?.scope![0].query?.credentialSubject?.hash?.$eq,
-                  ),
-                ),
-                type: responsedown.body?.scope![0].query?.type,
-              ),
-            ),
-          ]),
-          from: responsedown.from,
-            id: responsedown.id,
-            type: responsedown.type,
-            thid: responsedown.thid,
-            typ: responsedown.typ,
-            sessionId: headers
-          );
+      final responsedown = DownloadUrlModel.fromJson(jsonResponse);
 
-      if (response.statusCode == 200) {
+      final DownloadResponse = DownloadUrlModel(
+        dID: responsedown.dID,
+        uRL: responsedown.uRL,
+      );
+
+      if (response.statusCode == 201) {
         return DownloadResponse;
       } else {
-        print('Failed to Download Verify');
-        throw Exception('Failed to Download Verify');
+        print('Failed to Download ');
+        throw Exception('Failed to Download ');
       }
     } catch (error) {
-      print('Error during Download Verify: $error');
-      throw Exception('Failed to Download Verify');
+      print('Error during Download : $error');
+      throw Exception('Failed to Download ');
     }
   }
-  
+
+  ///////////////////////////////share////////////////////////////
+  ///
+  @override
+  Future<ShareModel> share(
+      {required String BatchHash,
+      required String FileHash,
+      required String OwnerDid,
+      required String FileName,
+      required String ShareDid,
+      required String Owner}) async {
+    print('Using space dowload');
+    try {
+      Map<String, dynamic> data = {
+        "OwnerDid": OwnerDid,
+        "ShareDid": ShareDid,
+        "BatchHash": BatchHash,
+        "FileHash": FileHash,
+        "Owner": Owner,
+        "FileName": FileName
+      };
+      // Define the URI for the use-space API endpoint
+      final uri = Uri.parse('$BASE_URL/shareclaim');
+
+      // Make the POST request with the proper headers and body
+      final response = await client.post(
+        uri,
+        body: jsonEncode(data),
+      );
+      print('data Share : $data');
+
+      print('Share  status code: ${response.statusCode}');
+      Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+      final responseShare = ShareModel.fromJson(jsonResponse);
+
+      final ShareResponse = ShareModel(
+        tXHash: responseShare.tXHash,
+        ownerDid: responseShare.ownerDid,
+        
+      );
+
+      if (response.statusCode == 201) {
+        return ShareResponse;
+      } else {
+        print('Failed to Share ');
+        throw Exception('Failed to Share ');
+      }
+    } catch (error) {
+      print('Error during Share : $error');
+      throw Exception('Failed to Share ');
+    }
+  }
 }

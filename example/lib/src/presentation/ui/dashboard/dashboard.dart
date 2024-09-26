@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
@@ -9,11 +10,15 @@ import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gradient_borders/box_borders/gradient_box_border.dart';
 import 'package:polygonid_flutter_sdk_example/src/data/secure_storage.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/bethelBottomBar.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/plan_navigation.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/bar.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/customCurveEdge.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_state.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/widget/add_plans.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/widgets/setupPassword.dart';
+import 'package:polygonid_flutter_sdk_example/utils/deploayContract.dart';
 import 'package:polygonid_flutter_sdk_example/utils/secure_storage_keys.dart';
 import 'package:web3modal_flutter/services/w3m_service/w3m_service.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
@@ -36,6 +41,13 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   late W3MService _w3mService;
   bool isConnected = false;
+  var httpClient = http.Client();
+
+  Web3Client? _web3Client;
+  var rpcUrl =
+      'https://polygon-mainnet.g.alchemy.com/v2/pHKWzuctaLCPxAKYc0c8bKQA8d85oPlk';
+
+  final _contractAddress = '0x665e346D9c68587Bd51C53eAd71e0F5367E7950C';
 
   final storage = const FlutterSecureStorage();
 
@@ -82,10 +94,41 @@ class _DashboardState extends State<Dashboard> {
       });
       if (isConnected) {
         print('connected: $isConnected');
-        _showWelcomeDialog();
+        // _showWelcomeDialog();
+        _deployContract();
       }
     });
     // _loadButtons();
+  }
+
+  Future<void> _deployContract() async {
+    final fileStorageService = FileStorageService(rpcUrl, _contractAddress,
+        'assets/abi/FileStorage.json');
+
+    try {
+      await fileStorageService.initializeWeb3Client();
+      final did = jsonDecode(widget.did.toString());
+      final contract = await fileStorageService.loadContract('FileStorage');
+      final result = await fileStorageService
+          .callContractFunction(contract, 'getAdressList', [did]);
+      print('result:$result');
+
+      if (result != null && result.isNotEmpty && result[0] is List) {
+        final List<dynamic> innerList = result[0];
+
+        // Check if the inner list is empty
+        if (innerList.isEmpty) {
+          print('The result contains an empty list');
+          _showWelcomeDialog();
+        } else {
+          // Proceed with processing the inner list
+        }
+      } else {
+        print('No data returned from contract or result format is unexpected');
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+    }
   }
 
   void _loadButtons() {
@@ -102,28 +145,20 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  
-
   void _showWelcomeDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Welcome!'),
-          content: Text('You have to connect with metamask to proceed'),
+          title: const Text('Welcome!'),
+          content: Text(
+              'You have to connect with metamask to proceed. \n Please Navigate to Add Plans Page'),
           actions: <Widget>[
             TextButton(
               child: Text('Add User'),
               onPressed: () {
-                final storage = GetStorage();
-                final owner1 = storage.read('walletAddress');
-                // final did = storage.read('DID');
-                // print('did 123: $did');
-                print('owener did: $owner1');
-
-                final did = jsonDecode(widget.did.toString());
-                print('did23: $did');
-                
+                Navigator.pop(context); // Close the dialog first
+                // Navigate to the PlanNav page
               },
             ),
           ],
@@ -231,7 +266,8 @@ class _DashboardState extends State<Dashboard> {
                     ),
                     child: GestureDetector(
                       onTap: () {
-                        _showWelcomeDialog();
+                        // _showWelcomeDialog();
+                        _deployContract();
                       },
                       child: Icon(
                         Icons.wallet,
