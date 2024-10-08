@@ -23,7 +23,8 @@ class UseSpaceEvent extends FileEvent {
 
 class GetFileNameEvent extends FileEvent {
   final String BatchHash;
-  const GetFileNameEvent( {required this.BatchHash});
+  final String Verify;
+  const GetFileNameEvent( {required this.BatchHash,required this.Verify});
 }
 
 class VerifyUploadEvent extends FileEvent {
@@ -50,6 +51,8 @@ class ResetFileStateEvent extends FileEvent {
   @override
   List<Object> get props => [];
 }
+
+
 final class getUploadVerifyClaims extends FileEvent {
   final List<FilterEntity>? filters;
   final String? batchHash;

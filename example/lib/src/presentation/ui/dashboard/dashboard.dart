@@ -9,6 +9,7 @@ import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gradient_borders/box_borders/gradient_box_border.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:polygonid_flutter_sdk_example/src/data/secure_storage.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/bethelBottomBar.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/plan_navigation.dart';
@@ -49,12 +50,21 @@ class _DashboardState extends State<Dashboard> {
 
   final _contractAddress = '0x665e346D9c68587Bd51C53eAd71e0F5367E7950C';
 
+  final _AbiPath = 'assets/abi/FileStorage.json';
+  final _contractAddress1 =
+      EthereumAddress.fromHex('0x665e346D9c68587Bd51C53eAd71e0F5367E7950C');
+
+  final _ContractAddress = '0x665e346D9c68587Bd51C53eAd71e0F5367E7950C';
+
   final storage = const FlutterSecureStorage();
+  var _isUserAdded = false;
 
   @override
   void initState() {
     super.initState();
     _initW3MService();
+    _initializeData();
+    _deployGetUderDid();
   }
 
   void _initW3MService() async {
@@ -92,26 +102,44 @@ class _DashboardState extends State<Dashboard> {
       setState(() {
         isConnected = isConnect;
       });
-      if (isConnected) {
+      if (isConnected == true) {
         print('connected: $isConnected');
         // _showWelcomeDialog();
         _deployContract();
+      } else {
+        _showMetamaskBottomSheet();
+        // _deployContract();
       }
     });
     // _loadButtons();
   }
 
   Future<void> _deployContract() async {
-    final fileStorageService = FileStorageService(rpcUrl, _contractAddress,
-        'assets/abi/FileStorage.json');
-
     try {
-      await fileStorageService.initializeWeb3Client();
+      _web3Client = Web3Client(rpcUrl, httpClient);
+
+      final abiFile =
+          await rootBundle.loadString('assets/abi/FileStorage.json');
+      if (abiFile.isEmpty) throw FormatException('ABI file is empty');
+
+      final jsonAbi = jsonDecode(abiFile);
+      final _abiCode =
+          ContractAbi.fromJson(jsonEncode(jsonAbi['abi']), 'FileStorage');
       final did = jsonDecode(widget.did.toString());
-      final contract = await fileStorageService.loadContract('FileStorage');
-      final result = await fileStorageService
-          .callContractFunction(contract, 'getAdressList', [did]);
-      print('result:$result');
+      print('did dashboard: $did');
+      final _contract = DeployedContract(_abiCode, _contractAddress1);
+      final _getAllBatchesFunction = _contract.function('getAdressList');
+
+      final storage = GetStorage();
+      final walletAddress1 = storage.read('walletAddress');
+      print('walletAddress1123: $walletAddress1');
+
+      // Clear the current file list before fetching new data
+      final result = await _web3Client?.call(
+        contract: _contract,
+        function: _getAllBatchesFunction,
+        params: [did],
+      );
 
       if (result != null && result.isNotEmpty && result[0] is List) {
         final List<dynamic> innerList = result[0];
@@ -119,12 +147,162 @@ class _DashboardState extends State<Dashboard> {
         // Check if the inner list is empty
         if (innerList.isEmpty) {
           print('The result contains an empty list');
-          _showWelcomeDialog();
+          _showWelcomeBottomSheet();
         } else {
-          // Proceed with processing the inner list
+          print('The result contains a non-empty list: $innerList');
+
+          // Normalize the wallet address (trim, and convert to lowercase for comparison)
+          final normalizedWalletAddress = walletAddress1?.toLowerCase().trim();
+
+          // Check if the wallet address is in the inner list
+          bool addressFound = innerList.any((address) =>
+              address.toString().toLowerCase().trim() ==
+              normalizedWalletAddress);
+
+          if (addressFound) {
+            print('Wallet address is in the list, no need to show alert');
+          
+          } else {
+            print('innerList does not contain walletAddress1');
+            // Show the alert since walletAddress1 is not in the inner list
+            _showAddressDialog(innerList); // Pass the list of addresses
+          }
         }
       } else {
         print('No data returned from contract or result format is unexpected');
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+    }
+  }
+
+  void _showAddressDialog(List<dynamic> addresses) {
+    // Check if addresses are not empty
+    if (addresses.isEmpty) {
+      print('No addresses to show in the bottom sheet');
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: Colors.transparent, // Customize background
+      builder: (BuildContext context) {
+        return Container(
+          height: MediaQuery.of(context).size.height / 3,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 68, 91, 0),
+                Theme.of(context).primaryColor,
+              ], // Add your gradient colors here
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context)
+                  .viewInsets
+                  .bottom, // Handle keyboard overlap
+              left: 16,
+              right: 16,
+              top: 16,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min, // Adjust height based on content
+              crossAxisAlignment: CrossAxisAlignment.start,
+              // mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Center(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width / 4,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .secondaryHeaderColor
+                          .withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    margin: const EdgeInsets.only(top: 5),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Please switch to Correct Wallet Address',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.secondary,
+                    fontSize: 12,
+                    fontFamily: GoogleFonts.robotoMono().fontFamily,
+                    fontWeight: FontWeight.w300,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                SingleChildScrollView(
+                  child: ListBody(
+                    children: addresses.asMap().entries.map((entry) {
+                      int index = entry.key + 1; // Start numbering from 1
+                      String address = entry.value.toString();
+
+                      return Column(
+                        children: [
+                          Text(
+                            '$index. $address',
+                            style: TextStyle(
+                              color: Theme.of(context).secondaryHeaderColor,
+                              fontSize: 9,
+                              fontFamily: GoogleFonts.robotoMono().fontFamily,
+                              fontWeight: FontWeight.w300,
+                            ),
+                          ),
+                          Divider(
+                            color: Theme.of(context)
+                                .secondaryHeaderColor
+                                .withOpacity(0.3),
+                            thickness: 1,
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+               
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        );
+      },
+    ).then((_) {
+      print('Bottom sheet closed'); // Confirm bottom sheet closure
+    });
+  }
+
+  Future<void> _deployGetUderDid() async {
+    final fileStorageService =
+        FileStorageService(rpcUrl, _ContractAddress, _AbiPath);
+
+    try {
+      await fileStorageService.initializeWeb3Client();
+      final did = jsonDecode(widget.did.toString());
+      final contract = await fileStorageService.loadContract('FileStorage');
+      final results = await fileStorageService
+          .callContractFunction(contract, 'getUserDid', []);
+      print('result12:${results}');
+      if (results![0] == true) {
+        setState(() {
+          _isUserAdded = true;
+        });
+        print('free plan activated');
+      } else {
+        _isUserAdded = false;
+        print('free plan not activated');
+
       }
     } catch (e) {
       print('An error occurred: $e');
@@ -145,26 +323,176 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  void _showWelcomeDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Welcome!'),
-          content: Text(
-              'You have to connect with metamask to proceed. \n Please Navigate to Add Plans Page'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Add User'),
-              onPressed: () {
-                Navigator.pop(context); // Close the dialog first
-                // Navigate to the PlanNav page
-              },
+void _showWelcomeBottomSheet() {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    backgroundColor: Colors.transparent,
+    builder: (BuildContext context) {
+      return Container(
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height / 3,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color.fromARGB(255, 68, 91, 0),
+              Theme.of(context).primaryColor,
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 16,
+          right: 16,
+          top: 16,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: MediaQuery.of(context).size.width / 4,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).secondaryHeaderColor.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(5),
+              ),
+              margin: const EdgeInsets.only(top: 5),
             ),
+            const SizedBox(height: 20),
+            Text(
+              'Welcome!',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                fontFamily: GoogleFonts.robotoMono().fontFamily,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'You have no active plans. \nPlease navigate to Add Plans Page',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                fontFamily: GoogleFonts.robotoMono().fontFamily,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                // Navigator.pop(context); // Close the bottom sheet first
+                PlanNav(did: widget.did,); // Navigate to PlanNav and push AddPlans
+              },
+              child: Text('Add Plans'),
+            ),
+            const SizedBox(height: 20),
           ],
-        );
-      },
-    );
+        ),
+      );
+    },
+  );
+}
+
+
+
+
+  void _showMetamaskBottomSheet() {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    backgroundColor: Colors.transparent, // Transparent for custom background styling
+    builder: (BuildContext context) {
+      return Container(
+        height: MediaQuery.of(context).size.height / 3,
+        width: MediaQuery.of(context).size.width,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color.fromARGB(255, 68, 91, 0),
+              Theme.of(context).primaryColor,
+            ], // Gradient background
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 16,
+          right: 16,
+          top: 16,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Container(
+              width: MediaQuery.of(context).size.width / 4,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).secondaryHeaderColor.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(5),
+              ),
+              margin: const EdgeInsets.only(top: 5),
+            ),
+            const Text(
+              'Welcome to \nBethelZkp Storage!',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const Text(
+              'You have to connect with MetaMask .',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14),
+            ),
+            Image.asset('assets/images/metamaskImg.png', width: 100, height: 100),
+            const SizedBox(height: 20),
+            
+          ],
+        ),
+      );
+    },
+  );
+}
+
+
+  Future<void> _initializeData() async {
+    // Your initialization logic here (fetching data, etc.)
+    String? walletAddress = _w3mService.session?.address;
+    if (walletAddress != null && walletAddress.isNotEmpty) {
+      await SecureStorage.write(
+        key: SecureStorageKeys.owner,
+        value: walletAddress,
+      );
+      final storage = GetStorage();
+      storage.write('walletAddress', walletAddress);
+      print('Wallet address saved: $walletAddress');
+    } else {
+      print('Error: Wallet address is null or empty');
+    }
+
+    _initW3MService();
+    _deployGetUderDid();
+
+    // Any other initialization logic...
+  }
+
+  Future<void> _onRefresh() async {
+    print("Refreshing data...");
+    await _initializeData(); // Call the initialization logic again
+    await Future.delayed(Duration(seconds: 2)); // Simulate a network call
   }
 
   @override
@@ -210,139 +538,158 @@ class _DashboardState extends State<Dashboard> {
     return SafeArea(
       child: Scaffold(
         backgroundColor: Theme.of(context).primaryColor,
-        body: SingleChildScrollView(
-          child: SizedBox(
-            child: Column(
-              children: [
-                ListTile(
-                  title: Row(
-                    children: [
-                      Image.asset('assets/images/launcher_icon.png',
-                          width: 30, height: 30),
-                      RichText(
-                          text: TextSpan(
-                              text: 'zkp',
-                              style: TextStyle(
-                                  color:
-                                      Theme.of(context).colorScheme.secondary,
-                                  fontSize: 20,
-                                  fontFamily:
-                                      GoogleFonts.robotoMono().fontFamily,
-                                  fontWeight: FontWeight.w300),
-                              children: [
-                            TextSpan(
-                                text: 'STORAGE',
+        body: LiquidPullToRefresh(
+          color: Theme.of(context).colorScheme.primary,
+          onRefresh: _onRefresh,
+          animSpeedFactor: 2.0,
+          child: SingleChildScrollView(
+            child: SizedBox(
+              child: Column(
+                children: [
+                  ListTile(
+                    title: Row(
+                      children: [
+                        Image.asset('assets/images/launcher_icon.png',
+                            width: 30, height: 30),
+                        RichText(
+                            text: TextSpan(
+                                text: 'zkp',
                                 style: TextStyle(
                                     color:
-                                        Theme.of(context).secondaryHeaderColor,
+                                        Theme.of(context).colorScheme.secondary,
                                     fontSize: 20,
                                     fontFamily:
                                         GoogleFonts.robotoMono().fontFamily,
-                                    fontWeight: FontWeight.w300))
-                          ]))
-                    ],
-                  ),
-                  subtitle: Column(
-                    children: !isConnected
-                        ? [
-                            W3MNetworkSelectButton(service: _w3mService),
-                            W3MConnectWalletButton(service: _w3mService),
-                          ]
-                        : [
-                            W3MAccountButton(service: _w3mService),
-                            W3MConnectWalletButton(service: _w3mService),
-                            // Text(WalletAddress.toString()),
-                          ],
-                  ),
-                  trailing: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      // color: Theme.of(context).colorScheme.primary,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                          color: Theme.of(context).colorScheme.secondary,
-                          width: 1),
+                                    fontWeight: FontWeight.w300),
+                                children: [
+                              TextSpan(
+                                  text: 'STORAGE',
+                                  style: TextStyle(
+                                      color: Theme.of(context)
+                                          .secondaryHeaderColor,
+                                      fontSize: 20,
+                                      fontFamily:
+                                          GoogleFonts.robotoMono().fontFamily,
+                                      fontWeight: FontWeight.w300))
+                            ]))
+                      ],
                     ),
-                    child: GestureDetector(
-                      onTap: () {
-                        // _showWelcomeDialog();
-                        _deployContract();
-                      },
-                      child: Icon(
-                        Icons.wallet,
-                        color: Theme.of(context).secondaryHeaderColor,
-                        size: 20,
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 20.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                            // color: Theme.of(context).secondaryHeaderColor.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                                color: Theme.of(context).colorScheme.secondary,
+                                width: 1)),
+                        child: Column(
+                          children: !isConnected
+                              ? [
+                                  W3MNetworkSelectButton(service: _w3mService),
+                                  W3MConnectWalletButton(service: _w3mService),
+                                ]
+                              : [
+                                  W3MAccountButton(
+                                    service: _w3mService,
+                                  ),
+                                  W3MConnectWalletButton(service: _w3mService),
+                                  // Text(WalletAddress.toString()),
+                                ],
+                        ),
+                      ),
+                    ),
+                    trailing: Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        // color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: Theme.of(context).colorScheme.secondary,
+                            width: 1),
+                      ),
+                      child: GestureDetector(
+                        onTap: () {
+                          // _showWelcomeDialog();
+                          // _deployContract();
+                          _showWelcomeBottomSheet();
+                        },
+                        child: Icon(
+                          Icons.wallet,
+                          color: Theme.of(context).secondaryHeaderColor,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ),
-                ),
 
-                ListTile(
-                  title: Text('My Storage',
-                      style: TextStyle(
-                          color: Theme.of(context)
-                              .appBarTheme
-                              .titleTextStyle
-                              ?.color,
-                          fontSize: 12,
-                          fontFamily: GoogleFonts.robotoMono().fontFamily,
-                          fontWeight: FontWeight.w300)),
-                  trailing: GestureDetector(
-                    onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => SetupPasswordScreen())),
-                    child: Text('See all',
+                  ListTile(
+                    title: Text('My Storage',
                         style: TextStyle(
                             color: Theme.of(context)
-                                .secondaryHeaderColor
-                                .withOpacity(0.3),
-                            fontSize: 10,
+                                .appBarTheme
+                                .titleTextStyle
+                                ?.color,
+                            fontSize: 12,
                             fontFamily: GoogleFonts.robotoMono().fontFamily,
                             fontWeight: FontWeight.w300)),
+                    trailing: GestureDetector(
+                      onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => SetupPasswordScreen())),
+                      child: Text('See all',
+                          style: TextStyle(
+                              color: Theme.of(context)
+                                  .secondaryHeaderColor
+                                  .withOpacity(0.3),
+                              fontSize: 10,
+                              fontFamily: GoogleFonts.robotoMono().fontFamily,
+                              fontWeight: FontWeight.w300)),
+                    ),
                   ),
-                ),
-                _watchlist(),
-                SizedBox(height: 30),
-                _barChart(),
-                SizedBox(height: 30),
-                _recentUploads(),
-                SizedBox(height: 30),
-                // _pieChart(),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20.0),
-                  child: PieChart(
-                    dataMap: dataMap,
-                    animationDuration: Duration(milliseconds: 800),
-                    chartLegendSpacing: 32,
-                    chartRadius: MediaQuery.of(context).size.width / 3.2,
-                    colorList: colorList,
-                    initialAngleInDegree: 0,
-                    chartType: ChartType.ring,
-                    ringStrokeWidth: 32,
-                    centerText: "Storage",
-                    legendOptions: LegendOptions(
-                      showLegendsInRow: false,
-                      legendPosition: LegendPosition.right,
-                      showLegends: true,
-                      // legendShape: _BoxShape.circle,
-                      legendTextStyle: TextStyle(
-                        fontWeight: FontWeight.bold,
+                  _watchlist(),
+                  SizedBox(height: 30),
+                  _barChart(),
+                  SizedBox(height: 30),
+                  _recentUploads(),
+                  SizedBox(height: 30),
+                  // _pieChart(),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 20.0),
+                    child: PieChart(
+                      dataMap: dataMap,
+                      animationDuration: Duration(milliseconds: 800),
+                      chartLegendSpacing: 32,
+                      chartRadius: MediaQuery.of(context).size.width / 3.2,
+                      colorList: colorList,
+                      initialAngleInDegree: 0,
+                      chartType: ChartType.ring,
+                      ringStrokeWidth: 32,
+                      centerText: "Storage",
+                      legendOptions: LegendOptions(
+                        showLegendsInRow: false,
+                        legendPosition: LegendPosition.right,
+                        showLegends: true,
+                        // legendShape: _BoxShape.circle,
+                        legendTextStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
+                      chartValuesOptions: ChartValuesOptions(
+                        showChartValueBackground: true,
+                        showChartValues: true,
+                        showChartValuesInPercentage: false,
+                        showChartValuesOutside: false,
+                        decimalPlaces: 1,
+                      ),
+                      // gradientList: ---To add gradient colors---
+                      // emptyColorGradient: ---Empty Color gradient---
                     ),
-                    chartValuesOptions: ChartValuesOptions(
-                      showChartValueBackground: true,
-                      showChartValues: true,
-                      showChartValuesInPercentage: false,
-                      showChartValuesOutside: false,
-                      decimalPlaces: 1,
-                    ),
-                    // gradientList: ---To add gradient colors---
-                    // emptyColorGradient: ---Empty Color gradient---
-                  ),
-                )
-              ],
+                  )
+                ],
+              ),
             ),
           ),
         ),

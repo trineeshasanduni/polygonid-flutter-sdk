@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart';
 import 'package:polygonid_flutter_sdk_example/src/data/secure_storage.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/common/widgets/circularProgress.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/bloc/add_plans_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/utils/deploayContract.dart';
 import 'package:polygonid_flutter_sdk_example/utils/image_resource.dart';
@@ -56,12 +57,6 @@ class _AddPlansState extends State<AddPlans> {
     _isVerified = storage.read('isVerified') ?? false;
 
     _deployPlans();
-  }
-
-  void _refreshApp() {
-    setState(() {
-      _displayText = "App refreshed at ${DateTime.now()}";
-    });
   }
 
   Future<void> _deployPlans() async {
@@ -157,9 +152,9 @@ class _AddPlansState extends State<AddPlans> {
           child: TabBarView(
             children: [
               _handleOneMonth(),
-              _handleOneMonth(), // Adjust as necessary for the "Shared" tab
-              _handleOneMonth(),
-              _handleOneMonth(),
+              _handleThreeMonth(), 
+              _handleSixMonth(),
+              _handleOneYear(),
             ],
           ),
         ),
@@ -176,26 +171,23 @@ class _AddPlansState extends State<AddPlans> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(height: 40),
-            _buildAnimatedContainer(
-              isExpanded1,
-              "Basic Plan",
-              "0\$ ",
-              () {
-                setState(() {
-                  isExpanded1 = !isExpanded1;
-                });
-              },
-              'Features for creators and developers who need more storage',
-              [
-                'Unlimited Uploads',
-                '5GB storage',
-                '100GB Bandwidth',
-                'IPFS Gateways',
-                'IPFS Pinning Service API'
-              ],
-              _isFreePlanActivated ? 'Activated' : 'ADD 0\$ PER MONTH',
-              'assets/images/paperPlane.png'
-            ),
+            _buildAnimatedContainer(isExpanded1, "Basic Plan", "0\$ ", () {
+              _deployPlans();
+              setState(() {
+                isExpanded1 = !isExpanded1;
+              });
+            },
+                'Features for creators and developers who need more storage',
+                [
+                  'Unlimited Uploads',
+                  'Upto 1GB storage space',
+                  'Hack-Proof',
+                  'ZKP Protected',
+                  'Blockchain-Based Secure',
+                  'Decentralized Data Protection'
+                ],
+                'ADD 0\$ PER MONTH',
+                'assets/images/paperPlane.png'),
             SizedBox(height: 20),
             _buildAnimatedContainer(
               isExpanded2,
@@ -206,11 +198,12 @@ class _AddPlansState extends State<AddPlans> {
                   isExpanded2 = !isExpanded2;
                 });
               },
-              'Perfect for those managing large files or extensive data...',
+              'Perfect for those managing large files or extensive data, ensuring your information is stored safely.',
               [
                 'Unlimited Uploads',
                 'Upto 1000GB storage space',
                 'Hack-Proof',
+                'ZKP Protected',
                 'Blockchain-Based Secure',
                 'Decentralized Data Protection'
               ],
@@ -218,26 +211,180 @@ class _AddPlansState extends State<AddPlans> {
               'assets/images/rocket2.png',
             ),
             SizedBox(height: 20),
+            _buildAnimatedContainer(isExpanded3, "Advance Plan", "30\$", () {
+              setState(() {
+                isExpanded3 = !isExpanded3;
+              });
+            },
+                'This plan is perfect for those needing large-scale, high-security storage solutions, ensuring that all your data is protected',
+                [
+                  'Unlimited Uploads',
+                  'Upto 5000GB storage space',
+                  'Hack-Proof',
+                  'ZKP Protected',
+                  'Blockchain-Based Secure',
+                  'Decentralized Data Protection'
+                ],
+                'ADD 30\$ PER MONTH',
+                'assets/images/plane.png'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _handleThreeMonth() {
+    return SingleChildScrollView(
+      // Scrollable content for large expanded plans
+      child: Padding(
+        padding: const EdgeInsets.all(16.0), // Add some padding if necessary
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(height: 40),
             _buildAnimatedContainer(
-              isExpanded3,
-              "Advance Plan",
+              isExpanded2,
+              "Starter Plan",
               "30\$",
               () {
                 setState(() {
-                  isExpanded3 = !isExpanded3;
+                  isExpanded2 = !isExpanded2;
                 });
               },
-              'This plan is perfect for those needing large-scale...',
+              'Perfect for those managing large files or extensive data, ensuring your information is stored safely.',
               [
                 'Unlimited Uploads',
-                'Upto 5000GB storage space',
+                'Upto 1000GB storage space',
                 'Hack-Proof',
+                'ZKP Protected',
                 'Blockchain-Based Secure',
                 'Decentralized Data Protection'
               ],
-              'ADD 30\$ PER MONTH',
-              'assets/images/plane.png'
+              'ADD 30\$',
+              'assets/images/rocket2.png',
             ),
+            SizedBox(height: 20),
+            _buildAnimatedContainer(isExpanded3, "Advance Plan", "90\$", () {
+              setState(() {
+                isExpanded3 = !isExpanded3;
+              });
+            },
+                'This plan is perfect for those needing large-scale, high-security storage solutions, ensuring that all your data is protected',
+                [
+                  'Unlimited Uploads',
+                  'Upto 5000GB storage space',
+                  'Hack-Proof',
+                  'ZKP Protected',
+                  'Blockchain-Based Secure',
+                  'Decentralized Data Protection'
+                ],
+                'ADD 90\$ PER MONTH',
+                'assets/images/plane.png'),
+          ],
+        ),
+      ),
+    );
+  }
+  Widget _handleSixMonth() {
+    return SingleChildScrollView(
+      // Scrollable content for large expanded plans
+      child: Padding(
+        padding: const EdgeInsets.all(16.0), // Add some padding if necessary
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(height: 40),
+            _buildAnimatedContainer(
+              isExpanded2,
+              "Starter Plan",
+              "60\$",
+              () {
+                setState(() {
+                  isExpanded2 = !isExpanded2;
+                });
+              },
+              'Perfect for those managing large files or extensive data, ensuring your information is stored safely.',
+              [
+                'Unlimited Uploads',
+                'Upto 1000GB storage space',
+                'Hack-Proof',
+                'ZKP Protected',
+                'Blockchain-Based Secure',
+                'Decentralized Data Protection'
+              ],
+              'ADD 60\$',
+              'assets/images/rocket2.png',
+            ),
+            SizedBox(height: 20),
+            _buildAnimatedContainer(isExpanded3, "Advance Plan", "180\$", () {
+              setState(() {
+                isExpanded3 = !isExpanded3;
+              });
+            },
+                'This plan is perfect for those needing large-scale, high-security storage solutions, ensuring that all your data is protected',
+                [
+                  'Unlimited Uploads',
+                  'Upto 5000GB storage space',
+                  'Hack-Proof',
+                  'ZKP Protected',
+                  'Blockchain-Based Secure',
+                  'Decentralized Data Protection'
+                ],
+                'ADD 180\$ PER MONTH',
+                'assets/images/plane.png'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _handleOneYear() {
+    return SingleChildScrollView(
+      // Scrollable content for large expanded plans
+      child: Padding(
+        padding: const EdgeInsets.all(16.0), // Add some padding if necessary
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(height: 40),
+            _buildAnimatedContainer(
+              isExpanded2,
+              "Starter Plan",
+              "120\$",
+              () {
+                setState(() {
+                  isExpanded2 = !isExpanded2;
+                });
+              },
+              'Perfect for those managing large files or extensive data, ensuring your information is stored safely.',
+              [
+                'Unlimited Uploads',
+                'Upto 1000GB storage space',
+                'Hack-Proof',
+                'ZKP Protected',
+                'Blockchain-Based Secure',
+                'Decentralized Data Protection'
+              ],
+              'ADD 120\$',
+              'assets/images/rocket2.png',
+            ),
+            SizedBox(height: 20),
+            _buildAnimatedContainer(isExpanded3, "Advance Plan", "360\$", () {
+              setState(() {
+                isExpanded3 = !isExpanded3;
+              });
+            },
+                'This plan is perfect for those needing large-scale, high-security storage solutions, ensuring that all your data is protected',
+                [
+                  'Unlimited Uploads',
+                  'Upto 5000GB storage space',
+                  'Hack-Proof',
+                  'ZKP Protected',
+                  'Blockchain-Based Secure',
+                  'Decentralized Data Protection'
+                ],
+                'ADD 360\$ PER MONTH',
+                'assets/images/plane.png'),
           ],
         ),
       ),
@@ -245,6 +392,7 @@ class _AddPlansState extends State<AddPlans> {
   }
 
   Widget _buildAddPlan(String name) {
+    // print('tap tap');
     return BlocBuilder<AddPlansBloc, AddPlansState>(
       bloc: _addPlansBloc,
       builder: (context, state) {
@@ -252,8 +400,11 @@ class _AddPlansState extends State<AddPlans> {
         final owner1 = storage.read('walletAddress');
 
         if (state is AddPlansLoading) {
-          return const Center(
-            child: CircularProgressIndicator(),
+          return  Center(
+            child:Loading(
+              Loadingcolor: Theme.of(context).primaryColor,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
           );
         }
 
@@ -386,6 +537,7 @@ class _AddPlansState extends State<AddPlans> {
               _checkFreeSpaceTxHashStatus(txHash.toString());
               _hasCheckedTxHash = true; // Mark as checked
               _hasLoggedNullTxHash = false; // Reset the logging flag
+              _deployPlans();
             } else if (txHash == null && !_hasLoggedNullTxHash) {
               // Log the case where TXHash is null only once
               print('Transaction hash is null');
@@ -395,30 +547,52 @@ class _AddPlansState extends State<AddPlans> {
         }
 
         if (!_isVerified) {
+          print('isVerified: $_isVerified');
           return Center(
             child: TextButton(
-              onPressed: () {
-                _isFreePlanActivated
-                    ? null
-                    : () {
-                        _addPlansBloc.add(GenerateSecretsEvent());
-                      };
+              onPressed:
+                  // _isFreePlanActivated
+                  //     ? null // Disable the button when the plan is already activated
+                  //     :
+                  () {
+                // Add the event when the button is pressed
+                _addPlansBloc.add(GenerateSecretsEvent());
               },
               child: _buildButton(
-                name,
+                _isFreePlanActivated ? "Activated" : name,
                 _isFreePlanActivated
-                    ? Colors.red
+                    ? Theme.of(context).primaryColor
                     : Theme.of(context).colorScheme.secondary,
-                Theme.of(context).primaryColor,
-                Theme.of(context).primaryColor,
+                _isFreePlanActivated
+                    ? Colors.redAccent[700]
+                    : Theme.of(context).primaryColor,
+                _isFreePlanActivated
+                    ? Colors.redAccent[700]
+                    : Theme.of(context).primaryColor,
               ),
             ),
           );
         } else {
+          // WidgetsBinding.instance.addPostFrameCallback((_) {
+          // _deployPlans();
+          // });
+
           return Center(
-            child: Text(
-              'Plan already added and user verified',
-              style: TextStyle(color: Colors.grey),
+            // child: Text(
+            //   'Plan already added and user verified',
+            //   style: TextStyle(color: Colors.grey),
+            // ),
+            child: _buildButton(
+              _isFreePlanActivated ? "Activated" : name,
+              _isFreePlanActivated
+                  ? Theme.of(context).primaryColor
+                  : Theme.of(context).colorScheme.secondary,
+              _isFreePlanActivated
+                  ? Colors.redAccent[700]
+                  : Theme.of(context).primaryColor,
+              _isFreePlanActivated
+                  ? Colors.redAccent[700]
+                  : Theme.of(context).primaryColor,
             ),
           );
         }
@@ -588,7 +762,7 @@ class _AddPlansState extends State<AddPlans> {
   Widget _buildAnimatedContainer(
       bool isExpanded,
       String title,
-      String subtitle,     
+      String subtitle,
       VoidCallback onTap,
       String description,
       List<String> features,
@@ -606,10 +780,12 @@ class _AddPlansState extends State<AddPlans> {
             curve: Curves.easeInOut,
             width: MediaQuery.of(context).size.width * 0.9,
             height: isExpanded
-                ? MediaQuery.of(context).size.width * 1.2
+                ? MediaQuery.of(context).size.width * 1.4
                 : MediaQuery.of(context).size.width * 0.4,
-            decoration: isExpanded
-                ? BoxDecoration(
+            decoration: title == "Basic Plan" && _isFreePlanActivated ?
+                       
+                       isExpanded 
+                ?   BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -631,6 +807,31 @@ class _AddPlansState extends State<AddPlans> {
                     color: Theme.of(context).primaryColor,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
+                  ): isExpanded
+                ? BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                        Theme.of(context)
+                            .colorScheme
+                            .secondary
+                            .withOpacity(0.5),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
+                  ): BoxDecoration(
+                    color: Theme.of(context).primaryColor,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
                       color: Theme.of(context).secondaryHeaderColor,
                       width: 2,
                     ),
@@ -646,8 +847,8 @@ class _AddPlansState extends State<AddPlans> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          
-                          Image.asset(icon, width: 50, height: 50, fit: BoxFit.fill),
+                          Image.asset(icon,
+                              width: 50, height: 50, fit: BoxFit.fill),
                           SizedBox(width: 30),
                           Text(
                             title, // Display title text
@@ -683,9 +884,11 @@ class _AddPlansState extends State<AddPlans> {
                                     color: Colors.white,
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
-                                    fontFamily: GoogleFonts.robotoMono().fontFamily)
+                                    fontFamily:
+                                        GoogleFonts.robotoMono().fontFamily)
                                 : TextStyle(
-                                    color: Theme.of(context).colorScheme.secondary,
+                                    color:
+                                        Theme.of(context).colorScheme.secondary,
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                     fontFamily:
@@ -695,12 +898,15 @@ class _AddPlansState extends State<AddPlans> {
                             'Per Month', // Display title text
                             style: isExpanded
                                 ? TextStyle(
-                                    color: Theme.of(context).secondaryHeaderColor,
+                                    color:
+                                        Theme.of(context).secondaryHeaderColor,
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    fontFamily: GoogleFonts.robotoMono().fontFamily)
+                                    fontFamily:
+                                        GoogleFonts.robotoMono().fontFamily)
                                 : TextStyle(
-                                    color: Theme.of(context).secondaryHeaderColor,
+                                    color:
+                                        Theme.of(context).secondaryHeaderColor,
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                     fontFamily:
@@ -734,7 +940,7 @@ class _AddPlansState extends State<AddPlans> {
                           ),
                           const SizedBox(height: 10),
                           SizedBox(
-                            height: MediaQuery.of(context).size.width * 0.3,
+                            height: MediaQuery.of(context).size.width * 0.4,
                             child: ListView.builder(
                               itemCount: features.length,
                               itemBuilder: (context, index) {
@@ -764,21 +970,11 @@ class _AddPlansState extends State<AddPlans> {
                       // Button will now trigger the event when clicked
                       if (title == "Basic Plan") ...[
                         _buildAddPlan(name1),
-                        // TextButton(
-                        //   onPressed: () {
-                        //     _addPlansBloc.add(freeSpaceEvent(
-                        //       owner: owner1,
-                        //       did: widget.did!,
-                        //     ));
-                        //   },
-                        //   child: _buildButton(
-                        //     'free space',
-                        //     Theme.of(context).colorScheme.secondary,
-                        //     Theme.of(context).primaryColor,
-                        //     Theme.of(context).primaryColor,
-                        //   ),
-                        // ),
+                       
                       ],
+                      // if (title == "Starter Plan") ...[
+                      //   _buildAddPlan(name1),
+                      // ],
 
                       // _addSpaceBloc.add(freeSpaceEvent(
                       //   owner: owner1,
@@ -796,29 +992,6 @@ class _AddPlansState extends State<AddPlans> {
     );
   }
 
-  // Widget _buildDashboardButton(String name, VoidCallback onTap) {
-  //   return GestureDetector(
-  //     onTap:
-  //         onTap, // Now the onTap function will only be called when the button is tapped
-  //     child: _buildButton(name, Theme.of(context).colorScheme.secondary,
-  //         Theme.of(context).primaryColor, Theme.of(context).primaryColor),
-  //   );
-  // }
-
-  // void _showWelcomeDialog() {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: Text('Welcome!'),
-  //         content: Text('You have to connect with metamask to proceed'),
-  //         actions: <Widget>[
-  //           _buildAddPlan(),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
 
   Widget _buildButton(
     String text,

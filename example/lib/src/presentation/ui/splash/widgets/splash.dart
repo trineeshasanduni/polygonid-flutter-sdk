@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/routes.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/create_wallet/setupAccount.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/widgets/setupPassword.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/splash/splash_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/splash/splash_event.dart';
@@ -56,9 +58,13 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SvgPicture.asset(
-              ImageResources.logo,
-              width: 180,
+            // SvgPicture.asset(
+            //   ImageResources.logo,
+            //   width: 180,
+            // ),
+            Image.asset(
+              'assets/images/ic_launcher.png',
+              width: 80,
             ),
             _buildDownloadProgress(),
           ],
@@ -77,7 +83,12 @@ class _SplashScreenState extends State<SplashScreen> {
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text("Downloading circuits..."),
+               Text("Downloading circuits...",style: TextStyle(
+                color: Theme.of(context).secondaryHeaderColor,
+                fontSize: 16,
+                fontFamily: GoogleFonts.robotoMono().fontFamily,
+                fontWeight: FontWeight.w400,
+              ),),
               const SizedBox(height: 2),
               Text(
                   "${(state.downloaded / state.contentLength * 100).toStringAsFixed(2)} %"),
@@ -87,11 +98,16 @@ class _SplashScreenState extends State<SplashScreen> {
                   _bloc.add(const SplashEvent.cancelDownloadEvent());
                 },
                 style: CustomButtonStyle.primaryButtonStyle,
-                child: const FittedBox(
+                child:  FittedBox(
                   child: Text(
                     "Cancel download",
                     textAlign: TextAlign.center,
-                    style: CustomTextStyles.primaryButtonTextStyle,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontFamily: GoogleFonts.robotoMono().fontFamily,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                 ),
               ),
@@ -129,7 +145,8 @@ class _SplashScreenState extends State<SplashScreen> {
   ///
   void _handleWaitingTimeEnded() {
     // Navigator.of(context).pushReplacementNamed(Routes.registerPath);
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const SetupPasswordScreen()));
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => const SetUpScreen()));
   }
 
   ///

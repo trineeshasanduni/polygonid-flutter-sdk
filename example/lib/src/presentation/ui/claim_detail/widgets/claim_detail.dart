@@ -46,27 +46,30 @@ class _ClaimDetailScreenState extends State<ClaimDetailScreen> {
     return SafeArea(
       child: SizedBox(
         width: MediaQuery.of(context).size.width,
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 24),
-                    _buildTitle(),
-                    const SizedBox(height: 6),
-                    _buildDetails(),
-                    const SizedBox(height: 40),
-                  ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 24),
+                      _buildTitle(),
+                      const SizedBox(height: 6),
+                      _buildDetails(), // Using Card for claim details
+                      const SizedBox(height: 40),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
-            _buildRefreshCredentialButton(),
-            _buildRemoveClaimButton(),
-            _buildBlocListener(),
-          ],
+              const SizedBox(height: 24),
+              _buildRefreshCredentialButton(),
+              _buildRemoveClaimButton(),
+              _buildBlocListener(),
+            ],
+          ),
         ),
       ),
     );
@@ -76,32 +79,55 @@ class _ClaimDetailScreenState extends State<ClaimDetailScreen> {
   Widget _buildTitle() {
     return Text(
       widget.claimModel.name,
-      style: CustomTextStyles.descriptionTextStyle.copyWith(fontSize: 20),
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.primary,
+        fontSize: 20,
+        height: 1.8,
+        fontWeight: FontWeight.w500,
+      ),
     );
   }
 
   ///
   Widget _buildDetails() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: widget.claimModel.details
-          .map((detail) => _buildDetail(detail))
-          .toList(),
+    return Card(
+      elevation: 3.0, // Shadow effect
+      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: widget.claimModel.details
+              .map((detail) => _buildDetail(detail))
+              .toList(),
+        ),
+      ),
     );
   }
 
   ///
   Widget _buildDetail(ClaimDetailModel detail) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 25),
+      padding: const EdgeInsets.only(bottom: 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             detail.name,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
           ),
+          const SizedBox(height: 5),
           Text(
             detail.value,
+            style: const TextStyle(
+              fontSize: 14,
+            ),
           ),
         ],
       ),
@@ -120,9 +146,13 @@ class _ClaimDetailScreenState extends State<ClaimDetailScreen> {
                 ClaimDetailEvent.deleteClaim(claimId: widget.claimModel.id));
           },
           style: CustomButtonStyle.primaryButtonStyle,
-          child: const Text(
-            CustomStrings.deleteClaimButtonCTA,
-            style: CustomTextStyles.primaryButtonTextStyle,
+          child: Text(
+            'Remove credential',
+            style: TextStyle(
+              color: Theme.of(context).primaryColor,
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+            ),
           ),
         ),
       ),

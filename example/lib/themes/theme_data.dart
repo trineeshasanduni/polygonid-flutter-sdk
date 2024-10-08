@@ -7,6 +7,7 @@ class Themes {
     colorScheme: const ColorScheme.light(
       primary: Color(0xFF2CFFAE),
       secondary: Color(0xFFa3d902),
+      tertiary:Color(0xFF5C7B00) ,
       background: Color.fromARGB(255, 214, 230, 168),
             error: Color.fromARGB(255, 255, 17, 0)
 
@@ -32,6 +33,7 @@ class Themes {
     colorScheme: const ColorScheme.dark(
       primary: Color(0xFF2CFFAE),
       secondary: Color(0xFFa3d902),
+      tertiary:Color(0xFF5C7B00) ,
       background: Color.fromARGB(255, 40, 40, 40),
       error: Color.fromARGB(255, 251, 17, 0)
     ),

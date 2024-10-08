@@ -84,9 +84,11 @@ class UseSpaceParam {
 
 class FileNameParam {
   final String BatchHash;
+  final String Verify;
 
   FileNameParam({
     required this.BatchHash,
+    required this.Verify,
   });
 }
 
@@ -162,7 +164,7 @@ class FileNameUsecase {
   Future<Either<Failure, FileNameEntity>> call(FileNameParam params) async {
     print('fetching file name');
 
-    return await fileRepository.getFileName(BatchHash: params.BatchHash);
+    return await fileRepository.getFileName(BatchHash: params.BatchHash,Verify: params.Verify);
   }
 }
 

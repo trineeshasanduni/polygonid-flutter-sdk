@@ -26,7 +26,8 @@ abstract class FileRepository {
   });
 
   Future<Either<Failure, FileNameEntity>> getFileName(
-      {required String BatchHash});
+      {required String BatchHash,
+      required String Verify,});
 
   Future<Either<Failure, VerifyUploadEntity>> verifyUpload(
       {required String BatchHash,

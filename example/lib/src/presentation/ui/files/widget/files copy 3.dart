@@ -309,7 +309,7 @@ class _FilesState extends State<Files> {
       // Only fetch if this batchHash hasn't been fetched already
       if (!fetchedBatchHashes.contains(batchHash) && filesFetched < totalFiles) {
         await Future.delayed(const Duration(milliseconds: 500), () {
-          _fileBloc.add(GetFileNameEvent(BatchHash: batchHash));
+          _fileBloc.add(GetFileNameEvent(BatchHash: batchHash, Verify: ''));
         });
       }
     }

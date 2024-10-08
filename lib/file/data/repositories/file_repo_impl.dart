@@ -74,14 +74,15 @@ class FileRepoImpl implements FileRepository {
 
   @override
   Future<Either<Failure, FileNameEntity>> getFileName(
-      {required String BatchHash}) async {
+      {required String BatchHash,required String Verify}) async {
     try {
       final FileNameModel fileNameModel =
-          await fileRemoteDatasource.getFileName(BatchHash);
+          await fileRemoteDatasource.getFileName(BatchHash, Verify);
       return right(FileNameEntity(
         fileName: fileNameModel.fileName,
         batchHash: fileNameModel.batchHash,
         fileHash: fileNameModel.fileHash,
+        isVerified: fileNameModel.isVerified,
       ));
     } catch (e) {
       return Left(Failure());

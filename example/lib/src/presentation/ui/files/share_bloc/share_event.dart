@@ -18,3 +18,8 @@ class onClickShare extends ShareEvent {
   const onClickShare(
       {required this.batch_hash, required this.file_hash, required this.OwnerDid,required this.FileName, required this.Owner, required this.ShareDid});
 }
+
+class ResetShareStateEvent extends ShareEvent {
+  @override
+  List<Object> get props => [];
+}

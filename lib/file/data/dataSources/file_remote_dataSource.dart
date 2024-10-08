@@ -21,7 +21,7 @@ abstract class FileRemoteDatasource {
     required int batchSize,
   });
 
-  Future<FileNameModel> getFileName(String BatchHash);
+  Future<FileNameModel> getFileName(String BatchHash, String Verify);
 
   Future<VerifyUploadModel> verifyUpload({
     required String BatchHash,

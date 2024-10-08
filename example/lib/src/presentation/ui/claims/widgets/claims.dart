@@ -50,8 +50,9 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       elevation: 0.0,
-      // backgroundColor: CustomColors.background,
-      foregroundColor: Theme.of(context).secondaryHeaderColor,
+      
+      iconTheme: const IconThemeData(color: Colors.white),
+
     );
   }
 
@@ -129,6 +130,8 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
       ),
     );
   }
+
+  
 
   ///
   Widget _buildClaimsConnectButton() {

@@ -1,3 +1,4 @@
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
@@ -42,7 +43,6 @@ class _QRCodeScannerPageState extends State<QRCodeScannerPage> {
       ) {
         if (snapshot.hasData) {
           snapshot.data;
-          print('snapshot.data: ${snapshot.data}');
           return CameraView(
             cameras: snapshot.data!,
             onImage: (inputImage) {
@@ -75,7 +75,6 @@ class _QRCodeScannerPageState extends State<QRCodeScannerPage> {
     _isBusy = true;
 
     final barcodes = await _barcodeScanner.processImage(inputImage);
-    print('barcodes: $barcodes');
 
     if (barcodes.isEmpty) {
       _isBusy = false;
@@ -91,8 +90,6 @@ class _QRCodeScannerPageState extends State<QRCodeScannerPage> {
     if (mounted) {
       setState(() {});
     }
-
-    print('barcodes.first.rawValue: ${barcodes.first.rawValue}');
 
     _resultCallback(barcodes.first.rawValue);
   }

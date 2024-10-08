@@ -56,7 +56,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
     on<fetchAndSaveUploadVerifyClaims>(_fetchAndSaveClaims);
     on<getUploadVerifyClaims>(_getUploadVerifyClaims);
     on<ResetFileStateEvent>((event, emit) {
-  emit(FileInitial());  // Reset state to initial
+     emit(FileInitial());  // Reset state to initial
 });
 
 
@@ -101,7 +101,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
       GetFileNameEvent event, Emitter<FileState> emit) async {
     emit(FileUploading());
     final fileNameResponse =
-        await getFileNameUsecase(FileNameParam(BatchHash: event.BatchHash));
+        await getFileNameUsecase(FileNameParam(BatchHash: event.BatchHash,Verify: event.Verify));
     fileNameResponse.fold(
       (failure) {
         print('failure get: $failure');

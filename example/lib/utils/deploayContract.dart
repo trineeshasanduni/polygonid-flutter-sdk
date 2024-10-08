@@ -41,6 +41,8 @@ class FileStorageService {
     final storage = GetStorage();
     final walletAddress1 = senderAddress ?? storage.read('walletAddress');
 
+    print("walletAddress112: $walletAddress1");
+
     final result = await _web3Client?.call(
       contract: contract,
       function: function,

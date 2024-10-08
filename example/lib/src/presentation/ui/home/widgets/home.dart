@@ -149,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
             textAlign: TextAlign.center,
             style: CustomTextStyles.primaryButtonTextStyle.copyWith(
               // color: CustomColors.primaryButton,
-            color:  Theme.of(context).primaryColor,
+            color:  Theme.of(context).colorScheme.primary,
             ),
           ),
         ),

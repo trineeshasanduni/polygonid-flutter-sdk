@@ -19,7 +19,8 @@ class CustomStrings {
   // AUTH
   static const String authPrivateProfile = "Private Profile";
   static const String authPublicProfile = "Public Profile";
-  static const String authButtonCTA = "Connect";
+  // static const String authButtonCTA = "Connect";
+  static const String authButtonCTA = "Scan Qr Code";
   static const String authDescription =
       "Authenticate through verifier provider by scanning QR Code.\nIf you are already authenticated, you can skip this step";
   static const String authSuccess = "Authenticated successfully";

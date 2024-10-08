@@ -5,6 +5,7 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/botto
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/dashBoard_navigation.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/plan_navigation.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/profile_navigation.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/widget/add_plans.dart';
 
 class BethelBottomBar extends StatefulWidget {
   final String? did;
@@ -13,12 +14,29 @@ class BethelBottomBar extends StatefulWidget {
     required this.did,
   });
 
+  
+
   @override
   BethelBottomBarState createState() => BethelBottomBarState();
 }
 
 class BethelBottomBarState extends State<BethelBottomBar> {
   int currentIndex = 0;
+
+  void navigateToPlans() {
+    setState(() {
+      currentIndex = 2; // Assuming PlanNav is at index 2
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Ensure the frame has updated before pushing a new route
+      PlanNavKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (context) => AddPlans(did: widget.did),
+        ),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

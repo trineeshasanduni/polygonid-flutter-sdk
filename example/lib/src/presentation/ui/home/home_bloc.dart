@@ -58,6 +58,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       await SecureStorage.write(
           key: SecureStorageKeys.privateKey, value: identity.privateKey);
       emit(HomeState.loaded(identifier: identity.did));
+      print('did created: ${identity.did}');
     } on IdentityException catch (identityException) {
       emit(HomeState.error(message: identityException.error));
     } catch (_) {

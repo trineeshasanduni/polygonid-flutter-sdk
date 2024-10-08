@@ -19,7 +19,6 @@ import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
 import 'package:polygonid_flutter_sdk/iden3comm/domain/entities/common/iden3_message_entity.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/common/widgets/circularProgress.dart';
-import 'package:polygonid_flutter_sdk_example/src/presentation/ui/create_wallet/widget/glassEffect.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/download_bloc/download_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/file_bloc/file_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/share_bloc/share_bloc.dart';
@@ -609,7 +608,7 @@ class _FilesState extends State<Files> {
             child: TabBarView(
               children: [
                 _buildFileList(),
-                _buildSharedFileList(), // You may change the second one if shared list logic is different
+                _buildFileList(), // You may change the second one if shared list logic is different
               ],
             ),
           ),
@@ -710,7 +709,7 @@ class _FilesState extends State<Files> {
                 )
               : Center(
                   child: Text(
-                    'No files Uploaded',
+                    'No files fetched',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -788,7 +787,7 @@ class _FilesState extends State<Files> {
           )
         : Center(
             child: Text(
-              'No files shared',
+              'No files fetched',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 16,
@@ -827,386 +826,113 @@ class _FilesState extends State<Files> {
     );
   }
 
-  void _showShareBottomSheet(BuildContext context, String batchHash,
-      String fileHash, String fileName) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
-      ),
-      builder: (BuildContext context) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize
-                .min, // Ensures the bottom sheet takes the minimum height necessary
-            children: [
-              Text(
-                'Share File',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text('Batch Hash: $batchHash'),
-              Text('File Hash: $fileHash'),
-              Text('File Name: $fileName'),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  // Implement the sharing logic here
-                  Navigator.pop(
-                      context); // Close the bottom sheet after sharing
-                },
-                child: const Text('Share'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _showShareInput(BuildContext context, String batchHash,
-      String fileHash, String fileName) async {
+  Future<void> _showShareInput(BuildContext context, String BatchHash,
+      String FileHash, String FileName) async {
     var pasteDid = TextEditingController();
     final storage = GetStorage();
     final walletAddress = storage.read('walletAddress');
     print('walletAddress : $walletAddress');
 
-    showModalBottomSheet(
-      backgroundColor:
-          Colors.transparent, // Set to transparent to allow the gradient
-      clipBehavior: Clip.hardEdge,
-      context: context,
-      isScrollControlled: true, // Allows the bottom sheet to take up more space
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (BuildContext context) {
-        return Container(
-          height: MediaQuery.of(context).size.height / 3,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color.fromARGB(255, 68, 91, 0),
-                Theme.of(context).primaryColor,
-              ], // Add your gradient colors here
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min, // Adjust height based on content
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Center(
-                  child: Container(
-                    width: MediaQuery.of(context).size.width / 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .secondaryHeaderColor
-                          .withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    margin: const EdgeInsets.only(top: 5),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: pasteDid,
-                  enabled: true,
-                  decoration: InputDecoration(
-                    labelText: 'Paste your Share DID here',
-                    labelStyle: TextStyle(
-                      color: Colors.white.withOpacity(0.4),
-                      fontFamily: GoogleFonts.robotoMono().fontFamily,
-                      fontSize: 13,
-                    ),
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Colors.red.withOpacity(0.4),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                BlocBuilder<ShareBloc, ShareState>(
-                  bloc: _shareBloc,
-                  builder: (context, state) {
-                    if (state is Sharing) {
-                      return Center(
-                        child: Loading(
-                          Loadingcolor: Theme.of(context).primaryColor,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                      );
-                    }
-                    if (state is ShareFailed) {
-                      _showSnackbar(
-                          'Share failed: ${state.message}', Colors.red);
-                    }
-                    if (state is Shared) {
-                      // Call the transaction hash check method
-                      _checkSharedTxHashStatus(state.response.tXHash!,
-                          state.response.ownerDid!, context);
+    BuildContext dialogContext;
 
-                      Future.delayed(const Duration(seconds: 10), () {
-                        _shareBloc.add(ResetShareStateEvent());
-                      });
-                    }
-                    return Center(
-                      child: GestureDetector(
-                          onTap: () {
-                            _shareBloc.add(onClickShare(
-                              FileName: fileName,
-                              OwnerDid: jsonDecode(widget.did.toString()),
-                              ShareDid: pasteDid.text,
-                              Owner: walletAddress,
-                              file_hash: fileHash,
-                              batch_hash: batchHash,
-                            ));
-                          },
-                          child: _buildtransperantButton(
-                              'Share', MediaQuery.of(context).size.width / 4)),
-                    );
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        dialogContext = context; // Save the context
+        return AlertDialog(
+          title: Column(
+            children: [
+              Align(
+                alignment: Alignment.topRight,
+                child: IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog
                   },
                 ),
-                const SizedBox(height: 20),
-              ],
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Paste Your Share DID',
+                  style: TextStyle(
+                    color: Theme.of(context).secondaryHeaderColor,
+                    fontFamily: GoogleFonts.robotoMono().fontFamily,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Expanded(
+            child: TextFormField(
+              controller: pasteDid,
+              enabled: true,
+              decoration: InputDecoration(
+                labelText: 'Paste your Share DID here',
+                labelStyle: TextStyle(
+                  color: Colors.white.withOpacity(0.4),
+                  fontFamily: GoogleFonts.robotoMono().fontFamily,
+                  fontSize: 13,
+                ),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Colors.red.withOpacity(0.4),
+                  ),
+                ),
+              ),
             ),
           ),
+          actions: <Widget>[
+            BlocBuilder<ShareBloc, ShareState>(
+              bloc: _shareBloc,
+              builder: (context, state) {
+                if (state is Sharing) {
+                  return Center(
+                      child: Loading(
+                          Loadingcolor: Theme.of(context).primaryColor,
+                          color: Theme.of(context).colorScheme.secondary));
+                }
+                if (state is ShareFailed) {
+                  _showSnackbar('Share failed: ${state.message}', Colors.red);
+                }
+                if (state is Shared) {
+                  // Call the transaction hash check method
+                  _checkSharedTxHashStatus(state.response.tXHash!,
+                      state.response.ownerDid!, dialogContext);
+                }
+                return TextButton(
+                  child: const Text('Share'),
+                  onPressed: () {
+                    _shareBloc.add(onClickShare(
+                      FileName: FileName,
+                      OwnerDid: jsonDecode(widget.did.toString()),
+                      ShareDid: pasteDid.text,
+                      Owner: walletAddress,
+                      file_hash: FileHash,
+                      batch_hash: BatchHash,
+                    ));
+                  },
+                );
+              },
+            ),
+          ],
         );
       },
     );
   }
 
-  Widget _buildtransperantButton(String text, dynamic width) {
-    return FrostedGlassBox(
-      theWidth: width,
-      theHeight: 50.0,
-      theX: 4.0,
-      theY: 4.0,
-      theColor: Colors.white.withOpacity(0.13),
-      theChild: ShaderMask(
-        shaderCallback: (bounds) => LinearGradient(
-          colors: [
-            Theme.of(context).colorScheme.primary,
-            Theme.of(context).colorScheme.secondary
-          ], // Customize your gradient colors
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ).createShader(bounds),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 14.0,
-            color: Colors.white, // This will be overridden by the gradient
-            fontWeight: FontWeight.bold,
-            fontFamily: GoogleFonts.robotoMono().fontFamily,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Future<void> _showShareInput1(BuildContext context, String BatchHash,
-  //     String FileHash, String FileName) async {
-  //   var pasteDid = TextEditingController();
-  //   final storage = GetStorage();
-  //   final walletAddress = storage.read('walletAddress');
-  //   print('walletAddress : $walletAddress');
-
-  //   BuildContext dialogContext;
-
-  //   showDialog(
-  //     barrierDismissible: false,
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       dialogContext = context; // Save the context
-  //       return AlertDialog(
-  //         title: Column(
-  //           children: [
-  //             Align(
-  //               alignment: Alignment.topRight,
-  //               child: IconButton(
-  //                 icon: Icon(Icons.close),
-  //                 onPressed: () {
-  //                   Navigator.of(context).pop(); // Close the dialog
-  //                 },
-  //               ),
-  //             ),
-  //             Align(
-  //               alignment: Alignment.centerLeft,
-  //               child: Text(
-  //                 'Paste Your Share DID',
-  //                 style: TextStyle(
-  //                   color: Theme.of(context).secondaryHeaderColor,
-  //                   fontFamily: GoogleFonts.robotoMono().fontFamily,
-  //                   fontSize: 15,
-  //                 ),
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //         content: Expanded(
-  //           child: TextFormField(
-  //             controller: pasteDid,
-  //             enabled: true,
-  //             decoration: InputDecoration(
-  //               labelText: 'Paste your Share DID here',
-  //               labelStyle: TextStyle(
-  //                 color: Colors.white.withOpacity(0.4),
-  //                 fontFamily: GoogleFonts.robotoMono().fontFamily,
-  //                 fontSize: 13,
-  //               ),
-  //               border: OutlineInputBorder(
-  //                 borderSide: BorderSide(
-  //                   color: Colors.red.withOpacity(0.4),
-  //                 ),
-  //               ),
-  //             ),
-  //           ),
-  //         ),
-  //         actions: <Widget>[
-  //           BlocBuilder<ShareBloc, ShareState>(
-  //             bloc: _shareBloc,
-  //             builder: (context, state) {
-  //               if (state is Sharing) {
-  //                 return Center(
-  //                     child: Loading(
-  //                         Loadingcolor: Theme.of(context).primaryColor,
-  //                         color: Theme.of(context).colorScheme.secondary));
-  //               }
-  //               if (state is ShareFailed) {
-  //                 _showSnackbar('Share failed: ${state.message}', Colors.red);
-  //               }
-  //               if (state is Shared) {
-  //                 // Call the transaction hash check method
-  //                 _checkSharedTxHashStatus(state.response.tXHash!,
-  //                     state.response.ownerDid!, dialogContext);
-  //               }
-  //               return TextButton(
-  //                 child: const Text('Share'),
-  //                 onPressed: () {
-  //                   _shareBloc.add(onClickShare(
-  //                     FileName: FileName,
-  //                     OwnerDid: jsonDecode(widget.did.toString()),
-  //                     ShareDid: pasteDid.text,
-  //                     Owner: walletAddress,
-  //                     file_hash: FileHash,
-  //                     batch_hash: BatchHash,
-  //                   ));
-  //                 },
-  //               );
-  //             },
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-
-  // Future<void> _showDownloadUrl(BuildContext context, Uri url) async {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: TextButton(
-  //             onPressed: () => setState(() {
-  //                   launchUrl(url, mode: LaunchMode.externalApplication);
-  //                 }),
-  //             child: Text('Click here to Download File')),
-  //       );
-  //     },
-  //   );
-  // }
-
   Future<void> _showDownloadUrl(BuildContext context, Uri url) async {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true, // Allows for more content control
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      backgroundColor: Colors.transparent, // Customize background
       builder: (BuildContext context) {
-        return Container(
-          height: MediaQuery.of(context).size.height / 3,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color.fromARGB(255, 68, 91, 0),
-                Theme.of(context).primaryColor,
-              ], // Add your gradient colors here
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context)
-                  .viewInsets
-                  .bottom, // Handle keyboard overlap
-              left: 16,
-              right: 16,
-              top: 16,
-            ),
-            child: Column(
-              mainAxisSize:
-                  MainAxisSize.min, // Minimize height based on content
-                  crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Center(
-                  child: Container(
-                    width: MediaQuery.of(context).size.width / 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .secondaryHeaderColor
-                          .withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    margin: const EdgeInsets.only(top: 5),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Now You can Download File',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).secondaryHeaderColor,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                GestureDetector(
-                    onTap: () => setState(() {
-                          launchUrl(url, mode: LaunchMode.externalApplication);
-                        }),
-                    child: _buildtransperantButton(
-                        'Click here to Download File',
-                        MediaQuery.of(context).size.width)),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
+        return AlertDialog(
+          title: TextButton(
+              onPressed: () => setState(() {
+                    launchUrl(url, mode: LaunchMode.externalApplication);
+                  }),
+              child: Text('Click here to Download File')),
         );
       },
     );
@@ -1274,11 +1000,116 @@ class _FilesState extends State<Files> {
           // _showSnackbar('File id Verified successfully:',
           //     Theme.of(context).colorScheme.secondary);
           // _buildFileList(true);
-          isVerified = true;
+
+          // isVerified = true;
         }
 
+        // if (downloadState is Downloading &&
+        //     downloadState.batchhash == batchHash) {
+        //   // Return CircularProgressIndicator when downloading
+        //   return Center(
+        //       child: Loading(
+        //           Loadingcolor: Theme.of(context).primaryColor,
+        //           color: Theme.of(context).colorScheme.secondary));
+        // }
+
+        // if (downloadState is DownloadSuccess &&
+        //     downloadState.batchhash == batchHash) {
+        //   print('downloadState batch:${downloadState.batchhash}');
+        //   _handleDownloadVerifyButton(
+        //       downloadState, downloadState.batchhash);
+        // }
+        // if (downloadState is DownloadFailed) {
+        //   _showSnackbar('Download failed', Colors.red);
+        // }
+
+        // if (downloadState is StatusLoaded &&
+        //     downloadState.batchhash == batchHash) {
+        //   print('status loaded in download');
+        //   print('downloadState batch1:${downloadState.batchhash}');
+        //   // _showSnackbar(
+        //   //     'status loaded', Theme.of(context).colorScheme.secondary);
+        //   _deployBatchFileContract(batchHash, fileHash);
+        // }
+
+        // if (downloadState is CidsGot &&
+        //     downloadState.batchhash == batchHash) {
+        //   print('cids got');
+        //   final cidString = downloadState.cids.cids;
+        //   final cidList = jsonEncode(cidString);
+        //   final cidGot = jsonEncode(cidList);
+
+        //   print('responsse cids got1: $cidGot');
+        //   print('responsse cids got: $cidList');
+
+        //   print('download1 : $batchHash');
+        //   print('download2 : $batchHash');
+        //   print('download3 : $fileName');
+        //   print('download4 : $cidList');
+        //   print('download5 : ${jsonDecode(widget.did.toString())}');
+
+        //   _downloadBloc.add(onClickDownloadUrl(
+        //       BatchHash: batchHash,
+        //       FileHash: batchHash,
+        //       Odid: jsonDecode(widget.did.toString()),
+        //       FileName: fileName.toString(),
+        //       Cids: cidList));
+
+        //   // _showSnackbar(
+        //   //     'cids got', Theme.of(context).colorScheme.secondary);
+        // }
+
+        // if (downloadState is DownloadUrlSuccess &&
+        //     downloadState.batchhash == batchHash) {
+        //   // Timer(Duration(seconds: 30), () {
+        //   //   _downloadBloc.add(ResetDownloadStateEvent());
+        //   //   _fileBloc.add(ResetFileStateEvent());
+        //   //   _showSnackbar('Time out', Colors.red);
+        //   // });
+
+        //   final url = downloadState.response.uRL;
+        //   final downloadLink = Uri.parse(url as String);
+        //   // _showSnackbar('${downloadState.response.uRL}',
+        //   //     Theme.of(context).colorScheme.secondary);
+        //   print('download url success: ${downloadState.response.uRL}');
+
+        //   // Start a 30-second timer
+        //   int remainingTime = 15; // 30 seconds countdown
+        //   Timer? countdownTimer;
+        //   WidgetsBinding.instance.addPostFrameCallback((_) {
+        //     // Show countdown UI (e.g., Snackbar)
+        //     _showCountdownSnackbar(context, remainingTime);
+        //   });
+        //   // Timer for updating the countdown every second
+        //   countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+        //     remainingTime--;
+        //     if (remainingTime > 0) {
+        //       // Update countdown UI
+        //       _showCountdownSnackbar(context, remainingTime);
+        //     } else {
+        //       // Timer is finished, reset the states
+        //       _downloadBloc.add(ResetDownloadStateEvent());
+        //       _fileBloc.add(ResetFileStateEvent());
+        //       countdownTimer?.cancel(); // Stop the timer
+        //     }
+        //   });
+        //   // Show download URL after URL is ready
+        //   WidgetsBinding.instance.addPostFrameCallback((_) async {
+        //     await _showDownloadUrl(context, downloadLink);
+        //   });
+        // }
+
         return GestureDetector(
-          onTap: () {
+          onTap:
+              // isVerified
+              //     ? () {
+              //         _downloadBloc.add(onClickDownload(
+              //             batch_hash: batchHash,
+              //             file_hash: batchHash,
+              //             didU: jsonDecode(widget.did.toString())));
+              //       }
+              //     :
+              () {
             final did = jsonDecode(widget.did.toString());
             final storage = GetStorage();
             final walletAddress = storage.read('walletAddress');
@@ -1375,11 +1206,6 @@ class _FilesState extends State<Files> {
           // _showSnackbar('${downloadState.response.uRL}',
           //     Theme.of(context).colorScheme.secondary);
           print('download url success: ${downloadState.response.uRL}');
-
-          Future.delayed(const Duration(seconds: 10), () {
-            _downloadBloc.add(ResetDownloadStateEvent());
-            // _fileBloc.add(ResetFileStateEvent());
-          });
 
           // Start a 30-second timer
           // int remainingTime = 15; // 30 seconds countdown

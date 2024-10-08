@@ -1,7 +1,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/widgets/claims.dart';
-import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claimsPage/widgets/claims_page.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/credencials.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard.dart';
 

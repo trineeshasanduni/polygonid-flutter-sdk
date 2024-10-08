@@ -110,7 +110,7 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
   }
 
   @override
-  Future<FileNameModel> getFileName(String BatchHash) async {
+  Future<FileNameModel> getFileName(String BatchHash, String Verify) async {
     print('fetching file name');
     try {
       final response = await client
@@ -132,6 +132,7 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
             fileHash: fileNameModel.fileHash,
             fileName: fileNameModel.fileName,
             batchHash: BatchHash,
+            isVerified: Verify == 'true' ? true : false,
           );
           print("fileName response: $fileNameModel");
           return responsefileName;
