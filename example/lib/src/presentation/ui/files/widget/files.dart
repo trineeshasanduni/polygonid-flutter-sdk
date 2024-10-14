@@ -62,7 +62,8 @@ class _FilesState extends State<Files> {
   bool _isRequestInProgress = false;
   List<String> fileNames = [];
   List<FileData> fileDataList = [];
-  List<String> sharedFileNames = [];
+  List<FileData> sharedFileNames = [];
+  // List<String> sharedFileNames = [];
   List<FileData> fileSharedDataList = [];
   List<dynamic> sharedDataResult = [];
   var httpClient = http.Client();
@@ -97,6 +98,7 @@ class _FilesState extends State<Files> {
     _deployContract();
     _initGetIdentifier();
     _deployFileCount();
+    _deployShredFiles();
   }
 
   void _initGetIdentifier() {
@@ -162,6 +164,7 @@ class _FilesState extends State<Files> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(message),
         duration: const Duration(seconds: 5),
+        behavior: SnackBarBehavior.floating,
         backgroundColor: backgroundColor,
       ));
     });
@@ -241,7 +244,20 @@ class _FilesState extends State<Files> {
             // Store the result
             for (var batchDetails in sharedDataResult) {
               final batchHash = batchDetails[2].toString();
+              final fileName = batchDetails[4].toString();
+              final fileHash = batchDetails[3].toString();
+              final verify = batchDetails[6].toString();
               print('Requesting shared file for batchHash: $batchHash');
+              print('filehash: $fileHash');
+              print('verify: $verify');
+              print('fileName: $fileName');
+
+              // _buildSharedFileList();
+
+              setState(() {
+                fileSharedDataList.add(FileData(fileName, batchHash, fileHash,
+                    verify == 'true' ? true : false));
+              });
 
               // Only fetch if this batchHash hasn't been fetched already
               // if (!fetchedBatchHashes.contains(batchHash) &&
@@ -276,6 +292,63 @@ class _FilesState extends State<Files> {
 
       final _contract = DeployedContract(_abiCode, _contractAddress);
       final _getAllBatchesFunction = _contract.function('getBatchFile');
+
+      final storage = GetStorage();
+      final walletAddress1 = storage.read('walletAddress');
+
+      final did = jsonDecode(widget.did.toString());
+
+      final result = await _web3Client?.call(
+        contract: _contract,
+        function: _getAllBatchesFunction,
+        params: [did, batch_hash, file_hash],
+        sender: EthereumAddress.fromHex(walletAddress1),
+      );
+      final walletAddress = storage.read('walletAddress');
+      print('walletAddress : $walletAddress');
+
+      if (result!.isNotEmpty) {
+        // Handle result based on its type
+        final index = result[0];
+
+        // Check if result[0] is of type BigInt and convert it to String
+        if (index is BigInt) {
+          final indexString = index.toString();
+          print('Fetched index: $indexString');
+
+          // Dispatch event with index and wallet address
+          _downloadBloc.add(GetCidsEvent(
+            index: indexString,
+            did: did,
+            owner: walletAddress,
+            batch_hash: batch_hash,
+          ));
+        } else {
+          print('Unexpected result type: ${index.runtimeType}');
+        }
+      } else {
+        print('No data returned from contract or result format is unexpected');
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+    }
+  }
+
+  Future<void> _deploysharefileContract(
+      String batch_hash, String file_hash) async {
+    try {
+      _web3Client = Web3Client(rpcUrl, httpClient);
+
+      final abiFile =
+          await rootBundle.loadString('assets/abi/FileStorage.json');
+      if (abiFile.isEmpty) throw FormatException('ABI file is empty');
+
+      final jsonAbi = jsonDecode(abiFile);
+      final _abiCode =
+          ContractAbi.fromJson(jsonEncode(jsonAbi['abi']), 'FileStorage');
+
+      final _contract = DeployedContract(_abiCode, _contractAddress);
+      final _getAllBatchesFunction = _contract.function('getShareFile');
 
       final storage = GetStorage();
       final walletAddress1 = storage.read('walletAddress');
@@ -532,10 +605,10 @@ class _FilesState extends State<Files> {
 
     return BlocProvider(
       create: (_) => _fileBloc,
-      child: SafeArea(
-        child: Scaffold(
-          backgroundColor: Theme.of(context).primaryColor,
-          body: BlocConsumer<FileBloc, FileState>(
+      child: Scaffold(
+        backgroundColor: Theme.of(context).primaryColor,
+        body: SafeArea(
+          child: BlocConsumer<FileBloc, FileState>(
             listener: (context, state) async {
               if (state is FileUploadFailed) {
                 _showSnackbar("File Upload Failed", Colors.red);
@@ -578,7 +651,7 @@ class _FilesState extends State<Files> {
                   const SizedBox(height: 20),
                   DefaultTabController(
                       length: 2,
-                      animationDuration: Duration(milliseconds: 500),
+                      animationDuration: const Duration(milliseconds: 500),
                       child: _buildTabView()),
                   // _buildFileList(),
                   const SizedBox(height: 20),
@@ -609,7 +682,7 @@ class _FilesState extends State<Files> {
             child: TabBarView(
               children: [
                 _buildFileList(),
-                _buildSharedFileList(), // You may change the second one if shared list logic is different
+                _buildSharedFileList(),
               ],
             ),
           ),
@@ -639,10 +712,12 @@ class _FilesState extends State<Files> {
   Future<void> _refreshFileList() async {
     setState(() {
       fileDataList.clear();
+      fileSharedDataList.clear();
     });
 
     await _deployContract();
     await _deployFileCount();
+    await _deployShredFiles();
   }
 
   Widget _buildFileList() {
@@ -659,6 +734,11 @@ class _FilesState extends State<Files> {
                   itemCount: fileDataList.length,
                   itemBuilder: (context, index) {
                     final fileData = fileDataList[index];
+
+                    print('batchHash: ${fileData.batchHash}');
+                    print('fileHash: ${fileData.fileHash}');
+                    print('fileName: ${fileData.fileName}');
+                    print('isVerified: ${fileData.isVerified}');
                     return ListTile(
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -735,67 +815,76 @@ class _FilesState extends State<Files> {
   }
 
   Widget _buildSharedFileList() {
-    return fileDataList.isNotEmpty
-        ? ListView.builder(
-            itemCount: fileDataList.length,
-            itemBuilder: (context, index) {
-              final fileData = fileDataList[index];
-              return ListTile(
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        fileData.fileName,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontFamily: GoogleFonts.robotoMono().fontFamily,
-                          fontSize: 12,
-                        ),
+    return Stack(
+      children: [
+        LiquidPullToRefresh(
+          backgroundColor: Theme.of(context).primaryColor,
+          // height: 50,
+          color: Theme.of(context).colorScheme.primary,
+          animSpeedFactor: 2.0,
+          onRefresh: _refreshFileList,
+          child: fileSharedDataList.isNotEmpty
+              ? ListView.builder(
+                  itemCount: fileSharedDataList.length,
+                  itemBuilder: (context, index) {
+                    final fileData = fileSharedDataList[index];
+                    return ListTile(
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              fileData.fileName,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontFamily: GoogleFonts.robotoMono().fontFamily,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.2,
+                                child: _buildSharedVerifyButton(
+                                    fileData.batchHash,
+                                    fileData.isVerified,
+                                    fileData.fileHash,
+                                    fileData.fileName),
+                              ),
+                              SizedBox(width: 20),
+                              SizedBox(
+                                // width: 20,
+                                child: _buildShareDownloadIcon(
+                                    fileData.batchHash,
+                                    fileData.fileHash,
+                                    fileData.fileName),
+                              ),
+                             
+                              
+                              // SizedBox(width: 10),
+                            ],
+                          ),
+                        ],
                       ),
+                    );
+                  },
+                )
+              : Center(
+                  child: Text(
+                    'No files shared',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontFamily: GoogleFonts.robotoMono().fontFamily,
                     ),
-                    SizedBox(width: 10),
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.2,
-                          child: _buildVerifyButton(
-                              fileData.batchHash,
-                              fileData.isVerified,
-                              fileData.fileHash,
-                              fileData.fileName),
-                        ),
-                        SizedBox(width: 20),
-                        SizedBox(
-                          // width: 20,
-                          child: _buildDownloadIcon(fileData.batchHash,
-                              fileData.fileHash, fileData.fileName),
-                        ),
-                        SizedBox(width: 20),
-                        SizedBox(
-                          // width: 10,
-                          child: _buildShareIcon(fileData.batchHash,
-                              fileData.fileHash, fileData.fileName),
-                        ),
-                        // SizedBox(width: 10),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
-              );
-            },
-          )
-        : Center(
-            child: Text(
-              'No files shared',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontFamily: GoogleFonts.robotoMono().fontFamily,
-              ),
-            ),
-          );
+        ),
+      ],
+    );
   }
 
   void _handleDownloadVerifyButton(
@@ -881,114 +970,224 @@ class _FilesState extends State<Files> {
     showModalBottomSheet(
       backgroundColor:
           Colors.transparent, // Set to transparent to allow the gradient
-      clipBehavior: Clip.hardEdge,
       context: context,
       isScrollControlled: true, // Allows the bottom sheet to take up more space
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (BuildContext context) {
-        return Container(
-          height: MediaQuery.of(context).size.height / 3,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color.fromARGB(255, 68, 91, 0),
-                Theme.of(context).primaryColor,
-              ], // Add your gradient colors here
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min, // Adjust height based on content
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Center(
-                  child: Container(
-                    width: MediaQuery.of(context).size.width / 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .secondaryHeaderColor
-                          .withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    margin: const EdgeInsets.only(top: 5),
-                  ),
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.3, // Initial height
+          maxChildSize: 0.9, // Max height when dragged
+          minChildSize: 0.3, // Minimum height when collapsed
+          builder: (BuildContext context, ScrollController scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color.fromARGB(255, 68, 91, 0),
+                    Theme.of(context).primaryColor,
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: pasteDid,
-                  enabled: true,
-                  decoration: InputDecoration(
-                    labelText: 'Paste your Share DID here',
-                    labelStyle: TextStyle(
-                      color: Colors.white.withOpacity(0.4),
-                      fontFamily: GoogleFonts.robotoMono().fontFamily,
-                      fontSize: 13,
-                    ),
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Colors.red.withOpacity(0.4),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                BlocBuilder<ShareBloc, ShareState>(
-                  bloc: _shareBloc,
-                  builder: (context, state) {
-                    if (state is Sharing) {
-                      return Center(
-                        child: Loading(
-                          Loadingcolor: Theme.of(context).primaryColor,
-                          color: Theme.of(context).colorScheme.secondary,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  child: Column(
+                    mainAxisSize:
+                        MainAxisSize.min, // Adjust height based on content
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: MediaQuery.of(context).size.width / 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .secondaryHeaderColor
+                                .withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          margin: const EdgeInsets.only(top: 5),
                         ),
-                      );
-                    }
-                    if (state is ShareFailed) {
-                      _showSnackbar(
-                          'Share failed: ${state.message}', Colors.red);
-                    }
-                    if (state is Shared) {
-                      // Call the transaction hash check method
-                      _checkSharedTxHashStatus(state.response.tXHash!,
-                          state.response.ownerDid!, context);
+                      ),
+                      const SizedBox(height: 20),
+                      TextFormField(
+                        controller: pasteDid,
+                        enabled: true,
+                        decoration: InputDecoration(
+                          labelText: 'Paste your Share DID here',
+                          labelStyle: TextStyle(
+                            color: Colors.white.withOpacity(0.4),
+                            fontFamily: GoogleFonts.robotoMono().fontFamily,
+                            fontSize: 13,
+                          ),
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.red.withOpacity(0.4),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      BlocBuilder<ShareBloc, ShareState>(
+                        bloc: _shareBloc,
+                        builder: (context, state) {
+                          if (state is Sharing) {
+                            return Center(
+                              child: Loading(
+                                Loadingcolor: Theme.of(context).primaryColor,
+                                color: Theme.of(context).colorScheme.secondary,
+                              ),
+                            );
+                          }
+                          if (state is ShareFailed) {
+                            _showSnackbar(
+                                'Share failed: ${state.message}', Colors.red);
+                          }
+                          if (state is Shared) {
+                            // Call the transaction hash check method
+                            _checkSharedTxHashStatus(state.response.tXHash!,
+                                state.response.ownerDid!, context);
 
-                      Future.delayed(const Duration(seconds: 10), () {
-                        _shareBloc.add(ResetShareStateEvent());
-                      });
-                    }
-                    return Center(
-                      child: GestureDetector(
-                          onTap: () {
-                            _shareBloc.add(onClickShare(
-                              FileName: fileName,
-                              OwnerDid: jsonDecode(widget.did.toString()),
-                              ShareDid: pasteDid.text,
-                              Owner: walletAddress,
-                              file_hash: fileHash,
-                              batch_hash: batchHash,
-                            ));
-                          },
-                          child: _buildtransperantButton(
-                              'Share', MediaQuery.of(context).size.width / 4)),
-                    );
-                  },
+                            Future.delayed(const Duration(seconds: 10), () {
+                              _shareBloc.add(ResetShareStateEvent());
+                            });
+                          }
+                          return Center(
+                            child: GestureDetector(
+                                onTap: () {
+                                  _shareBloc.add(onClickShare(
+                                    FileName: fileName,
+                                    OwnerDid: jsonDecode(widget.did.toString()),
+                                    ShareDid: pasteDid.text,
+                                    Owner: walletAddress,
+                                    file_hash: fileHash,
+                                    batch_hash: batchHash,
+                                  ));
+                                },
+                                child: _buildtransperantButton('Share',
+                                    MediaQuery.of(context).size.width / 4)),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
   }
+
+  //  Future<void> _showShareInput(BuildContext context, String BatchHash,
+  //     String FileHash, String FileName) async {
+  //   var pasteDid = TextEditingController();
+  //   final storage = GetStorage();
+  //   final walletAddress = storage.read('walletAddress');
+  //   print('walletAddress : $walletAddress');
+
+  //   BuildContext dialogContext;
+
+  //   showDialog(
+  //     barrierDismissible: false,
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       dialogContext = context; // Save the context
+  //       return AlertDialog(
+  //         title:
+  //             Align(
+  //               alignment: Alignment.topRight,
+  //               child: IconButton(
+  //                 icon: Icon(Icons.close),
+  //                 onPressed: () {
+  //                   Navigator.of(context).pop(); // Close the dialog
+  //                 },
+  //               ),
+  //             ),
+  //             // Align(
+  //             //   alignment: Alignment.centerLeft,
+  //             //   child: Text(
+  //             //     'Paste Your Share DID',
+  //             //     style: TextStyle(
+  //             //       color: Theme.of(context).secondaryHeaderColor,
+  //             //       fontFamily: GoogleFonts.robotoMono().fontFamily,
+  //             //       fontSize: 14,
+  //             //     ),
+  //             //   ),
+  //             // ),
+
+  //         content: SingleChildScrollView(
+  //           child: TextFormField(
+  //             controller: pasteDid,
+  //             enabled: true,
+  //             decoration: InputDecoration(
+  //               labelText: 'Paste your Share DID here',
+  //               labelStyle: TextStyle(
+  //                 color: Colors.white.withOpacity(0.4),
+  //                 fontFamily: GoogleFonts.robotoMono().fontFamily,
+  //                 fontSize: 12,
+  //               ),
+  //               border: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(30),
+  //           // borderSide: BorderSide.,
+
+  //         ),
+  //             ),
+  //           ),
+  //         ),
+  //         actions: <Widget>[
+  //           BlocBuilder<ShareBloc, ShareState>(
+  //             bloc: _shareBloc,
+  //             builder: (context, state) {
+  //               if (state is Sharing) {
+  //                 return Center(
+  //                     child: Loading(
+  //                         Loadingcolor: Theme.of(context).primaryColor,
+  //                         color: Theme.of(context).colorScheme.secondary));
+  //               }
+  //               if (state is ShareFailed) {
+  //                 _showSnackbar('Share failed: ${state.message}', Colors.red);
+  //               }
+  //               if (state is Shared) {
+  //                 // Call the transaction hash check method
+  //                 _checkSharedTxHashStatus(state.response.tXHash!,
+  //                     state.response.ownerDid!, dialogContext);
+
+  //                     Future.delayed(const Duration(seconds: 10), () {
+  //                       _shareBloc.add(ResetShareStateEvent());
+  //                     });
+  //               }
+  //               return TextButton(
+  //                 child: const Text('Share'),
+  //                 onPressed: () {
+  //                   _shareBloc.add(onClickShare(
+  //                     FileName: FileName,
+  //                     OwnerDid: jsonDecode(widget.did.toString()),
+  //                     ShareDid: pasteDid.text,
+  //                     Owner: walletAddress,
+  //                     file_hash: FileHash,
+  //                     batch_hash: BatchHash,
+  //                   ));
+  //                 },
+  //               );
+  //             },
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   Widget _buildtransperantButton(String text, dynamic width) {
     return FrostedGlassBox(
@@ -1165,7 +1364,7 @@ class _FilesState extends State<Files> {
             child: Column(
               mainAxisSize:
                   MainAxisSize.min, // Minimize height based on content
-                  crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Center(
@@ -1304,6 +1503,67 @@ class _FilesState extends State<Files> {
     );
   }
 
+  Widget _buildSharedVerifyButton(
+      String batchHash, bool isVerified, String fileHash, String fileName) {
+    print('bathash: $batchHash');
+    return BlocBuilder<ShareBloc, ShareState>(
+      bloc: _shareBloc,
+      builder: (context, shareState) {
+        if (shareState is ShareVerifying && shareState.batchhash == batchHash) {
+          return Center(
+            child: Loading(
+                Loadingcolor: Theme.of(context).primaryColor,
+                color: Theme.of(context).colorScheme.secondary),
+          );
+        }
+        if (shareState is ShareFailed) {
+          _showSnackbar('Verify failed: ${shareState.message}', Colors.red);
+        }
+        if (shareState is ShareVerifySuccess &&
+            shareState.batchhash == batchHash) {
+          final response = jsonEncode(shareState.response);
+          print("response share verify: $response");
+          _handleShareVerifyResponseSuccess(shareState, shareState.batchhash);
+        }
+        if (shareState is ShareVerifyResponseloaded &&
+            shareState.batchhash == batchHash) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _handleShareVerified(shareState.iden3message, shareState.batchhash);
+          });
+        }
+        if (shareState is ShareVerifiedClaims &&
+            shareState.batchhash == batchHash) {
+          // _showSnackbar('File id Verified successfully:',
+          //     Theme.of(context).colorScheme.secondary);
+          // _buildFileList(true);
+          isVerified = true;
+        }
+
+        return GestureDetector(
+          onTap: () {
+            final did = jsonDecode(widget.did.toString());
+            final storage = GetStorage();
+            final walletAddress = storage.read('walletAddress');
+            _shareBloc.add(ShareVerifyEvent(
+                BatchHash: batchHash,
+                FileHash: fileHash,
+                Did: did,
+                OwnerAddress: walletAddress));
+          },
+          child: Visibility(
+            visible: !isVerified, // If not verified, button is visible
+            child: _buildButton(
+              "Verify",
+              Colors.redAccent[700],
+              Colors.redAccent[700],
+              Theme.of(context).primaryColor,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildDownloadIcon(
       String batchHash, String fileHash, String fileName) {
     return BlocBuilder<DownloadBloc, DownloadState>(
@@ -1426,6 +1686,95 @@ class _FilesState extends State<Files> {
     );
   }
 
+  Widget _buildShareDownloadIcon(
+      String batchHash, String fileHash, String fileName) {
+    return BlocBuilder<DownloadBloc, DownloadState>(
+      bloc: _downloadBloc,
+      builder: (BuildContext context, DownloadState downloadState) {
+        if (downloadState is Downloading &&
+            downloadState.batchhash == batchHash) {
+          // Return CircularProgressIndicator when downloading
+          return Center(
+              child: Loading(
+                  Loadingcolor: Theme.of(context).primaryColor,
+                  color: Theme.of(context).colorScheme.secondary));
+        }
+
+        if (downloadState is DownloadSuccess &&
+            downloadState.batchhash == batchHash) {
+          print('downloadState batch:${downloadState.batchhash}');
+          _handleDownloadVerifyButton(downloadState, downloadState.batchhash);
+        }
+        if (downloadState is DownloadFailed) {
+          _showSnackbar('Download failed', Colors.red);
+        }
+
+        if (downloadState is StatusLoaded &&
+            downloadState.batchhash == batchHash) {
+          print('status loaded in download');
+          print('downloadState batch1:${downloadState.batchhash}');
+
+          _deploysharefileContract(batchHash, fileHash);
+        }
+
+        if (downloadState is CidsGot && downloadState.batchhash == batchHash) {
+          print('cids got');
+          final cidString = downloadState.cids.cids;
+          final cidList = jsonEncode(cidString);
+          final cidGot = jsonEncode(cidList);
+
+          print('responsse share cids got1: $cidGot');
+          print('responsse share cids got: $cidList');
+
+          print('download1 share: $batchHash');
+          print('download2 share: $batchHash');
+          print('download3 share: $fileName');
+          print('download4 share: $cidList');
+          print('download5 share: ${jsonDecode(widget.did.toString())}');
+
+          _downloadBloc.add(onClickDownloadUrl(
+              BatchHash: batchHash,
+              FileHash: batchHash,
+              Odid: jsonDecode(widget.did.toString()),
+              FileName: fileName.toString(),
+              Cids: cidList));
+        }
+
+        if (downloadState is DownloadUrlSuccess &&
+            downloadState.batchhash == batchHash) {
+          final url = downloadState.response.uRL;
+          final downloadLink = Uri.parse(url as String);
+
+          print('download url success: ${downloadState.response.uRL}');
+
+          Future.delayed(const Duration(seconds: 10), () {
+            _downloadBloc.add(ResetDownloadStateEvent());
+          });
+
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            await _showDownloadUrl(context, downloadLink);
+          });
+        }
+
+        // Default return for other states
+        return GestureDetector(
+          onTap: () {
+            _downloadBloc.add(onClickDownload(
+                batch_hash: batchHash,
+                file_hash: batchHash,
+                didU: jsonDecode(widget.did.toString())));
+          },
+          child: _buildIcon(
+            Icons.download,
+            Theme.of(context).colorScheme.secondary,
+            Theme.of(context).colorScheme.secondary,
+            Colors.white,
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _handleVerified(
       Iden3MessageEntity iden3message, String batchHash) async {
     debugPrint('File is verified');
@@ -1442,6 +1791,22 @@ class _FilesState extends State<Files> {
     print('get verify response: $response');
 
     _fileBloc.add(onVerifyResponse(response, batchHash));
+  }
+
+  void _handleShareVerifyResponseSuccess(
+      ShareVerifySuccess state, String batchHash) async {
+    final response = jsonEncode(state.response);
+
+    print('get share verify response: $response');
+
+    _shareBloc.add(onShareVerifyResponse(response, batchHash));
+  }
+
+  Future<void> _handleShareVerified(
+      Iden3MessageEntity iden3message, String batchHash) async {
+    debugPrint('share File is verified');
+    _shareBloc.add(fetchAndSaveShareVerifyClaims(
+        iden3message: iden3message, batchHash: batchHash));
   }
 
   Widget _buildIcon(
@@ -1519,7 +1884,9 @@ class _FilesState extends State<Files> {
         ],
       ),
       trailing: GestureDetector(
-        onTap: _deployContract,
+        onTap: () {
+          _refreshFileList();
+        },
         child: Container(
           width: 30,
           height: 30,
@@ -1531,7 +1898,7 @@ class _FilesState extends State<Files> {
             ),
           ),
           child: Icon(
-            Icons.wallet,
+            Icons.refresh,
             color: Theme.of(context).secondaryHeaderColor,
             size: 20,
           ),
@@ -1548,8 +1915,8 @@ class _FilesState extends State<Files> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _buildFileInfoColumn(_fileCount, 'Files'),
-            _buildFileInfoColumn(_fileUsage, 'Usage'),
+            _buildFileInfoColumn(_fileCount, 'Upload Files'),
+            _buildFileInfoColumn(_fileUsage, 'Upload Usage'),
             SizedBox(width: 10),
             GestureDetector(
               onTap: _isLoading ? null : openFile,

@@ -14,6 +14,7 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/claims_
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/claims_event.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/widgets/claims.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/common/widgets/circularProgress.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/create_wallet/widget/glassEffect.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_event.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_state.dart';
@@ -25,6 +26,7 @@ import 'package:polygonid_flutter_sdk_example/utils/custom_colors.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_strings.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_text_styles.dart';
 import 'package:polygonid_flutter_sdk_example/utils/qr_code_parser_utils.dart';
+// import 'package:rive/rive.dart';
 import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gradient_borders/box_borders/gradient_box_border.dart';
@@ -130,6 +132,11 @@ class _SignupState extends State<Signup> {
                     shape: BoxShape.circle),
               ),
             ),
+            // RiveAnimation.asset(
+            //   'assets/images/shape2.riv',
+            //   fit: BoxFit.cover,
+            //   alignment: Alignment.center,
+            // ),
             BackdropFilter(
               filter: ImageFilter.blur(
                 //sigmaX is the Horizontal blur
@@ -158,10 +165,40 @@ class _SignupState extends State<Signup> {
                             const SizedBox(height: 50),
                             _buildForm(),
                             const SizedBox(height: 20),
-                            Divider(
-                                color: Theme.of(context)
-                                    .secondaryHeaderColor
-                                    .withOpacity(0.5)),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,  
+                              children: [
+                                Container(
+                                  width: MediaQuery.of(context).size.width / 2.5,
+                                  height: 1,
+                                  color: Theme.of(context)
+                                      .secondaryHeaderColor
+                                      .withOpacity(0.5),
+                                ),
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                Text(
+                                  'or',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontFamily:
+                                        GoogleFonts.robotoMono().fontFamily,
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                Container(
+                                  width: MediaQuery.of(context).size.width / 2.5,
+                                  height: 1,
+                                  color: Theme.of(context)
+                                      .secondaryHeaderColor
+                                      .withOpacity(0.5),
+                                ),
+                              ],
+                            ),
                             const SizedBox(height: 20),
                             _buildQRButton(),
                             _buildBlocListener(),
@@ -227,7 +264,7 @@ class _SignupState extends State<Signup> {
                       controller: identity,
                       enabled: false,
                       decoration: InputDecoration(
-                        labelText: 'Paste your Polygon DID here',
+                        labelText: 'This is Your DID',
                         labelStyle: TextStyle(
                           color: Colors.white.withOpacity(0.4),
                           fontFamily: GoogleFonts.robotoMono().fontFamily,
@@ -262,24 +299,40 @@ class _SignupState extends State<Signup> {
               children: [
                 GestureDetector(
                   onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const SetupPasswordScreen(),
-                    ),
+                    PageRouteBuilder(
+              pageBuilder: (context, animation, secondAnimation) =>
+                  const SetupPasswordScreen(),
+              transitionsBuilder: (context, animation, secondAnimation, child) {
+                return SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(-1.0, 0.0),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                );
+              }),
+                    // MaterialPageRoute(
+                    //   builder: (context) => const SetupPasswordScreen(),
+                    // ),
                   ),
                   child: Container(
-                    width: MediaQuery.of(context).size.width / 6,
+                    // color: Theme.of(context).colorScheme.secondary.w,
+                    width: MediaQuery.of(context).size.width / 8,
+                    // height: 50,
                     alignment: Alignment.bottomCenter,
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor,
-                      borderRadius: BorderRadius.circular(6),
-                      border: const GradientBoxBorder(
+                      shape: BoxShape.circle,
+                      color: Theme.of(context).colorScheme.secondary.withOpacity(0.2),
+                      // borderRadius: BorderRadius.circular(6),
+                      border: GradientBoxBorder(
                         gradient: LinearGradient(
                           colors: [
-                            Color(0xFFa3d902),
-                            Color(0xFF2CFFAE),
+                            Theme.of(context).colorScheme.secondary,
+                            Theme.of(context).colorScheme.primary,
                           ],
                         ),
+                        
                         width: 2,
                       ),
                     ),
@@ -359,9 +412,10 @@ class _SignupState extends State<Signup> {
                         }
                       },
                       child: Container(
-                        width: MediaQuery.of(context).size.width / 1.8,
+                        width: MediaQuery.of(context).size.width / 2,
+                        height: 50,
                         alignment: Alignment.bottomCenter,
-                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        // padding: const EdgeInsets.symmetric(vertical: 15),
                         decoration: BoxDecoration(
                           color: Theme.of(context).primaryColor,
                           borderRadius: BorderRadius.circular(50),
@@ -372,12 +426,15 @@ class _SignupState extends State<Signup> {
                         ),
                         child: Center(
                           child: state is RegisterLoading
-                              ? Loading(Loadingcolor:Theme.of(context).primaryColor,color:Theme.of(context).colorScheme.secondary)
+                              ? Loading(
+                                  Loadingcolor: Theme.of(context).primaryColor,
+                                  color:
+                                      Theme.of(context).colorScheme.secondary)
                               : Text(
                                   'Submit',
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 15,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                     fontFamily:
                                         GoogleFonts.robotoMono().fontFamily,
@@ -397,26 +454,59 @@ class _SignupState extends State<Signup> {
   }
 
   ///
-  Widget _buildButton(
-      String text, dynamic colorScheme, dynamic border, dynamic textColor) {
+  // Widget _buildButton(
+  //     String text, dynamic colorScheme, dynamic border, dynamic textColor) {
+  //   return Container(
+  //     width: MediaQuery.of(context).size.width,
+  //     alignment: Alignment.center,
+  //     padding: const EdgeInsets.symmetric(vertical: 15),
+  //     decoration: BoxDecoration(
+  //       color: colorScheme,
+  //       borderRadius: BorderRadius.circular(50),
+  //       border: Border.all(
+  //         color: border,
+  //         width: 2,
+  //       ),
+  //     ),
+  //     child: Text(
+  //       text,
+  //       style: GoogleFonts.robotoMono(
+  //         color: textColor,
+  //         fontSize: 12,
+  //         fontWeight: FontWeight.w500,
+  //       ),
+  //     ),
+  //   );
+  // }
+
+  Widget _buildButton(BuildContext context, String text, dynamic colorScheme,
+      dynamic colorScheme2, dynamic border, dynamic textColor) {
     return Container(
-      width: MediaQuery.of(context).size.width,
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(vertical: 15),
       decoration: BoxDecoration(
-        color: colorScheme,
-        borderRadius: BorderRadius.circular(50),
-        border: Border.all(
-          color: border,
-          width: 2,
+        gradient: LinearGradient(
+          colors: [colorScheme, colorScheme2],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(
+            30.0), // Optional: Add some rounding to the button
       ),
-      child: Text(
-        text,
-        style: GoogleFonts.robotoMono(
-          color: textColor,
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
+      child: FrostedGlassBox(
+        theWidth: MediaQuery.of(context).size.width,
+        theHeight: 50.0,
+        theX: 0.0,
+        theY: 0.0,
+        theColor: Colors.white
+            .withOpacity(0.13), // This can remain for frosted glass effect
+        theChild: Text(
+          text,
+          style: TextStyle(
+            fontSize: 12.0,
+            color:
+                textColor, // Keep the text color simple since the gradient is on the button
+            fontWeight: FontWeight.bold,
+            fontFamily: GoogleFonts.robotoMono().fontFamily,
+          ),
         ),
       ),
     );
@@ -511,12 +601,16 @@ class _SignupState extends State<Signup> {
               },
               // style: CustomButtonStyle.primaryButtonStyle,
               child: loading
-                  ? Loading(Loadingcolor:Theme.of(context).primaryColor,color:Theme.of(context).colorScheme.secondary)
+                  ? Loading(
+                      Loadingcolor: Theme.of(context).primaryColor,
+                      color: Theme.of(context).colorScheme.secondary)
                   : _buildButton(
-                      'Register Using QR',
+                      context,
+                      'Register Using Qr',
+                      Theme.of(context).colorScheme.primary,
                       Theme.of(context).colorScheme.secondary,
                       Colors.black,
-                      Colors.black),
+                      Theme.of(context).primaryColor),
             );
           }),
     );
@@ -578,77 +672,76 @@ class _SignupState extends State<Signup> {
   //   );
 
   Widget _buildBlocListener() {
-  return BlocListener<RegisterBloc, RegisterState>(
-    bloc: _registerBloc,
-    listener: (context, state) async {
-      print('state1: $state');
+    return BlocListener<RegisterBloc, RegisterState>(
+      bloc: _registerBloc,
+      listener: (context, state) async {
+        print('state1: $state');
 
-      if (state is NavigateToQrCodeScanner) {
-        print('navigate to qr code scanner : $state');
-        _handleNavigateToQrCodeScanner();
-      }
-
-      if (state is QrCodeScanned) {
-        print('qr code scanned : $state');
-        final AddQr = state.registerQREntity.aDDQR;
-        print('add qr code1: $AddQr');
-
-       final SharedPreferences prefs = await SharedPreferences.getInstance();
-await prefs.setString('AddQr', AddQr!);  // Write
-final String? storedQr = prefs.getString('AddQr');  // Read
-print('Shared Preferences stored qr: $storedQr');
-
-        _handleCallbackUrl(state.registerQREntity.qR);
-      }
-
-      if (state is CallbackLoaded) {
-        final response = jsonEncode(state.callbackResponse.toJson());
-        print('qr callback response: $response');
-        _registerBloc.add(onGetQrResponse(response));
-      }
-
-      if (state is QrRegistered) {
-        WidgetsBinding.instance.addPostFrameCallback((_) async {
-          print('fetching qr registered');
-          await _handleQrRegistered(state.iden3message);
-
-          // Navigate to the desired page (e.g., HomeScreen)
-        });
-      }
-
-      if (state is loadedQrClaims) {
-        // Ensure async read and await before using the value
-        print('qr code fetching');
-
-        final storage = GetStorage();
-        
-        try {
-          final SharedPreferences prefs = await SharedPreferences.getInstance();
-         final String? storedQr = prefs.getString('AddQr'); 
-          
-          if (storedQr != null) {
-            print('qr code read: $storedQr');
-            await _handleCallbackUrl(storedQr.toString());
-
-            // Navigate after handling callback URL
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const SetupPasswordScreen(),
-              ),
-            );
-          } else {
-            print('Error: AddQr is null, no QR code found in storage.');
-          }
-        } catch (e) {
-          print('Error reading AddQr from storage: $e');
+        if (state is NavigateToQrCodeScanner) {
+          print('navigate to qr code scanner : $state');
+          _handleNavigateToQrCodeScanner();
         }
-      }
-    },
-    child: const SizedBox.shrink(),
-  );
 
+        if (state is QrCodeScanned) {
+          print('qr code scanned : $state');
+          final AddQr = state.registerQREntity.aDDQR;
+          print('add qr code1: $AddQr');
 
+          final SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString('AddQr', AddQr!); // Write
+          final String? storedQr = prefs.getString('AddQr'); // Read
+          print('Shared Preferences stored qr: $storedQr');
+
+          _handleCallbackUrl(state.registerQREntity.qR);
+        }
+
+        if (state is CallbackLoaded) {
+          final response = jsonEncode(state.callbackResponse.toJson());
+          print('qr callback response: $response');
+          _registerBloc.add(onGetQrResponse(response));
+        }
+
+        if (state is QrRegistered) {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            print('fetching qr registered');
+            await _handleQrRegistered(state.iden3message);
+
+            // Navigate to the desired page (e.g., HomeScreen)
+          });
+        }
+
+        if (state is loadedQrClaims) {
+          // Ensure async read and await before using the value
+          print('qr code fetching');
+
+          final storage = GetStorage();
+
+          try {
+            final SharedPreferences prefs =
+                await SharedPreferences.getInstance();
+            final String? storedQr = prefs.getString('AddQr');
+
+            if (storedQr != null) {
+              print('qr code read: $storedQr');
+              await _handleCallbackUrl(storedQr.toString());
+
+              // Navigate after handling callback URL
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SetupPasswordScreen(),
+                ),
+              );
+            } else {
+              print('Error: AddQr is null, no QR code found in storage.');
+            }
+          } catch (e) {
+            print('Error reading AddQr from storage: $e');
+          }
+        }
+      },
+      child: const SizedBox.shrink(),
+    );
   }
 
   Future<void> _handleQrRegistered(Iden3MessageEntity iden3message) async {

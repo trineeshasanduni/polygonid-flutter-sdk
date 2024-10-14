@@ -74,7 +74,7 @@ class Routes {
 
   ///
   static WidgetBuilder _claimsRoute() {
-    return (BuildContext context) => ClaimsScreen();
+    return (BuildContext context) => ClaimsScreen(category: '',  );
   }
 
   ///

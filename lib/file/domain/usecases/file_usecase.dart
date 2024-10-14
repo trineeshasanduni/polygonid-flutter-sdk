@@ -11,6 +11,7 @@ import 'package:polygonid_flutter_sdk/file/domain/entities/download_status_entit
 import 'package:polygonid_flutter_sdk/file/domain/entities/fileName_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/file_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/share_entity.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/verify_share_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/verify_upload_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/repositories/file_repo.dart';
 
@@ -122,6 +123,20 @@ class DownloadStatusParams {
   final String sessionId;
 
   DownloadStatusParams({required this.sessionId});
+}
+
+class ShareVerifyParam {
+  final String BatchHash;
+  final String FileHash;
+  final String Did;
+  final String OwnerAddress;
+
+  ShareVerifyParam({
+    required this.BatchHash,
+    required this.FileHash,
+    required this.Did,
+    required this.OwnerAddress,
+  });
 }
 
 // Modify both UseCase implementations to use UseCaseParams:
@@ -277,5 +292,24 @@ class ShareUsecase
       
         );
         
+  }}
+
+
+@override
+class ShareVerifyUsecase
+    implements UseCase<VerifyShareEntity, ShareVerifyParam> {
+  final FileRepository fileRepository;
+  const ShareVerifyUsecase(this.fileRepository);
+
+  @override
+  Future<Either<Failure, VerifyShareEntity>> call(
+      ShareVerifyParam params) async {
+    // print('registering12: ${params.did}');
+    return await fileRepository.verifyShare(
+       BatchHash: params.BatchHash,
+        FileHash: params.FileHash,
+        Did: params.Did,
+        OwnerAddress: params.OwnerAddress
+        );
   }
 }

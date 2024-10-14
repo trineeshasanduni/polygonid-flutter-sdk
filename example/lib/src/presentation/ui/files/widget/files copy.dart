@@ -160,6 +160,7 @@ class _FilesState extends State<Files> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(message),
+        behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 5),
         backgroundColor: backgroundColor,
       ));

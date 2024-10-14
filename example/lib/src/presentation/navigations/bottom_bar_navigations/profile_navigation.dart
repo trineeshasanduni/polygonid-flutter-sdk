@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:polygonid_flutter_sdk_example/src/presentation/ui/profile/profile.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/profile/widget/profile.dart';
 
 class ProfileNav extends StatefulWidget {
-  const ProfileNav({super.key});
+    final String? did;
+
+  const ProfileNav({super.key,required this.did});
 
   @override
   State<ProfileNav> createState() => _ProfileNavState();
@@ -22,7 +24,7 @@ class _ProfileNavState extends State<ProfileNav> {
             if (settings.name == "/myFiles") {
               // return const MyFiles();
             }
-            return const MyProfile();
+            return  MyProfile(did:widget.did,);
           },
         );
       },

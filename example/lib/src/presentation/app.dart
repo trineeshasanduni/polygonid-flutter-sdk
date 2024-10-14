@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:polygonid_flutter_sdk/registers/domain/usecases/register_usecase.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/routes.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard_bloc/dashboard_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/download_bloc/download_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/file_bloc/file_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/login/bloc/login_bloc.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/profile/bloc/profile_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/bloc/register_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/themes/theme_data.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_colors.dart';
@@ -24,6 +26,8 @@ class AppState extends State<App> {
   late final LoginBloc _loginBloc;
   late final FileBloc _fileBloc;
   late final DownloadBloc _downloadBloc;
+  late final ProfileBloc _profileBloc;
+  late final DashboardBloc _dashboardBloc;
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +44,12 @@ class AppState extends State<App> {
         ),
         BlocProvider<DownloadBloc>(
           create: (context) => _downloadBloc,
+        ),
+        BlocProvider<ProfileBloc>(
+          create: (context) => _profileBloc,
+        ),
+        BlocProvider<DashboardBloc>(
+          create: (context) => _dashboardBloc,
         ),
       ],
       child: MaterialApp(

@@ -2,7 +2,7 @@ part of 'dashboard_bloc.dart';
 
 sealed class DashboardState extends Equatable {
   const DashboardState();
-  
+
   @override
   List<Object> get props => [];
 }
@@ -11,14 +11,11 @@ final class DashboardInitial extends DashboardState {}
 
 final class DashboardLoading extends DashboardState {}
 
-// final class DashboardUserAdded extends DashboardState {
-//   final List<UserEntity> users;
+final class DashboardLoaded extends DashboardState {
+  final List<NetworkUsageEntity> usage;
 
-//   const DashboardUserAdded(this.users);
-
-//   @override
-//   List<Object> get props => [users];
-// }
+  const DashboardLoaded(this.usage);
+}
 
 final class DashboardError extends DashboardState {
   final String message;
@@ -28,5 +25,3 @@ final class DashboardError extends DashboardState {
   @override
   List<Object> get props => [message];
 }
-
-

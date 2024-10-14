@@ -29,7 +29,6 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
   final storage = const FlutterSecureStorage();
- 
 
   @override
   void initState() {
@@ -113,18 +112,18 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
 
             Column(
               children: [
-                // IconButton(
-                //   icon: const Icon(Icons.close, color: Colors.white),
-                //   onPressed: () {
-                //     Navigator.of(context).pushReplacementNamed(Routes.homePath);
-                //     // Navigator.push(
-                //     //   context,
-                //     //   MaterialPageRoute(
-                //     //     builder: (context) => const SetUpScreen(),
-                //     //   ),
-                //     // );
-                //   },
-                // ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () {
+                    Navigator.of(context).pushReplacementNamed(Routes.homePath);
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (context) => const SetUpScreen(),
+                    //   ),
+                    // );
+                  },
+                ),
                 _buildBlocContent(context),
                 const SizedBox(height: 20),
                 _buildRegisterButton(),
@@ -146,7 +145,9 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
       builder: (context, state) {
         if (state is LoginLoading) {
           // return  CircularProgressIndicator(color: Theme.of(context).secondaryHeaderColor);
-          return Loading(Loadingcolor:Theme.of(context).primaryColor,color:Theme.of(context).colorScheme.secondary);
+          return Loading(
+              Loadingcolor: Theme.of(context).primaryColor,
+              color: Theme.of(context).colorScheme.secondary);
         }
         if (state is LoginFailure) {
           return Text(state.error, style: const TextStyle(color: Colors.red));
@@ -230,7 +231,6 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
     );
   }
 
-
   Widget _buildSubtitle() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,13 +271,27 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
     return GestureDetector(
       onTap: () {
         Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => const Signup(),
-          ),
+          PageRouteBuilder(
+              pageBuilder: (context, animation, secondAnimation) =>
+                  const Signup(),
+              transitionsBuilder: (context, animation, secondAnimation, child) {
+                return SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(1.0, 0.0),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                );
+              }),
         );
       },
-      child: _buildButton(context,'Register', Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.secondary
-          , Colors.black, Theme.of(context).primaryColor),
+      child: _buildButton(
+          context,
+          'Register',
+          Theme.of(context).colorScheme.primary,
+          Theme.of(context).colorScheme.secondary,
+          Colors.black,
+          Theme.of(context).primaryColor),
     );
   }
 
@@ -296,65 +310,68 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
   //   );
   // }
 
- Widget _buildButton(BuildContext context,String text, dynamic colorScheme, dynamic colorScheme2, dynamic border, dynamic textColor) {
-  return  Container(
+  Widget _buildButton(BuildContext context, String text, dynamic colorScheme,
+      dynamic colorScheme2, dynamic border, dynamic textColor) {
+    return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-            colors: [colorScheme,colorScheme2],
+          colors: [colorScheme, colorScheme2],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(30.0), // Optional: Add some rounding to the button
+        borderRadius: BorderRadius.circular(
+            30.0), // Optional: Add some rounding to the button
       ),
       child: FrostedGlassBox(
         theWidth: MediaQuery.of(context).size.width,
         theHeight: 50.0,
         theX: 0.0,
         theY: 0.0,
-        theColor: Colors.white.withOpacity(0.13), // This can remain for frosted glass effect
+        theColor: Colors.white
+            .withOpacity(0.13), // This can remain for frosted glass effect
         theChild: Text(
           text,
           style: TextStyle(
             fontSize: 12.0,
-            color: textColor, // Keep the text color simple since the gradient is on the button
+            color:
+                textColor, // Keep the text color simple since the gradient is on the button
             fontWeight: FontWeight.bold,
             fontFamily: GoogleFonts.robotoMono().fontFamily,
           ),
         ),
       ),
-    
-  );
-}
+    );
+  }
 
-Widget _buildtransperantButton(String text) {
-  return   FrostedGlassBox(
-        
-        theWidth: MediaQuery.of(context).size.width,
-        theHeight: 50.0,
-        theX: 4.0,
-        theY: 4.0,
-        theColor: Colors.white.withOpacity(0.13),
-        theChild: ShaderMask(
-          shaderCallback: (bounds) => LinearGradient(
-            colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.secondary], // Customize your gradient colors
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ).createShader(bounds),
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 14.0,
-              color: Colors.white, // This will be overridden by the gradient
-              fontWeight: FontWeight.bold,
-              fontFamily: GoogleFonts.robotoMono().fontFamily,
-            ),
+  Widget _buildtransperantButton(String text) {
+    return FrostedGlassBox(
+      theWidth: MediaQuery.of(context).size.width,
+      theHeight: 50.0,
+      theX: 4.0,
+      theY: 4.0,
+      theColor: Colors.white.withOpacity(0.13),
+      theChild: ShaderMask(
+        shaderCallback: (bounds) => LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.secondary
+          ], // Customize your gradient colors
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ).createShader(bounds),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 14.0,
+            color: Colors.white, // This will be overridden by the gradient
+            fontWeight: FontWeight.bold,
+            fontFamily: GoogleFonts.robotoMono().fontFamily,
           ),
         ),
-      
-    
-  );
-}
- 
+      ),
+    );
+  }
+
   // Widget _buildButton(
   //     String text, dynamic colorScheme, dynamic border, dynamic textColor) {
   //   return Container(

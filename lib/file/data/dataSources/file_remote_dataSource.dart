@@ -6,6 +6,7 @@ import 'package:polygonid_flutter_sdk/file/data/model/download_status_model.dart
 import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/file_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/share_model.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/verify_share_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/verify_upload_model.dart';
 
 abstract class FileRemoteDatasource {
@@ -47,10 +48,17 @@ abstract class FileRemoteDatasource {
       required String Cids});
 
   Future<ShareModel> share(
-     {required String BatchHash,
+      {required String BatchHash,
       required String FileHash,
       required String OwnerDid,
       required String FileName,
       required String ShareDid,
       required String Owner});
+
+  Future<VerifyShareModel> shareVerifyUpload({
+    required String BatchHash,
+    required String FileHash,
+    required String Did,
+    required String OwnerAddress,
+  });
 }

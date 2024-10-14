@@ -1,29 +1,33 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:polygonid_flutter_sdk/dashboard/domain/entities/networkUsageEntity.dart';
+import 'package:polygonid_flutter_sdk/dashboard/domain/usecases/network_usecase.dart';
 
 part 'dashboard_event.dart';
 part 'dashboard_state.dart';
 
 class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
-  DashboardBloc() : super(DashboardInitial()) {
-    // on<addUserEvent>(_handleAddUser);
+  final NetworkUsageUsecase networkUsageUsecase;
+
+  DashboardBloc(this.networkUsageUsecase) : super(DashboardInitial()) {
+    on<networkUsageEvent>(_handleNetworkUsage);
   }
 
-  // void _handleAddUser(addUserEvent event, Emitter<DashboardState> emit) {
-  //   emit(DashboardLoading());
-  //  final addUserresponse= await fileUsecase(UseCaseParams(
-  //       did: event.did, ownerDid: event.ownerDid, fileData: event.fileData
-  //   ));
-  //   uploadResponse.fold(
-  //   (failure) {
-  //     print('failure get: $failure');
-  //     emit(FileUploadFailed(failure.toString()));
-  //   },
+  Future<void> _handleNetworkUsage(
     
-  //   (upload) {
-  //     print('Emitting StatusLoaded with DID: $upload');
-  //   emit(FileUploaded(upload));
-  //   },
-  // );
+      networkUsageEvent event, Emitter<DashboardState> emit) async {
+        print('fetch network usage bloc');
+    emit(DashboardLoading());
+
+    final failureOrusage = await networkUsageUsecase(UseCaseParams(
+          did: event.did,
+          ));
+           print('fetch network usage bloc1');
+        
+    failureOrusage.fold(
+      (failure) => emit(DashboardError(failure.toString())),
+      (usage) => emit(DashboardLoaded(usage)),
+    );
+  }
   }
 // }

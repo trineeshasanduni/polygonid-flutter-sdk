@@ -10,6 +10,7 @@ import 'package:polygonid_flutter_sdk/file/data/model/download_status_model.dart
 import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/file_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/share_model.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/verify_share_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/verify_upload_model.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/cid_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/downloadUrl_entity.dart';
@@ -18,6 +19,7 @@ import 'package:polygonid_flutter_sdk/file/domain/entities/download_status_entit
 import 'package:polygonid_flutter_sdk/file/domain/entities/fileName_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/file_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/share_entity.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/verify_share_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/verify_upload_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/repositories/file_repo.dart';
 import 'package:polygonid_flutter_sdk/registers/data/dataSources/register_remote_dataSource.dart';
@@ -248,6 +250,40 @@ class FileRepoImpl implements FileRepository {
       ));
     } catch (error) {
       return left(Failure('Failed to share: $error'));
+    }
+  }
+
+  Future<Either<Failure, VerifyShareEntity>> verifyShare(
+      {required String BatchHash,
+    required String FileHash,
+    required String Did,
+    required String OwnerAddress,}) async {
+    try {
+      VerifyShareModel shareVerifyModel =
+          await fileRemoteDatasource.shareVerifyUpload(
+              BatchHash: BatchHash, FileHash: FileHash, Did: Did, OwnerAddress: OwnerAddress);
+      print('object234: ${shareVerifyModel.body?.credentials![0].description}');
+      return right(VerifyShareEntity(
+          body: BodyShare(
+            credentials: [
+              CredentialsShare(
+                description:
+                    shareVerifyModel.body?.credentials![0].description,
+                id: shareVerifyModel.body?.credentials![0].id,
+              ),
+            ],
+            url: shareVerifyModel.body?.url,
+          ),
+          from: shareVerifyModel.from,
+          id: shareVerifyModel.id,
+          type: shareVerifyModel.type,
+          thid: shareVerifyModel.thid,
+          typ: shareVerifyModel.typ,
+          to: shareVerifyModel.to));
+
+        
+    } catch (error) {
+      return left(Failure('Failed to Verify share: $error'));
     }
   }
 }

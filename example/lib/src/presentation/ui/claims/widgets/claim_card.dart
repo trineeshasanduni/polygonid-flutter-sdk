@@ -67,7 +67,7 @@ class ClaimCard extends StatelessWidget {
                       claimModel.name,
                       style:  TextStyle(
                         fontWeight: FontWeight.w500,
-                        color: Theme.of(context).colorScheme.onPrimary,
+                        color: Theme.of(context).primaryColor,
                         fontSize: 20,
                         fontFamily: GoogleFonts.robotoMono().fontFamily,
                       ),

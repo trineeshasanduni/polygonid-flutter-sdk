@@ -2,12 +2,14 @@ import 'dart:convert';
 
 import 'package:get_it/get_it.dart';
 import 'package:polygonid_flutter_sdk/add_plans/data/dataSources/remote/addPlans_remote_datasource_impl.dart';
-import 'package:polygonid_flutter_sdk/add_space/data/dataSources/remote/addSpace_remote_datasource_impl.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/repositories/addPlans_repository.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/usecases/addPlans_usecase.dart';
-import 'package:polygonid_flutter_sdk/add_space/domain/repositories/addSpace_repository.dart';
-import 'package:polygonid_flutter_sdk/add_space/domain/usecases/addSpace_usecase.dart';
 import 'package:polygonid_flutter_sdk/common/domain/entities/env_entity.dart';
+import 'package:polygonid_flutter_sdk/dashboard/data/dataSources/networkUsage_remote_dataSource.dart';
+import 'package:polygonid_flutter_sdk/dashboard/data/dataSources/remote/networkUsage_remote_dataSource_impl.dart';
+import 'package:polygonid_flutter_sdk/dashboard/data/repositories/network_Repsitory_Impl.dart';
+import 'package:polygonid_flutter_sdk/dashboard/domain/repositories/network_repository.dart';
+import 'package:polygonid_flutter_sdk/dashboard/domain/usecases/network_usecase.dart';
 import 'package:polygonid_flutter_sdk/file/data/dataSources/file_remote_dataSource.dart';
 import 'package:polygonid_flutter_sdk/file/domain/repositories/file_repo.dart';
 import 'package:polygonid_flutter_sdk/file/domain/usecases/file_usecase.dart';
@@ -17,6 +19,8 @@ import 'package:polygonid_flutter_sdk/login/data/dataSources/remote/login_remote
 import 'package:polygonid_flutter_sdk/login/data/dataSources/remote/login_remote_datasource_impl.dart';
 import 'package:polygonid_flutter_sdk/login/domain/repositories/login_repository.dart';
 import 'package:polygonid_flutter_sdk/login/domain/usecases/login_usecase.dart';
+import 'package:polygonid_flutter_sdk/profile/domain/repositories/profile_repo.dart';
+import 'package:polygonid_flutter_sdk/profile/domain/usecases/profile_usecase.dart';
 import 'package:polygonid_flutter_sdk/registers/data/dataSources/register_remote_dataSource.dart';
 import 'package:polygonid_flutter_sdk/registers/data/dataSources/remote/register_remote_dataSource_impl.dart';
 import 'package:polygonid_flutter_sdk/file/data/dataSources/remote/file_remote_dataSource_impl.dart';
@@ -24,7 +28,9 @@ import 'package:polygonid_flutter_sdk/registers/data/repositories/register_repo_
 import 'package:polygonid_flutter_sdk/login/data/repositories/login_repository_impl.dart';
 import 'package:polygonid_flutter_sdk/file/data/repositories/file_repo_impl.dart';
 import 'package:polygonid_flutter_sdk/add_plans/data/repositories/addPlans_repository_impl.dart';
-import 'package:polygonid_flutter_sdk/add_space/data/repositories/addSpace_repository_impl.dart';
+import 'package:polygonid_flutter_sdk/profile/data/repositories/profile_repo_impl.dart';
+import 'package:polygonid_flutter_sdk/profile/data/dataSources/remote/profile_remote_dataSource_impl.dart';
+import 'package:polygonid_flutter_sdk/profile/data/dataSources/profile_dataSource.dart';
 import 'package:polygonid_flutter_sdk/registers/domain/repositories/register_repo.dart';
 import 'package:polygonid_flutter_sdk/registers/domain/usecases/register_usecase.dart';
 import 'package:polygonid_flutter_sdk/sdk/polygon_id_sdk.dart';
@@ -37,12 +43,14 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/claims_
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/mappers/claim_model_mapper.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/mappers/claim_model_state_mapper.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/mappers/proof_model_type_mapper.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard_bloc/dashboard_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/download_bloc/download_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/file_bloc/file_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/share_bloc/share_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/login/bloc/login_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/bloc/add_plans_bloc.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/profile/bloc/profile_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/bloc/register_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/restore_identity/bloc/restore_identity_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/sign/sign_bloc.dart';
@@ -73,6 +81,8 @@ Future<void> init() async {
   addPlansDependencies();
   DownloadDependencies();
   ShareDependencies();
+  profileDependencies();
+  networkUsageDependencies();
   _initGetit();
 }
 
@@ -117,7 +127,8 @@ void registerHomeDependencies() {
 
 ///
 void registerRegisterDependencies() {
-  getIt.registerFactory(() => RegisterBloc(getIt(), getIt(), getIt(), getIt(),getIt()));
+  getIt.registerFactory(
+      () => RegisterBloc(getIt(), getIt(), getIt(), getIt(), getIt()));
 
   // Use cases
   getIt.registerLazySingleton(() => RegisterUsecase(getIt()));
@@ -153,8 +164,8 @@ void registerLoginDependencies() {
 }
 
 void fileUploadDependencies() {
-  getIt.registerFactory(() => FileBloc( getIt(),
-      getIt(),getIt(),getIt(),getIt(),getIt(),getIt()));
+  getIt.registerFactory(() =>
+      FileBloc(getIt(), getIt(), getIt(), getIt(), getIt(), getIt(), getIt()));
 
   // Use cases
   getIt.registerLazySingleton(() => FileUsecase(getIt()));
@@ -172,29 +183,33 @@ void fileUploadDependencies() {
 }
 
 void DownloadDependencies() {
-  getIt.registerFactory(() => DownloadBloc( getIt(),
-      getIt(),getIt(),getIt(),getIt(),getIt()));
+  getIt.registerFactory(
+      () => DownloadBloc(getIt(), getIt(), getIt(), getIt(), getIt(), getIt()));
 
-      // Use cases
+  // Use cases
   getIt.registerLazySingleton(() => DownloadStatusUsecase(getIt()));
-   getIt.registerLazySingleton(() => DownloadVerifyUsecase(getIt()));
-   getIt.registerLazySingleton(() => CidsUsecase(getIt()));
-   getIt.registerLazySingleton(() => DownloadUsecase(getIt()));
-
+  getIt.registerLazySingleton(() => DownloadVerifyUsecase(getIt()));
+  getIt.registerLazySingleton(() => CidsUsecase(getIt()));
+  getIt.registerLazySingleton(() => DownloadUsecase(getIt()));
 }
 
 void ShareDependencies() {
-  getIt.registerFactory(() => ShareBloc( getIt()));
+  getIt.registerFactory(() => ShareBloc(getIt(), getIt(), getIt(), getIt(), getIt()));
 
-      // Use cases
+  // Use cases
   getIt.registerLazySingleton(() => ShareUsecase(getIt()));
- 
-
+  getIt.registerLazySingleton(() => ShareVerifyUsecase(getIt()));
 }
 
 ///
 void addPlansDependencies() {
-  getIt.registerFactory(() => AddPlansBloc( getIt(), getIt(), getIt(), getIt(), getIt(),));
+  getIt.registerFactory(() => AddPlansBloc(
+        getIt(),
+        getIt(),
+        getIt(),
+        getIt(),
+        getIt(),
+      ));
 
   // Use cases
   getIt.registerLazySingleton(() => AddUserUsecase(getIt()));
@@ -202,7 +217,6 @@ void addPlansDependencies() {
   getIt.registerLazySingleton(() => CreateProofUsecase(getIt()));
   getIt.registerLazySingleton(() => VerifyUsecase(getIt()));
   getIt.registerLazySingleton(() => FreeSpaceUsecase(getIt()));
-
 
   // // Repositories
   getIt.registerLazySingleton<AddPlansRepository>(
@@ -213,6 +227,46 @@ void addPlansDependencies() {
       () => AddPlansRemoteDatasourceImpl(client: getIt()));
 }
 
+void profileDependencies() {
+  getIt.registerFactory(() => ProfileBloc(
+        getIt(),
+
+      ));
+
+  // Use cases
+  getIt.registerLazySingleton(() =>ProfileUsecase(getIt()));
+
+
+
+  // // Repositories
+  getIt.registerLazySingleton<ProfileRepository>(
+      () => ProfileRepoImpl(profileRemoteDatasource: getIt()));
+
+  // // Data sources
+  getIt.registerFactory<ProfileRemoteDatasource>(
+      () => ProfileRemoteDatasourceImpl(client: getIt()));
+}
+
+///
+void networkUsageDependencies() {
+  getIt.registerFactory(() => DashboardBloc(
+        getIt(),
+
+      ));
+
+  // Use cases
+  getIt.registerLazySingleton(() =>NetworkUsageUsecase(getIt()));
+
+
+
+  // // Repositories
+  getIt.registerLazySingleton<NetworkRepository>(
+      () => NetworkRepsitoryImpl(networkRemoteDatasource: getIt()));
+
+  // // Data sources
+  getIt.registerFactory<NetworkRemoteDatasource>(
+      () => NetworkRemoteDatasourceImpl(client: getIt()));
+}
 
 ///
 void registerClaimsDependencies() {

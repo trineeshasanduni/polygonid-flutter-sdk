@@ -47,6 +47,7 @@ final class fetchAndSaveUploadVerifyClaims extends FileEvent {
 
   const fetchAndSaveUploadVerifyClaims({required this.iden3message,required this.batchHash});
 }
+
 class ResetFileStateEvent extends FileEvent {
   @override
   List<Object> get props => [];

@@ -10,6 +10,7 @@ import 'package:polygonid_flutter_sdk/file/data/model/download_status_model.dart
 import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/file_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/share_model.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/verify_share_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/verify_upload_model.dart';
 import 'package:polygonid_flutter_sdk/registers/data/dataSources/register_remote_dataSource.dart';
 import 'package:polygonid_flutter_sdk/registers/data/model/register_model.dart';
@@ -46,6 +47,7 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
 
       // Send the request
       var response = await request.send();
+      print('response uploaded: $response');
 
       // Get the response
       final responseBody = await response.stream.bytesToString();
@@ -439,4 +441,72 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
       throw Exception('Failed to Share ');
     }
   }
+
+  @override
+  Future<VerifyShareModel> shareVerifyUpload({
+  required String BatchHash,
+  required String FileHash,
+  required String Did,
+  required String OwnerAddress,
+}) async {
+  print('Fetching share verify upload');
+
+  try {
+    // Prepare the request data
+    Map<String, dynamic> data = {
+      "BatchHash": BatchHash,
+      "FileHash": FileHash,
+      "Did": Did,
+      "OwnerAddress": OwnerAddress,
+    };
+
+    print('data share verify: $data');
+
+    // Define the URI for the use-space API endpoint
+    final uri = Uri.parse('$BASE_URL/getshareclaim');
+
+    // Make the POST request with the proper headers and body
+    final response = await client.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json', // Set content type as JSON
+      },
+      body: jsonEncode(data), // Encode the data as JSON
+    );
+
+    // Log the response status code and body
+    print('Status Code: ${response.statusCode}');
+    print('Response share Body: ${response.body.toString()}');
+
+    if (response.statusCode == 200) {
+      // Check if the body is not empty
+      if (response.body.isNotEmpty) {
+        // Decode the JSON response
+        final  verifyJson = jsonDecode(response.body.toString());
+        print('Decoded share JSON: $verifyJson');
+
+        final  verifyJson2 = jsonDecode(verifyJson);
+        print('Decoded share JSON2: $verifyJson2');
+        
+
+        // Convert it to VerifyShareModel using fromJson or a similar method
+        final verifyShareModel = VerifyShareModel.fromJson(verifyJson2);
+        print('VerifyUploadModel share: $verifyShareModel');
+
+        return verifyShareModel;
+      } else {
+        // Handle the case when the body is empty (if that's expected in some cases)
+        throw Exception('Response body is empty');
+      }
+    } else {
+      // Handle non-200 responses
+      throw Exception('Failed to load share verify: ${response.statusCode}');
+    }
+  } catch (e) {
+    // Catch and print any errors
+    print('Error fetching share verify upload: $e');
+    throw Exception('Failed to fetch share verify upload');
+  }
+}
+
 }

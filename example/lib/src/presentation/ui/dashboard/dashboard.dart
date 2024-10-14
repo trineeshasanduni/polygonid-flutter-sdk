@@ -12,9 +12,11 @@ import 'package:gradient_borders/box_borders/gradient_box_border.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:polygonid_flutter_sdk_example/src/data/secure_storage.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/bethelBottomBar.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/plan_navigation.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/bar.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/customCurveEdge.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard_bloc/dashboard_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_state.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/widget/add_plans.dart';
@@ -58,6 +60,9 @@ class _DashboardState extends State<Dashboard> {
 
   final storage = const FlutterSecureStorage();
   var _isUserAdded = false;
+    late final DashboardBloc _dashboardBloc;
+
+
 
   @override
   void initState() {
@@ -65,6 +70,9 @@ class _DashboardState extends State<Dashboard> {
     _initW3MService();
     _initializeData();
     _deployGetUderDid();
+      _dashboardBloc = getIt<DashboardBloc>();
+    _initActivityLogs();
+    
   }
 
   void _initW3MService() async {
@@ -399,8 +407,6 @@ void _showWelcomeBottomSheet() {
 }
 
 
-
-
   void _showMetamaskBottomSheet() {
   showModalBottomSheet(
     context: context,
@@ -457,7 +463,23 @@ void _showWelcomeBottomSheet() {
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14),
             ),
-            Image.asset('assets/images/metamaskImg.png', width: 100, height: 100),
+            // Image.asset('assets/images/metamaskImg.png', width: 50, height: 50),
+            Column(
+                            children: !isConnected
+                                ? [
+                                    W3MNetworkSelectButton(service: _w3mService),
+                                    W3MConnectWalletButton(service: _w3mService),
+                                  ]
+                                : [
+                                    W3MAccountButton(
+                                      service: _w3mService,
+                                    ),
+                                    W3MConnectWalletButton(service: _w3mService,
+                                    
+                                    ),
+                                    // Text(WalletAddress.toString()),
+                                  ],
+                          ),
             const SizedBox(height: 20),
             
           ],
@@ -466,7 +488,6 @@ void _showWelcomeBottomSheet() {
     },
   );
 }
-
 
   Future<void> _initializeData() async {
     // Your initialization logic here (fetching data, etc.)
@@ -493,6 +514,14 @@ void _showWelcomeBottomSheet() {
     print("Refreshing data...");
     await _initializeData(); // Call the initialization logic again
     await Future.delayed(Duration(seconds: 2)); // Simulate a network call
+  }
+
+void _initActivityLogs() {
+    if (widget.did != null) {
+      _dashboardBloc.add(networkUsageEvent(did: widget.did!));
+    } else {
+      print('DID is null');
+    }
   }
 
   @override
@@ -535,165 +564,166 @@ void _showWelcomeBottomSheet() {
       const Color.fromARGB(255, 17, 148, 98),
       const Color(0xFF2CFFAE),
     ];
-    return SafeArea(
-      child: Scaffold(
+    return  Scaffold(
         backgroundColor: Theme.of(context).primaryColor,
-        body: LiquidPullToRefresh(
-          color: Theme.of(context).colorScheme.primary,
-          onRefresh: _onRefresh,
-          animSpeedFactor: 2.0,
-          child: SingleChildScrollView(
-            child: SizedBox(
-              child: Column(
-                children: [
-                  ListTile(
-                    title: Row(
-                      children: [
-                        Image.asset('assets/images/launcher_icon.png',
-                            width: 30, height: 30),
-                        RichText(
-                            text: TextSpan(
-                                text: 'zkp',
-                                style: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.secondary,
-                                    fontSize: 20,
-                                    fontFamily:
-                                        GoogleFonts.robotoMono().fontFamily,
-                                    fontWeight: FontWeight.w300),
-                                children: [
-                              TextSpan(
-                                  text: 'STORAGE',
+        body: SafeArea(
+          child: LiquidPullToRefresh(
+            color: Theme.of(context).colorScheme.primary,
+            onRefresh: _onRefresh,
+            animSpeedFactor: 2.0,
+            child: SingleChildScrollView(
+              child: SizedBox(
+                child: Column(
+                  children: [
+                    ListTile(
+                      title: Row(
+                        children: [
+                          Image.asset('assets/images/launcher_icon.png',
+                              width: 30, height: 30),
+                          RichText(
+                              text: TextSpan(
+                                  text: 'zkp',
                                   style: TextStyle(
-                                      color: Theme.of(context)
-                                          .secondaryHeaderColor,
+                                      color:
+                                          Theme.of(context).colorScheme.secondary,
                                       fontSize: 20,
                                       fontFamily:
                                           GoogleFonts.robotoMono().fontFamily,
-                                      fontWeight: FontWeight.w300))
-                            ]))
-                      ],
-                    ),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 20.0),
-                      child: Container(
+                                      fontWeight: FontWeight.w300),
+                                  children: [
+                                TextSpan(
+                                    text: 'STORAGE',
+                                    style: TextStyle(
+                                        color: Theme.of(context)
+                                            .secondaryHeaderColor,
+                                        fontSize: 20,
+                                        fontFamily:
+                                            GoogleFonts.robotoMono().fontFamily,
+                                        fontWeight: FontWeight.w300))
+                              ]))
+                        ],
+                      ),
+                      // subtitle: Padding(
+                      //   padding: const EdgeInsets.only(top: 20.0),
+                      //   child: Container(
+                      //     decoration: BoxDecoration(
+                      //         // color: Theme.of(context).secondaryHeaderColor.withOpacity(0.8),
+                      //         borderRadius: BorderRadius.circular(20),
+                      //         border: Border.all(
+                      //             color: Theme.of(context).colorScheme.secondary,
+                      //             width: 1)),
+                      //     child: Column(
+                      //       children: !isConnected
+                      //           ? [
+                      //               W3MNetworkSelectButton(service: _w3mService),
+                      //               W3MConnectWalletButton(service: _w3mService),
+                      //             ]
+                      //           : [
+                      //               W3MAccountButton(
+                      //                 service: _w3mService,
+                      //               ),
+                      //               W3MConnectWalletButton(service: _w3mService,
+                                    
+                      //               ),
+                      //               // Text(WalletAddress.toString()),
+                      //             ],
+                      //     ),
+                      //   ),
+                      // ),
+                      trailing: Container(
+                        width: 30,
+                        height: 30,
                         decoration: BoxDecoration(
-                            // color: Theme.of(context).secondaryHeaderColor.withOpacity(0.8),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                                color: Theme.of(context).colorScheme.secondary,
-                                width: 1)),
-                        child: Column(
-                          children: !isConnected
-                              ? [
-                                  W3MNetworkSelectButton(service: _w3mService),
-                                  W3MConnectWalletButton(service: _w3mService),
-                                ]
-                              : [
-                                  W3MAccountButton(
-                                    service: _w3mService,
-                                  ),
-                                  W3MConnectWalletButton(service: _w3mService),
-                                  // Text(WalletAddress.toString()),
-                                ],
+                          // color: Theme.of(context).colorScheme.primary,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                              color: Theme.of(context).colorScheme.secondary,
+                              width: 1),
+                        ),
+                        child: GestureDetector(
+                          onTap: () {
+                            // _showWelcomeDialog();
+                            // _deployContract();
+                            // _showWelcomeBottomSheet();
+                            _showMetamaskBottomSheet();
+                          },
+                          child: Image.asset('assets/images/metamaskImg.png',
+                              width: 30, height: 30),
+                          
                         ),
                       ),
                     ),
-                    trailing: Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        // color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                            color: Theme.of(context).colorScheme.secondary,
-                            width: 1),
-                      ),
-                      child: GestureDetector(
-                        onTap: () {
-                          // _showWelcomeDialog();
-                          // _deployContract();
-                          _showWelcomeBottomSheet();
-                        },
-                        child: Icon(
-                          Icons.wallet,
-                          color: Theme.of(context).secondaryHeaderColor,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ),
 
-                  ListTile(
-                    title: Text('My Storage',
-                        style: TextStyle(
-                            color: Theme.of(context)
-                                .appBarTheme
-                                .titleTextStyle
-                                ?.color,
-                            fontSize: 12,
-                            fontFamily: GoogleFonts.robotoMono().fontFamily,
-                            fontWeight: FontWeight.w300)),
-                    trailing: GestureDetector(
-                      onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => SetupPasswordScreen())),
-                      child: Text('See all',
+                    
+          
+                    ListTile(
+                      title: Text('My Storage',
                           style: TextStyle(
                               color: Theme.of(context)
-                                  .secondaryHeaderColor
-                                  .withOpacity(0.3),
-                              fontSize: 10,
+                                  .appBarTheme
+                                  .titleTextStyle
+                                  ?.color,
+                              fontSize: 12,
                               fontFamily: GoogleFonts.robotoMono().fontFamily,
                               fontWeight: FontWeight.w300)),
+                      trailing: GestureDetector(
+                        onTap: () =>{},
+                        child: Text('See all',
+                            style: TextStyle(
+                                color: Theme.of(context)
+                                    .secondaryHeaderColor
+                                    .withOpacity(0.3),
+                                fontSize: 10,
+                                fontFamily: GoogleFonts.robotoMono().fontFamily,
+                                fontWeight: FontWeight.w300)),
+                      ),
                     ),
-                  ),
-                  _watchlist(),
-                  SizedBox(height: 30),
-                  _barChart(),
-                  SizedBox(height: 30),
-                  _recentUploads(),
-                  SizedBox(height: 30),
-                  // _pieChart(),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 20.0),
-                    child: PieChart(
-                      dataMap: dataMap,
-                      animationDuration: Duration(milliseconds: 800),
-                      chartLegendSpacing: 32,
-                      chartRadius: MediaQuery.of(context).size.width / 3.2,
-                      colorList: colorList,
-                      initialAngleInDegree: 0,
-                      chartType: ChartType.ring,
-                      ringStrokeWidth: 32,
-                      centerText: "Storage",
-                      legendOptions: LegendOptions(
-                        showLegendsInRow: false,
-                        legendPosition: LegendPosition.right,
-                        showLegends: true,
-                        // legendShape: _BoxShape.circle,
-                        legendTextStyle: TextStyle(
-                          fontWeight: FontWeight.bold,
+                    _watchlist(),
+                    SizedBox(height: 30),
+                    _barChart(),
+                    SizedBox(height: 30),
+                    _recentUploads(),
+                    SizedBox(height: 30),
+                    // _pieChart(),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20.0),
+                      child: PieChart(
+                        dataMap: dataMap,
+                        animationDuration: Duration(milliseconds: 800),
+                        chartLegendSpacing: 32,
+                        chartRadius: MediaQuery.of(context).size.width / 3.2,
+                        colorList: colorList,
+                        initialAngleInDegree: 0,
+                        chartType: ChartType.ring,
+                        ringStrokeWidth: 32,
+                        centerText: "Storage",
+                        legendOptions: LegendOptions(
+                          showLegendsInRow: false,
+                          legendPosition: LegendPosition.right,
+                          showLegends: true,
+                          // legendShape: _BoxShape.circle,
+                          legendTextStyle: TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
+                        chartValuesOptions: ChartValuesOptions(
+                          showChartValueBackground: true,
+                          showChartValues: true,
+                          showChartValuesInPercentage: false,
+                          showChartValuesOutside: false,
+                          decimalPlaces: 1,
+                        ),
+                        // gradientList: ---To add gradient colors---
+                        // emptyColorGradient: ---Empty Color gradient---
                       ),
-                      chartValuesOptions: ChartValuesOptions(
-                        showChartValueBackground: true,
-                        showChartValues: true,
-                        showChartValuesInPercentage: false,
-                        showChartValuesOutside: false,
-                        decimalPlaces: 1,
-                      ),
-                      // gradientList: ---To add gradient colors---
-                      // emptyColorGradient: ---Empty Color gradient---
-                    ),
-                  )
-                ],
+                    )
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ),
+      
     );
   }
 
@@ -861,11 +891,11 @@ void _showWelcomeBottomSheet() {
               ),
             ),
           ),
-          const BarChartSample2(),
+           LineChartSample2(did: widget.did),
           Positioned(
             right: 8,
             child: Container(
-              height: 38,
+              height: 32,
               width: 92,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary,
@@ -875,12 +905,15 @@ void _showWelcomeBottomSheet() {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('More',
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.background,
-                            fontSize: 15,
-                            fontFamily: GoogleFonts.robotoMono().fontFamily,
-                            fontWeight: FontWeight.w300)),
+                    GestureDetector(
+                      onTap: (){_initActivityLogs();},
+                      child: Text('Avg',
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.background,
+                              fontSize: 12,
+                              fontFamily: GoogleFonts.robotoMono().fontFamily,
+                              fontWeight: FontWeight.w300)),
+                    ),
                     Icon(
                       Icons.arrow_drop_down,
                       color: Theme.of(context).colorScheme.background,

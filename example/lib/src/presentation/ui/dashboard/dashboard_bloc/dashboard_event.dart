@@ -8,10 +8,8 @@ sealed class DashboardEvent extends Equatable {
 }
 
 
-class addUserEvent extends DashboardEvent {
-  final String Commitment;
-  final String Did;
-  final String NullifierHash;
-  final String Owner;
-  const addUserEvent( {required this.Commitment,required this.Did, required this.NullifierHash, required this.Owner});
+class networkUsageEvent extends DashboardEvent {
+  final String did;
+  
+  const networkUsageEvent( {required this.did});
 }

@@ -5,4 +5,9 @@ abstract interface class UseCase<SuccessType, Params> {
   Future<Either<Failure, SuccessType>> call(Params params);
 }
 
+abstract class UseCases<Type, Params> {
+  Future<Either<Failure, List<Type>>> call(Params params);
+}
+
+
 

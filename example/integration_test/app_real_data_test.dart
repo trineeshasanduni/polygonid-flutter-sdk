@@ -40,7 +40,7 @@ void main() {
               Routes.homePath: (BuildContext context) => const HomeScreen(),
               Routes.authPath: (BuildContext context) => AuthScreen(),
               Routes.qrCodeScannerPath: (BuildContext context) => Container(),
-              Routes.claimsPath: (BuildContext context) => ClaimsScreen(),
+              // Routes.claimsPath: (BuildContext context) => ClaimsScreen(),
             },
           ),
         );

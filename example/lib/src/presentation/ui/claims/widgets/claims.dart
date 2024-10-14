@@ -19,8 +19,10 @@ import 'package:polygonid_flutter_sdk_example/utils/custom_text_styles.dart';
 
 class ClaimsScreen extends StatefulWidget {
   final ClaimsBloc _bloc;
+  final String category;
+  
 
-  ClaimsScreen({Key? key})
+  ClaimsScreen({Key? key,  required this.category})
       : _bloc = getIt<ClaimsBloc>(),
         super(key: key);
 
@@ -206,47 +208,130 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
   }
 
   ///
+  // Widget _buildClaimList() {
+  //   return BlocBuilder(
+  //     bloc: widget._bloc,
+  //     builder: (BuildContext context, ClaimsState state) {
+  //       if (state is LoadedDataClaimsState) {
+  //         List<ClaimModel> claimList = state.claimList;
+  //         List<Widget> claimWidgetList = _buildClaimCardWidgetList(claimList);
+  //         return claimList.isNotEmpty
+  //             ? Column(
+  //                 mainAxisSize: MainAxisSize.min,
+  //                 children: claimWidgetList,
+  //               )
+  //             :  Center(
+  //                 child: Text(CustomStrings.claimsListNoResult,style: TextStyle(color: Theme.of(context).secondaryHeaderColor),),
+  //               );
+  //       }
+  //       return const SizedBox.shrink();
+  //     },
+  //     buildWhen: (_, ClaimsState currentState) {
+  //       bool rebuild = currentState is LoadedDataClaimsState;
+  //       return rebuild;
+  //     },
+  //   );
+  // }
+
   Widget _buildClaimList() {
-    return BlocBuilder(
-      bloc: widget._bloc,
-      builder: (BuildContext context, ClaimsState state) {
-        if (state is LoadedDataClaimsState) {
-          List<ClaimModel> claimList = state.claimList;
-          List<Widget> claimWidgetList = _buildClaimCardWidgetList(claimList);
-          return claimList.isNotEmpty
-              ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: claimWidgetList,
-                )
-              :  Center(
-                  child: Text(CustomStrings.claimsListNoResult,style: TextStyle(color: Theme.of(context).secondaryHeaderColor),),
-                );
+  return BlocBuilder(
+    bloc: widget._bloc,
+    builder: (BuildContext context, ClaimsState state) {
+      if (state is LoadedDataClaimsState) {
+         List<ClaimModel> filteredClaims = state.claimList.where((claim) {
+              // Adjust the filtering logic based on your claim model
+              return claim.name == widget.category; // Assuming 'category' exists in ClaimModel
+            }).toList();
+
+        // Group the claims by their name field
+        Map<String, List<ClaimModel>> categorizedClaims = {};
+        for (var claim in filteredClaims) {
+          if (!categorizedClaims.containsKey(claim.name)) {
+            categorizedClaims[claim.name] = [];
+          }
+          categorizedClaims[claim.name]?.add(claim);
         }
-        return const SizedBox.shrink();
-      },
-      buildWhen: (_, ClaimsState currentState) {
-        bool rebuild = currentState is LoadedDataClaimsState;
-        return rebuild;
-      },
-    );
-  }
+
+        return categorizedClaims.isNotEmpty
+            ? Column(
+                children: categorizedClaims.entries.map((entry) {
+                  String categoryName = entry.key;
+                  List<ClaimModel> claimsInCategory = entry.value;
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildCategoryHeader(categoryName),
+                      Column(
+                        children: _buildClaimCardWidgetList(claimsInCategory),
+                      ),
+                      const SizedBox(height: 24), // Add some spacing between categories
+                    ],
+                  );
+                }).toList(),
+              )
+            : Center(
+                child: Text(
+                  CustomStrings.claimsListNoResult,
+                  style: TextStyle(color: Theme.of(context).secondaryHeaderColor),
+                ),
+              );
+      }
+      return const SizedBox.shrink();
+    },
+    buildWhen: (_, ClaimsState currentState) {
+      return currentState is LoadedDataClaimsState;
+    },
+  );
+}
+
+
+  Widget _buildCategoryHeader(String categoryName) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    child: Text(
+      categoryName,
+      style: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).secondaryHeaderColor,
+      ),
+    ),
+  );
+}
+
 
   ///
+  // List<Widget> _buildClaimCardWidgetList(List<ClaimModel> claimList) {
+  //   return claimList
+  //       .map(
+  //         (claimModelItem) => Padding(
+  //           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+  //           child: InkWell(
+  //             onTap: () {
+  //               widget._bloc.add(ClaimsEvent.onClickClaim(claimModelItem));
+  //             },
+  //             child: ClaimCard(claimModel: claimModelItem),
+  //           ),
+  //         ),
+  //       )
+  //       .toList();
+  // }
+
   List<Widget> _buildClaimCardWidgetList(List<ClaimModel> claimList) {
-    return claimList
-        .map(
-          (claimModelItem) => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            child: InkWell(
-              onTap: () {
-                widget._bloc.add(ClaimsEvent.onClickClaim(claimModelItem));
-              },
-              child: ClaimCard(claimModel: claimModelItem),
-            ),
-          ),
-        )
-        .toList();
-  }
+  return claimList.map((claimModelItem) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: InkWell(
+        onTap: () {
+          widget._bloc.add(ClaimsEvent.onClickClaim(claimModelItem));
+        },
+        child: ClaimCard(claimModel: claimModelItem),
+      ),
+    );
+  }).toList();
+}
+
 
   ///
   Widget _buildBlocListener() {

@@ -49,14 +49,13 @@ class _AddPlansState extends State<AddPlans> {
   @override
   void initState() {
     super.initState();
+    _deployPlans();
     _addPlansBloc = getIt<AddPlansBloc>();
     GetStorage.init();
 
     // Retrieve saved verification status from storage
     final storage = GetStorage();
     _isVerified = storage.read('isVerified') ?? false;
-
-    _deployPlans();
   }
 
   Future<void> _deployPlans() async {
@@ -120,7 +119,15 @@ class _AddPlansState extends State<AddPlans> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             _buildHeader(),
-            SizedBox(height: 20),
+            // SizedBox(height: 10),
+            // Text('Plans',
+            // style: TextStyle(
+            //   color: Theme.of(context).secondaryHeaderColor,
+            //   fontSize: 20,
+            //   fontFamily: GoogleFonts.robotoMono().fontFamily,
+            //   fontWeight: FontWeight.w300,
+            // )),
+            SizedBox(height: 10),
             Expanded(
               // Only use Expanded here for the TabBarView
               child: DefaultTabController(
@@ -152,7 +159,7 @@ class _AddPlansState extends State<AddPlans> {
           child: TabBarView(
             children: [
               _handleOneMonth(),
-              _handleThreeMonth(), 
+              _handleThreeMonth(),
               _handleSixMonth(),
               _handleOneYear(),
             ],
@@ -285,6 +292,7 @@ class _AddPlansState extends State<AddPlans> {
       ),
     );
   }
+
   Widget _handleSixMonth() {
     return SingleChildScrollView(
       // Scrollable content for large expanded plans
@@ -400,8 +408,8 @@ class _AddPlansState extends State<AddPlans> {
         final owner1 = storage.read('walletAddress');
 
         if (state is AddPlansLoading) {
-          return  Center(
-            child:Loading(
+          return Center(
+            child: Loading(
               Loadingcolor: Theme.of(context).primaryColor,
               color: Theme.of(context).colorScheme.secondary,
             ),
@@ -445,23 +453,8 @@ class _AddPlansState extends State<AddPlans> {
           print('createProof b: ${state.ProofResponse.b}');
           print('createProof c: ${state.ProofResponse.c}');
           print('createProof input: ${state.ProofResponse.input}');
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Proof Generated. Ready for Verification'),
-                SizedBox(height: 20),
-                TextButton(
-                  onPressed: () {
-                    // _checkProofTxHashStatus(
-                    //     state.ProofResponse.TXHash.toString(),
-                    //     state.ProofResponse.a as List<String>,
-                    //     state.ProofResponse.b as List<List<String>>,
-                    //     state.ProofResponse.c as List<String>,
-                    //     state.ProofResponse.input as List<String>,
-                    //     owner1,
-                    //     widget.did!);
-                    _addPlansBloc.add(verifyuserEvent(
+
+          _addPlansBloc.add(verifyuserEvent(
                       A: state.ProofResponse.a as List<String>,
                       B: state.ProofResponse.b as List<List<String>>,
                       C: state.ProofResponse.c as List<String>,
@@ -469,17 +462,43 @@ class _AddPlansState extends State<AddPlans> {
                       Owner: owner1,
                       Did: widget.did!, // change here
                     ));
-                  },
-                  child: _buildButton(
-                    name,
-                    Theme.of(context).colorScheme.secondary,
-                    Theme.of(context).primaryColor,
-                    Theme.of(context).primaryColor,
-                  ),
-                ),
-              ],
-            ),
-          );
+          // return Center(
+          //   child: Column(
+          //     mainAxisAlignment: MainAxisAlignment.center,
+          //     children: [
+          //       Text('User added. Now Ready for Verification',style: TextStyle(
+          //         color: Colors.red,
+          //       ),),
+          //       SizedBox(height: 20),
+          //       TextButton(
+          //         onPressed: () {
+          //           // _checkProofTxHashStatus(
+          //           //     state.ProofResponse.TXHash.toString(),
+          //           //     state.ProofResponse.a as List<String>,
+          //           //     state.ProofResponse.b as List<List<String>>,
+          //           //     state.ProofResponse.c as List<String>,
+          //           //     state.ProofResponse.input as List<String>,
+          //           //     owner1,
+          //           //     widget.did!);
+          //           _addPlansBloc.add(verifyuserEvent(
+          //             A: state.ProofResponse.a as List<String>,
+          //             B: state.ProofResponse.b as List<List<String>>,
+          //             C: state.ProofResponse.c as List<String>,
+          //             Inputs: state.ProofResponse.input as List<String>,
+          //             Owner: owner1,
+          //             Did: widget.did!, // change here
+          //           ));
+          //         },
+          //         child: _buildButton(
+          //           name,
+          //           Theme.of(context).colorScheme.secondary,
+          //           Theme.of(context).primaryColor,
+          //           Theme.of(context).primaryColor,
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // );
         }
 
         // if (state is VerifyProof) {
@@ -782,60 +801,67 @@ class _AddPlansState extends State<AddPlans> {
             height: isExpanded
                 ? MediaQuery.of(context).size.width * 1.4
                 : MediaQuery.of(context).size.width * 0.4,
-            decoration: title == "Basic Plan" && _isFreePlanActivated ?
-                       
-                       isExpanded 
-                ?   BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Theme.of(context).colorScheme.primary.withOpacity(0.15),
-                        Theme.of(context)
-                            .colorScheme
-                            .secondary
-                            .withOpacity(0.5),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.secondary,
-                      width: 2,
-                    ),
-                  )
-                : BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.primary,
-                      width: 2,
-                    ),
-                  ): isExpanded
-                ? BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Theme.of(context).colorScheme.primary.withOpacity(0.15),
-                        Theme.of(context)
-                            .colorScheme
-                            .secondary
-                            .withOpacity(0.5),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.primary,
-                      width: 2,
-                    ),
-                  ): BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Theme.of(context).secondaryHeaderColor,
-                      width: 2,
-                    ),
-                  ),
+            decoration: title == "Basic Plan" && _isFreePlanActivated
+                ? isExpanded
+                    ? BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.15),
+                            Theme.of(context)
+                                .colorScheme
+                                .secondary
+                                .withOpacity(0.5),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.secondary,
+                          width: 2,
+                        ),
+                      )
+                    : BoxDecoration(
+                        color: Theme.of(context).primaryColor,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 2,
+                        ),
+                      )
+                : isExpanded
+                    ? BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.15),
+                            Theme.of(context)
+                                .colorScheme
+                                .secondary
+                                .withOpacity(0.5),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 2,
+                        ),
+                      )
+                    : BoxDecoration(
+                        color: Theme.of(context).primaryColor,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Theme.of(context).secondaryHeaderColor,
+                          width: 2,
+                        ),
+                      ),
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: SingleChildScrollView(
@@ -970,7 +996,6 @@ class _AddPlansState extends State<AddPlans> {
                       // Button will now trigger the event when clicked
                       if (title == "Basic Plan") ...[
                         _buildAddPlan(name1),
-                       
                       ],
                       // if (title == "Starter Plan") ...[
                       //   _buildAddPlan(name1),
@@ -991,7 +1016,6 @@ class _AddPlansState extends State<AddPlans> {
       },
     );
   }
-
 
   Widget _buildButton(
     String text,

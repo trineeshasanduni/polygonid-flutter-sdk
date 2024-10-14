@@ -129,7 +129,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     "Retry",
                     textAlign: TextAlign.center,
                     style: CustomTextStyles.primaryButtonTextStyle
-                        .copyWith(color: CustomColors.primaryButton),
+                        .copyWith(color: Theme.of(context).colorScheme.primary),
                   ),
                 ),
               ),
