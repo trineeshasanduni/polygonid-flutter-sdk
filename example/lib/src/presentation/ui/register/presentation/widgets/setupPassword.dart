@@ -10,6 +10,7 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/bethelBottomBar.d
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/routes.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/common/widgets/circularProgress.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/common/widgets/transperant_button.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/create_wallet/setupAccount.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/create_wallet/widget/glassEffect.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/login/bloc/login_bloc.dart';
@@ -263,7 +264,7 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
       onTap: () {
         _loginBloc.add(LoginWithCredentials());
       },
-      child: _buildtransperantButton('Log in'),
+      child: TransperantButton(text:'Log In' ,width:  MediaQuery.of(context).size.width,),
     );
   }
 
@@ -343,34 +344,34 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
     );
   }
 
-  Widget _buildtransperantButton(String text) {
-    return FrostedGlassBox(
-      theWidth: MediaQuery.of(context).size.width,
-      theHeight: 50.0,
-      theX: 4.0,
-      theY: 4.0,
-      theColor: Colors.white.withOpacity(0.13),
-      theChild: ShaderMask(
-        shaderCallback: (bounds) => LinearGradient(
-          colors: [
-            Theme.of(context).colorScheme.primary,
-            Theme.of(context).colorScheme.secondary
-          ], // Customize your gradient colors
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ).createShader(bounds),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 14.0,
-            color: Colors.white, // This will be overridden by the gradient
-            fontWeight: FontWeight.bold,
-            fontFamily: GoogleFonts.robotoMono().fontFamily,
-          ),
-        ),
-      ),
-    );
-  }
+  // Widget _buildtransperantButton(String text) {
+  //   return FrostedGlassBox(
+  //     theWidth: MediaQuery.of(context).size.width,
+  //     theHeight: 50.0,
+  //     theX: 4.0,
+  //     theY: 4.0,
+  //     theColor: Colors.white.withOpacity(0.13),
+  //     theChild: ShaderMask(
+  //       shaderCallback: (bounds) => LinearGradient(
+  //         colors: [
+  //           Theme.of(context).colorScheme.primary,
+  //           Theme.of(context).colorScheme.secondary
+  //         ], // Customize your gradient colors
+  //         begin: Alignment.topLeft,
+  //         end: Alignment.bottomRight,
+  //       ).createShader(bounds),
+  //       child: Text(
+  //         text,
+  //         style: TextStyle(
+  //           fontSize: 14.0,
+  //           color: Colors.white, // This will be overridden by the gradient
+  //           fontWeight: FontWeight.bold,
+  //           fontFamily: GoogleFonts.robotoMono().fontFamily,
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   // Widget _buildButton(
   //     String text, dynamic colorScheme, dynamic border, dynamic textColor) {

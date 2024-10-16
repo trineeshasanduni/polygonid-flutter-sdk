@@ -19,6 +19,7 @@ import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
 import 'package:polygonid_flutter_sdk/iden3comm/domain/entities/common/iden3_message_entity.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/common/widgets/circularProgress.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/common/widgets/transperant_button.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/create_wallet/widget/glassEffect.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/download_bloc/download_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/file_bloc/file_bloc.dart';
@@ -1073,8 +1074,9 @@ class _FilesState extends State<Files> {
                                     batch_hash: batchHash,
                                   ));
                                 },
-                                child: _buildtransperantButton('Share',
-                                    MediaQuery.of(context).size.width / 4)),
+                                child: TransperantButton(text:'Share',
+                                width: MediaQuery.of(context).size.width / 4)),
+                                  
                           );
                         },
                       ),
@@ -1090,245 +1092,6 @@ class _FilesState extends State<Files> {
     );
   }
 
-  //  Future<void> _showShareInput(BuildContext context, String BatchHash,
-  //     String FileHash, String FileName) async {
-  //   var pasteDid = TextEditingController();
-  //   final storage = GetStorage();
-  //   final walletAddress = storage.read('walletAddress');
-  //   print('walletAddress : $walletAddress');
-
-  //   BuildContext dialogContext;
-
-  //   showDialog(
-  //     barrierDismissible: false,
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       dialogContext = context; // Save the context
-  //       return AlertDialog(
-  //         title:
-  //             Align(
-  //               alignment: Alignment.topRight,
-  //               child: IconButton(
-  //                 icon: Icon(Icons.close),
-  //                 onPressed: () {
-  //                   Navigator.of(context).pop(); // Close the dialog
-  //                 },
-  //               ),
-  //             ),
-  //             // Align(
-  //             //   alignment: Alignment.centerLeft,
-  //             //   child: Text(
-  //             //     'Paste Your Share DID',
-  //             //     style: TextStyle(
-  //             //       color: Theme.of(context).secondaryHeaderColor,
-  //             //       fontFamily: GoogleFonts.robotoMono().fontFamily,
-  //             //       fontSize: 14,
-  //             //     ),
-  //             //   ),
-  //             // ),
-
-  //         content: SingleChildScrollView(
-  //           child: TextFormField(
-  //             controller: pasteDid,
-  //             enabled: true,
-  //             decoration: InputDecoration(
-  //               labelText: 'Paste your Share DID here',
-  //               labelStyle: TextStyle(
-  //                 color: Colors.white.withOpacity(0.4),
-  //                 fontFamily: GoogleFonts.robotoMono().fontFamily,
-  //                 fontSize: 12,
-  //               ),
-  //               border: OutlineInputBorder(
-  //           borderRadius: BorderRadius.circular(30),
-  //           // borderSide: BorderSide.,
-
-  //         ),
-  //             ),
-  //           ),
-  //         ),
-  //         actions: <Widget>[
-  //           BlocBuilder<ShareBloc, ShareState>(
-  //             bloc: _shareBloc,
-  //             builder: (context, state) {
-  //               if (state is Sharing) {
-  //                 return Center(
-  //                     child: Loading(
-  //                         Loadingcolor: Theme.of(context).primaryColor,
-  //                         color: Theme.of(context).colorScheme.secondary));
-  //               }
-  //               if (state is ShareFailed) {
-  //                 _showSnackbar('Share failed: ${state.message}', Colors.red);
-  //               }
-  //               if (state is Shared) {
-  //                 // Call the transaction hash check method
-  //                 _checkSharedTxHashStatus(state.response.tXHash!,
-  //                     state.response.ownerDid!, dialogContext);
-
-  //                     Future.delayed(const Duration(seconds: 10), () {
-  //                       _shareBloc.add(ResetShareStateEvent());
-  //                     });
-  //               }
-  //               return TextButton(
-  //                 child: const Text('Share'),
-  //                 onPressed: () {
-  //                   _shareBloc.add(onClickShare(
-  //                     FileName: FileName,
-  //                     OwnerDid: jsonDecode(widget.did.toString()),
-  //                     ShareDid: pasteDid.text,
-  //                     Owner: walletAddress,
-  //                     file_hash: FileHash,
-  //                     batch_hash: BatchHash,
-  //                   ));
-  //                 },
-  //               );
-  //             },
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-
-  Widget _buildtransperantButton(String text, dynamic width) {
-    return FrostedGlassBox(
-      theWidth: width,
-      theHeight: 50.0,
-      theX: 4.0,
-      theY: 4.0,
-      theColor: Colors.white.withOpacity(0.13),
-      theChild: ShaderMask(
-        shaderCallback: (bounds) => LinearGradient(
-          colors: [
-            Theme.of(context).colorScheme.primary,
-            Theme.of(context).colorScheme.secondary
-          ], // Customize your gradient colors
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ).createShader(bounds),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 14.0,
-            color: Colors.white, // This will be overridden by the gradient
-            fontWeight: FontWeight.bold,
-            fontFamily: GoogleFonts.robotoMono().fontFamily,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Future<void> _showShareInput1(BuildContext context, String BatchHash,
-  //     String FileHash, String FileName) async {
-  //   var pasteDid = TextEditingController();
-  //   final storage = GetStorage();
-  //   final walletAddress = storage.read('walletAddress');
-  //   print('walletAddress : $walletAddress');
-
-  //   BuildContext dialogContext;
-
-  //   showDialog(
-  //     barrierDismissible: false,
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       dialogContext = context; // Save the context
-  //       return AlertDialog(
-  //         title: Column(
-  //           children: [
-  //             Align(
-  //               alignment: Alignment.topRight,
-  //               child: IconButton(
-  //                 icon: Icon(Icons.close),
-  //                 onPressed: () {
-  //                   Navigator.of(context).pop(); // Close the dialog
-  //                 },
-  //               ),
-  //             ),
-  //             Align(
-  //               alignment: Alignment.centerLeft,
-  //               child: Text(
-  //                 'Paste Your Share DID',
-  //                 style: TextStyle(
-  //                   color: Theme.of(context).secondaryHeaderColor,
-  //                   fontFamily: GoogleFonts.robotoMono().fontFamily,
-  //                   fontSize: 15,
-  //                 ),
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //         content: Expanded(
-  //           child: TextFormField(
-  //             controller: pasteDid,
-  //             enabled: true,
-  //             decoration: InputDecoration(
-  //               labelText: 'Paste your Share DID here',
-  //               labelStyle: TextStyle(
-  //                 color: Colors.white.withOpacity(0.4),
-  //                 fontFamily: GoogleFonts.robotoMono().fontFamily,
-  //                 fontSize: 13,
-  //               ),
-  //               border: OutlineInputBorder(
-  //                 borderSide: BorderSide(
-  //                   color: Colors.red.withOpacity(0.4),
-  //                 ),
-  //               ),
-  //             ),
-  //           ),
-  //         ),
-  //         actions: <Widget>[
-  //           BlocBuilder<ShareBloc, ShareState>(
-  //             bloc: _shareBloc,
-  //             builder: (context, state) {
-  //               if (state is Sharing) {
-  //                 return Center(
-  //                     child: Loading(
-  //                         Loadingcolor: Theme.of(context).primaryColor,
-  //                         color: Theme.of(context).colorScheme.secondary));
-  //               }
-  //               if (state is ShareFailed) {
-  //                 _showSnackbar('Share failed: ${state.message}', Colors.red);
-  //               }
-  //               if (state is Shared) {
-  //                 // Call the transaction hash check method
-  //                 _checkSharedTxHashStatus(state.response.tXHash!,
-  //                     state.response.ownerDid!, dialogContext);
-  //               }
-  //               return TextButton(
-  //                 child: const Text('Share'),
-  //                 onPressed: () {
-  //                   _shareBloc.add(onClickShare(
-  //                     FileName: FileName,
-  //                     OwnerDid: jsonDecode(widget.did.toString()),
-  //                     ShareDid: pasteDid.text,
-  //                     Owner: walletAddress,
-  //                     file_hash: FileHash,
-  //                     batch_hash: BatchHash,
-  //                   ));
-  //                 },
-  //               );
-  //             },
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-
-  // Future<void> _showDownloadUrl(BuildContext context, Uri url) async {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: TextButton(
-  //             onPressed: () => setState(() {
-  //                   launchUrl(url, mode: LaunchMode.externalApplication);
-  //                 }),
-  //             child: Text('Click here to Download File')),
-  //       );
-  //     },
-  //   );
-  // }
 
   Future<void> _showDownloadUrl(BuildContext context, Uri url) async {
     showModalBottomSheet(
@@ -1399,9 +1162,12 @@ class _FilesState extends State<Files> {
                     onTap: () => setState(() {
                           launchUrl(url, mode: LaunchMode.externalApplication);
                         }),
-                    child: _buildtransperantButton(
-                        'Click here to Download File',
-                        MediaQuery.of(context).size.width)),
+                    child: TransperantButton(
+                        text: 'Click here to Download File',
+                        width: MediaQuery.of(context).size.width
+                        
+                       
+                       )),
                 const SizedBox(height: 20),
               ],
             ),

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:polygonid_flutter_sdk/dashboard/domain/entities/networkUsageEntity.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/common/widgets/circularProgress.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard_bloc/dashboard_bloc.dart';
 
 class LineChartSample2 extends StatefulWidget {
@@ -17,8 +18,8 @@ class LineChartSample2 extends StatefulWidget {
 
 class _LineChartSample2State extends State<LineChartSample2> {
   List<Color> gradientColors = [
-     const Color(0xFF2CFFAE),
-      const Color(0xFFa3d902),
+    const Color(0xFF2CFFAE),
+    const Color(0xFFa3d902),
   ];
 
   bool showAvg = false;
@@ -48,7 +49,11 @@ class _LineChartSample2State extends State<LineChartSample2> {
         bloc: _dashboardBloc,
         builder: (context, state) {
           if (state is DashboardLoading) {
-            return Center(child: CircularProgressIndicator());
+            return Center(
+              child: Loading(
+                  Loadingcolor: Theme.of(context).primaryColor,
+                  color: Theme.of(context).colorScheme.secondary),
+            );
           } else if (state is DashboardLoaded) {
             final usageData = state.usage;
             print('state usage: ${state.usage}');
@@ -89,15 +94,15 @@ class _LineChartSample2State extends State<LineChartSample2> {
                 AspectRatio(
                   aspectRatio: 1.50,
                   child: Padding(
-                    padding: const EdgeInsets.only(right: 25.0,left: 15,top: 40, bottom: 40),
+                    padding: const EdgeInsets.only(
+                        right: 25.0, left: 15, top: 40, bottom: 40),
                     child: LineChart(
-                        // showAvg
-                        //     ? avgData(state.usage.cast<NetworkUsageEntity>())
-                        //     : 
-                            mainData(state.usage),
-                      ),
+                      // showAvg
+                      //     ? avgData(state.usage.cast<NetworkUsageEntity>())
+                      //     :
+                      mainData(state.usage),
+                    ),
                   ),
-                  
                 ),
                 // Positioned(
                 //   right: 16,
@@ -135,7 +140,7 @@ class _LineChartSample2State extends State<LineChartSample2> {
       axisSide: meta.axisSide,
       child: Text(
         formattedDay[value.toInt() % formattedDay.length]!,
-        style:  TextStyle(
+        style: TextStyle(
           color: Theme.of(context).appBarTheme.titleTextStyle?.color,
           fontWeight: FontWeight.bold,
           fontSize: 10,
@@ -152,134 +157,129 @@ class _LineChartSample2State extends State<LineChartSample2> {
   //   return Text('${value.toStringAsFixed(2)}', style: style);
   // }
   Widget leftTitleWidgets(double value, TitleMeta meta) {
-  double? getMaxUsage(List<double?> usageList) {
-    return usageList
+    double? getMaxUsage(List<double?> usageList) {
+      return usageList
+          .where((usage) => usage != null)
+          .cast<double>()
+          .reduce((a, b) => a > b ? a : b);
+    }
+
+    double? maxUsage = getMaxUsage(dailyUsageMiB);
+    if (maxUsage == null) return Container(); // Handle null case
+
+    const style = TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 10,
+    );
+
+    String text;
+    switch (value.toInt()) {
+      case 0:
+        text = '0';
+        break;
+      case 2:
+        text = (2 * maxUsage / 10).toStringAsFixed(2);
+        break;
+      case 4:
+        text = (4 * maxUsage / 10).toStringAsFixed(2);
+        break;
+      case 6:
+        text = (6 * maxUsage / 10).toStringAsFixed(2);
+        break;
+      case 8:
+        text = (8 * maxUsage).toStringAsFixed(2);
+        break;
+      case 10:
+        text = (maxUsage).toStringAsFixed(2);
+        break;
+      default:
+        return Container();
+    }
+
+    return Text(
+      text,
+      style: style,
+      textAlign: TextAlign.left,
+    );
+  }
+
+  LineChartData mainData(List<NetworkUsageEntity> usage) {
+    final spots = dailyUsageMiB
+        .asMap()
+        .entries
+        .map((entry) => FlSpot(entry.key.toDouble(), entry.value ?? 0.0))
+        .toList();
+
+    print('spots: $spots');
+
+    double? maxUsage = dailyUsageMiB
         .where((usage) => usage != null)
         .cast<double>()
         .reduce((a, b) => a > b ? a : b);
-  }
 
-  double? maxUsage = getMaxUsage(dailyUsageMiB);
-  if (maxUsage == null) return Container(); // Handle null case
+    print('maxUsage: $maxUsage');
 
-  const style = TextStyle(
-    fontWeight: FontWeight.bold,
-    fontSize: 10,
-  );
-
-  String text;
-  switch (value.toInt()) {
-    case 0:
-      text = '0';
-      break;
-    case 2:
-      text = (2*maxUsage / 10).toStringAsFixed(2);
-      break;
-    case 4:
-      text = (4*maxUsage / 10).toStringAsFixed(2);
-      break;
-    case 6:
-      text = (6 * maxUsage / 10).toStringAsFixed(2);
-      break;
-      case 8:
-      text = (8* maxUsage ).toStringAsFixed(2);
-      break;
-     case 10:
-      text = (maxUsage ).toStringAsFixed(2);
-      break;
-    default:
-      return Container();
-  }
-
-  return Text(
-    text,
-    style: style,
-    
-    textAlign: TextAlign.left,
-  );
-}
-
-
-  LineChartData mainData(List<NetworkUsageEntity> usage) {
-  final spots = dailyUsageMiB
-      .asMap()
-      .entries
-      .map((entry) => FlSpot(entry.key.toDouble(), entry.value ?? 0.0))
-      .toList();
-
-      print('spots: $spots');
-
-  double? maxUsage = dailyUsageMiB
-      .where((usage) => usage != null)
-      .cast<double>()
-      .reduce((a, b) => a > b ? a : b);
-
-      print('maxUsage: $maxUsage');
-
-  return LineChartData(
-    gridData: const FlGridData(
-      show: true,
-      drawVerticalLine: true,
-      horizontalInterval: 1,
-      verticalInterval: 1,
-    ),
-    titlesData: FlTitlesData(
-      show: true,
-      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-      bottomTitles: AxisTitles(
-        sideTitles: SideTitles(
-          showTitles: true,
-          reservedSize: 50,
-          interval: 1,
-          getTitlesWidget: bottomTitleWidgets,
-        ),
+    return LineChartData(
+      gridData: const FlGridData(
+        show: true,
+        drawVerticalLine: true,
+        horizontalInterval: 1,
+        verticalInterval: 1,
       ),
-      leftTitles: AxisTitles(
-        sideTitles: SideTitles(
-          showTitles: true,
-          interval: 1,
-          getTitlesWidget: leftTitleWidgets,
-          reservedSize: 42,
+      titlesData: FlTitlesData(
+        show: true,
+        rightTitles:
+            const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 50,
+            interval: 1,
+            getTitlesWidget: bottomTitleWidgets,
+          ),
         ),
-        axisNameWidget: const Text(
-                  'MiB',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 8
-                  ),
-                ),
-      ),
-    ),
-    borderData: FlBorderData(
-        show: true, border: Border.all(color: const Color(0xff37434d))),
-    minX: 0,
-    maxX: (dailyUsageMiB.length - 1).toDouble(),
-    minY: 0,
-    maxY:10, // Set maxY to maxUsage
-    lineBarsData: [
-      LineChartBarData(
-        spots: spots,
-        isCurved: true,
-        gradient: LinearGradient(colors: gradientColors),
-        barWidth: 5,
-        isStrokeCapRound: true,
-        dotData: const FlDotData(show: false),
-        belowBarData: BarAreaData(
-          show: true,
-          gradient: LinearGradient(
-            colors: gradientColors
-                .map((color) => color.withOpacity(0.3))
-                .toList(),
+        leftTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            interval: 1,
+            getTitlesWidget: leftTitleWidgets,
+            reservedSize: 42,
+          ),
+          axisNameWidget: const Text(
+            'MiB',
+            style: TextStyle(color: Colors.white, fontSize: 8),
           ),
         ),
       ),
-    ],
-  );
-}
+      borderData: FlBorderData(
+          show: true, border: Border.all(color: const Color(0xff37434d))),
+      minX: 0,
+      maxX: (dailyUsageMiB.length - 1).toDouble(),
+      minY: 0,
+      maxY: 10, // Set maxY to maxUsage
+      lineBarsData: [
+        LineChartBarData(
+          spots: spots,
+          isCurved: true,
+          gradient: LinearGradient(colors: gradientColors),
+          barWidth: 5,
+          isStrokeCapRound: true,
+          dotData: const FlDotData(show: false),
+          belowBarData: BarAreaData(
+            show: true,
+            gradient: LinearGradient(
+              colors: gradientColors
+                  .map((color) => color.withOpacity(0.3))
+                  .toList(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
-
-  LineChartData avgData( List<NetworkUsageEntity> usage) {
+  LineChartData avgData(List<NetworkUsageEntity> usage) {
     final averageUsage = dailyUsageMiB
             .where((e) => e != null)
             .map((e) => e!)

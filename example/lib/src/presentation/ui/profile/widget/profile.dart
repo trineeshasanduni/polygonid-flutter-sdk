@@ -218,7 +218,7 @@ class _MyProfileState extends State<MyProfile> {
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => EditProfilePage(),
+            builder: (context) => EditProfilePage(did: widget.did),
           ),
         );
       },

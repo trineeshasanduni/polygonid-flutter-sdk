@@ -229,12 +229,17 @@ void addPlansDependencies() {
 
 void profileDependencies() {
   getIt.registerFactory(() => ProfileBloc(
-        getIt(),
+        getIt(),getIt(),getIt(),getIt(),getIt(),getIt()
 
       ));
 
   // Use cases
   getIt.registerLazySingleton(() =>ProfileUsecase(getIt()));
+  getIt.registerLazySingleton(() =>VerifyEmailUsecase(getIt()));
+  getIt.registerLazySingleton(() =>UpdateVerifyEmailUsecase(getIt()));
+  getIt.registerLazySingleton(() =>GetVerifyEmailUsecase(getIt()));
+  getIt.registerLazySingleton(() =>VerifyTelUsecase(getIt()));
+  getIt.registerLazySingleton(() =>ValidateOTPUsecase(getIt()));
 
 
 
