@@ -603,33 +603,33 @@ void _initActivityLogs() {
                               ]))
                         ],
                       ),
-                      // subtitle: Padding(
-                      //   padding: const EdgeInsets.only(top: 20.0),
-                      //   child: Container(
-                      //     decoration: BoxDecoration(
-                      //         // color: Theme.of(context).secondaryHeaderColor.withOpacity(0.8),
-                      //         borderRadius: BorderRadius.circular(20),
-                      //         border: Border.all(
-                      //             color: Theme.of(context).colorScheme.secondary,
-                      //             width: 1)),
-                      //     child: Column(
-                      //       children: !isConnected
-                      //           ? [
-                      //               W3MNetworkSelectButton(service: _w3mService),
-                      //               W3MConnectWalletButton(service: _w3mService),
-                      //             ]
-                      //           : [
-                      //               W3MAccountButton(
-                      //                 service: _w3mService,
-                      //               ),
-                      //               W3MConnectWalletButton(service: _w3mService,
+                      subtitle:!isConnected? Padding(
+                        padding: const EdgeInsets.only(top: 20.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                  color: Theme.of(context).colorScheme.secondary,
+                                  width: 1)),
+                          child: Column(
+                            children: !isConnected
+                                ? [
+                                    W3MNetworkSelectButton(service: _w3mService),
+                                    W3MConnectWalletButton(service: _w3mService,),
+                                  ]
+                                : [
+                                    W3MAccountButton(
+                                      service: _w3mService,
+                                    ),
+                                    W3MConnectWalletButton(service: _w3mService,
                                     
-                      //               ),
-                      //               // Text(WalletAddress.toString()),
-                      //             ],
-                      //     ),
-                      //   ),
-                      // ),
+                                    ),
+                                    // Text(WalletAddress.toString()),
+                                  ],
+                          ),
+                        ),
+                      ):null,
                       trailing: Container(
                         width: 30,
                         height: 30,
