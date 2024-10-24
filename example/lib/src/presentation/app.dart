@@ -5,6 +5,7 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/route
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard_bloc/dashboard_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/download_bloc/download_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/file_bloc/file_bloc.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/bloc/home_id_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/login/bloc/login_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/profile/bloc/profile_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/bloc/register_bloc.dart';
@@ -23,6 +24,7 @@ class App extends StatefulWidget {
 class AppState extends State<App> {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   late final RegisterBloc _registerBloc;
+  // late final HomeIdBloc _homeIdBloc;
   late final LoginBloc _loginBloc;
   late final FileBloc _fileBloc;
   late final DownloadBloc _downloadBloc;
@@ -36,6 +38,9 @@ class AppState extends State<App> {
         BlocProvider<LoginBloc>(
           create: (context) => _loginBloc,
         ),
+        //  BlocProvider<HomeIdBloc>(
+        //   create: (context) => _homeIdBloc,
+        // ),
         BlocProvider<RegisterBloc>(
           create: (context) => _registerBloc,
         ),

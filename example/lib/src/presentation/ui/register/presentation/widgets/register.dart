@@ -387,10 +387,16 @@ class _SignupState extends State<Signup> {
                       _errorMessage = null;
                       // Defer navigation until after the current frame
                       WidgetsBinding.instance.addPostFrameCallback((_) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SetupPasswordScreen(),
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (context) => const SetupPasswordScreen(),
+                        //   ),
+                        // );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Successfully Registered'),
+                            backgroundColor: Colors.green,
                           ),
                         );
                       });
@@ -596,7 +602,7 @@ class _SignupState extends State<Signup> {
             return GestureDetector(
               onTap: () {
                 if (!loading) {
-                  _registerBloc.add(clickScanQrCode());
+                  _registerBloc.add(clickRegisterScanQrCode());
                 }
               },
               // style: CustomButtonStyle.primaryButtonStyle,

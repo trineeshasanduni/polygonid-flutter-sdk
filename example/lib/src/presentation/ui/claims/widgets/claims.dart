@@ -71,11 +71,11 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 24),
-                    _buildTitle(),
-                    const SizedBox(height: 6),
-                    _buildDescription(),
-                    const SizedBox(height: 6),
+                    // const SizedBox(height: 24),
+                    // _buildTitle(),
+                    // const SizedBox(height: 6),
+                    // _buildDescription(),
+                    // const SizedBox(height: 6),
                     _buildError(),
                     const SizedBox(height: 24),
                     _buildClaimList(),
@@ -259,7 +259,7 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
                   List<ClaimModel> claimsInCategory = entry.value;
 
                   return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       _buildCategoryHeader(categoryName),
                       Column(

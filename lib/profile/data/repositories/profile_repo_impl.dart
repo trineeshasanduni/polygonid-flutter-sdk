@@ -21,178 +21,161 @@ class ProfileRepoImpl implements ProfileRepository {
   ProfileRepoImpl({required this.profileRemoteDatasource});
 
   @override
-Future<Either<Failure, ActivityEntity>> activityLogs({
-  required String did,
-}) async {
-  try {
-    // Fetching the activity logs from remote datasource
-    ActivityModel activityModel = await profileRemoteDatasource.activityLogs(
-      did: did,
-    );
+  Future<Either<Failure, ActivityEntity>> activityLogs({
+    required String did,
+  }) async {
+    try {
+      // Fetching the activity logs from remote datasource
+      ActivityModel activityModel = await profileRemoteDatasource.activityLogs(
+        did: did,
+      );
 
-    // Check if groupedLogs is not null
-    if (activityModel.groupedLogs != null) {
-      // Map all the grouped logs
-      List<GroupedLogs> groupedLogsList = activityModel.groupedLogs!.map((group) {
-        return GroupedLogs(
-          logs: group.logs!.map((log) {
-            // Mapping each log
-            return Logs(
-              did: log.did!,
-              id: log.id!,
-              name: log.name!,
-              data: log.data!,
-              level: log.level!,
-              traceId: log.traceId!,
-              timestamp: Timestamp(
-                seconds: log.timestamp!.seconds!,
-                nanos: log.timestamp!.nanos!,
-              ),
-              humanReadableTimestamp: log.humanReadableTimestamp!,
-            );
-          }).toList(), // Convert the logs to a list
-        );
-      }).toList(); // Convert the grouped logs to a list
+      // Check if groupedLogs is not null
+      if (activityModel.groupedLogs != null) {
+        // Map all the grouped logs
+        List<GroupedLogs> groupedLogsList =
+            activityModel.groupedLogs!.map((group) {
+          return GroupedLogs(
+            logs: group.logs!.map((log) {
+              // Mapping each log
+              return Logs(
+                did: log.did!,
+                id: log.id!,
+                name: log.name!,
+                data: log.data!,
+                level: log.level!,
+                traceId: log.traceId!,
+                timestamp: Timestamp(
+                  seconds: log.timestamp!.seconds!,
+                  nanos: log.timestamp!.nanos!,
+                ),
+                humanReadableTimestamp: log.humanReadableTimestamp!,
+              );
+            }).toList(), // Convert the logs to a list
+          );
+        }).toList(); // Convert the grouped logs to a list
 
-      // Return the mapped ActivityEntity
-      return right(ActivityEntity(groupedLogs: groupedLogsList));
-    } else {
-      return left(Failure('No grouped logs found'));
+        // Return the mapped ActivityEntity
+        return right(ActivityEntity(groupedLogs: groupedLogsList));
+      } else {
+        return left(Failure('No grouped logs found'));
+      }
+    } catch (error) {
+      // Return failure if there's an exception
+      return left(Failure('Failed to retrieve logs: $error'));
     }
-  } catch (error) {
-    // Return failure if there's an exception
-    return left(Failure('Failed to retrieve logs: $error'));
   }
-}
 
   @override
-Future<Either<Failure, verifyEmailEntity>> VerifyEmail({
-  required String Did,
-  required String UserEmail,
-}) async {
-  try {
-    // Fetching the activity logs from remote datasource
-    VerifyEmailModel verifyEmailModel = await profileRemoteDatasource.verifyEmail(
-      Did: Did,
-      UserEmail: UserEmail,
-    );
+  Future<Either<Failure, verifyEmailEntity>> VerifyEmail({
+    required String Did,
+    required String UserEmail,
+  }) async {
+    try {
+      // Fetching the activity logs from remote datasource
+      VerifyEmailModel verifyEmailModel =
+          await profileRemoteDatasource.verifyEmail(
+        Did: Did,
+        UserEmail: UserEmail,
+      );
 
-    // Check if groupedLogs is not null
-     return right(verifyEmailEntity());
-  } catch (error) {
-    // Return failure if there's an exception
-    return left(Failure('Failed to retrieve logs: $error'));
+      // Check if groupedLogs is not null
+      return right(verifyEmailEntity());
+    } catch (error) {
+      // Return failure if there's an exception
+      return left(Failure('Failed to retrieve logs: $error'));
+    }
   }
-}
 
-@override
-Future<Either<Failure, verifyEmailEntity>> updateVerifyEmail({
-  required String Did,
-  required String UserEmail,
-  required String Token,  
-}) async {
-  try {
-    // Fetching the activity logs from remote datasource
-    VerifyEmailModel verifyEmailModel = await profileRemoteDatasource.updateVerifyEmail(
-      Did: Did,
-      UserEmail: UserEmail,
-      Token: Token,
-    );
+  @override
+  Future<Either<Failure, verifyEmailEntity>> updateVerifyEmail({
+    required String Did,
+    required String UserEmail,
+    required String Token,
+  }) async {
+    try {
+      // Fetching the activity logs from remote datasource
+      VerifyEmailModel verifyEmailModel =
+          await profileRemoteDatasource.updateVerifyEmail(
+        Did: Did,
+        UserEmail: UserEmail,
+        Token: Token,
+      );
 
-    // Check if groupedLogs is not null
-     return right(verifyEmailEntity(
-       
-     ));
-  } catch (error) {
-    // Return failure if there's an exception
-    return left(Failure('Failed to retrieve logs: $error'));
+      // Check if groupedLogs is not null
+      return right(verifyEmailEntity());
+    } catch (error) {
+      // Return failure if there's an exception
+      return left(Failure('Failed to retrieve logs: $error'));
+    }
   }
-}
 
-@override
-Future<Either<Failure, GetEmailEntity>> getEmailVerify({
-  required String Did,
-   
-}) async {
-  try {
-    // Fetching the activity logs from remote datasource
-    GetEmailModel verifyEmailModel = await profileRemoteDatasource.getEmailVerify(
-      did: Did,
-    
-    );
+  @override
+  Future<Either<Failure, GetEmailEntity>> getEmailVerify({
+    required String Did,
+  }) async {
+    try {
+      // Fetching the activity logs from remote datasource
+      GetEmailModel verifyEmailModel =
+          await profileRemoteDatasource.getEmailVerify(
+        did: Did,
+      );
       print('verify email response: ${verifyEmailModel.isVerified}');
 
-    // Check if groupedLogs is not null
-     return right(GetEmailEntity(
-      
-       
+      // Check if groupedLogs is not null
+      return right(GetEmailEntity(
         userEmail: verifyEmailModel.userEmail,
         isVerified: verifyEmailModel.isVerified,
-       
-    
-
-       
-     ));
-  } catch (error) {
-    // Return failure if there's an exception
-    return left(Failure('Failed to retrieve logs: $error'));
+      ));
+    } catch (error) {
+      // Return failure if there's an exception
+      return left(Failure('Failed to retrieve logs: $error'));
+    }
   }
-}
-
 
 ///////////////////////////////verify phone number///////////////////
-///
-@override
-Future<Either<Failure, VerifyTelEntity>> VerifyTel({
-  required String DID,
-  required String Mobile,
-}) async {
-  try {
-    // Fetching the activity logs from remote datasource
-    VerifyTelModel verifyEmailModel = await profileRemoteDatasource.verifyTel(
-      DID: DID,
-      Mobile: Mobile
-      
-    );
+  ///
+  @override
+  Future<Either<Failure, VerifyTelEntity>> VerifyTel({
+    required String DID,
+    required String Mobile,
+  }) async {
+    try {
+      // Fetching the activity logs from remote datasource
+      VerifyTelModel verifyEmailModel =
+          await profileRemoteDatasource.verifyTel(DID: DID, Mobile: Mobile);
 
-    // Check if groupedLogs is not null
-     return right(VerifyTelEntity());
-  } catch (error) {
-    // Return failure if there's an exception
-    return left(Failure('Failed to retrieve logs: $error'));
+      // Check if groupedLogs is not null
+      return right(VerifyTelEntity());
+    } catch (error) {
+      // Return failure if there's an exception
+      return left(Failure('Failed to retrieve logs: $error'));
+    }
   }
-}
 
-@override
-Future<Either<Failure, ValidateOTPEntity>> validateOTP({
-  required String DID,
-  required String OTP,
-}) async {
-  try {
-    // Fetching the activity logs from remote datasource
-    ValidateOTPModel validateOTPModel = await profileRemoteDatasource.validateOTP(
-      DID: DID,
-      OTP: OTP
-      
-    );
+  @override
+  Future<Either<Failure, ValidateOTPEntity>> validateOTP({
+    required String DID,
+    required String OTP,
+  }) async {
+    try {
+      // Fetching the activity logs from remote datasource
+      ValidateOTPModel validateOTPModel =
+          await profileRemoteDatasource.validateOTP(DID: DID, OTP: OTP);
 
-    // Check if groupedLogs is not null
-     return right(ValidateOTPEntity(
-      validate: validateOTPModel.validate
-     ));
-  } catch (error) {
-    // Return failure if there's an exception
-    return left(Failure('Failed to retrieve logs: $error'));
+      // Check if groupedLogs is not null
+      return right(ValidateOTPEntity(validate: validateOTPModel.validate));
+    } catch (error) {
+      // Return failure if there's an exception
+      return left(Failure('Failed to retrieve logs: $error'));
+    }
   }
-}
-
-
 
 //////////////////////////update profile//////////////////////////
-///
-@override
-Future<Either<Failure, UpdateProfileEntity>> updateUserProfile({
-  required String OwnerDid,
+  ///
+  @override
+  Future<Either<Failure, UpdateProfileEntity>> updateUserProfile({
+    required String OwnerDid,
     required String OwnerEmail,
     required String FirstName,
     required String LastName,
@@ -209,46 +192,85 @@ Future<Either<Failure, UpdateProfileEntity>> updateUserProfile({
     required String State,
     required String AddressLine1,
     required String AddressLine2,
-}) async {
-  try {
-    // Fetching the activity logs from remote datasource
-    UpdateProfileModel updateProfileModel = await profileRemoteDatasource.updateUserProfile(
-      OwnerDid: OwnerDid,
-      OwnerEmail : OwnerEmail,
-      FirstName :FirstName,
-      LastName :LastName,
-      Country :Country,
-      PhoneNumber :PhoneNumber,
-      AccountType :AccountType,
-      CompanyName :CompanyName,
-      CompanyRegno :CompanyRegno,
-      City :City,
-      PostalCode :PostalCode,
-      CountryCode :CountryCode,
-      Description :Description,
-      Street :Street,
-      State :State,
-      AddressLine1 :AddressLine1,
-      AddressLine2 :AddressLine2
-      
+    // required int ProfileImage,
+    required String OwnerAddress,
+  }) async {
+    try {
+      // Fetching the activity logs from remote datasource
+      UpdateProfileModel updateProfileModel =
+          await profileRemoteDatasource.updateUserProfile(
+              OwnerDid: OwnerDid,
+              OwnerEmail: OwnerEmail,
+              FirstName: FirstName,
+              LastName: LastName,
+              Country: Country,
+              PhoneNumber: PhoneNumber,
+              AccountType: AccountType,
+              CompanyName: CompanyName,
+              CompanyRegno: CompanyRegno,
+              City: City,
+              PostalCode: PostalCode,
+              CountryCode: CountryCode,
+              Description: Description,
+              Street: Street,
+              State: State,
+              AddressLine1: AddressLine1,
+              AddressLine2: AddressLine2,
+              // ProfileImage: ProfileImage,
+              OwnerAddress: OwnerAddress);
 
-      
-    );
-
-    // Check if groupedLogs is not null
-     return right(UpdateProfileEntity(
-      ownerDid: updateProfileModel.ownerDid,
-      firstName: updateProfileModel.firstName
-
-
-      
-     )
-     );
-  } catch (error) {
-    // Return failure if there's an exception
-    return left(Failure('Failed to retrieve logs: $error'));
+      // Check if groupedLogs is not null
+      return right(UpdateProfileEntity(
+          ownerDid: updateProfileModel.ownerDid,
+          firstName: updateProfileModel.firstName,
+          lastName: updateProfileModel.lastName,
+          country: updateProfileModel.country,
+          phoneNumber: updateProfileModel.phoneNumber,
+          accountType: updateProfileModel.accountType,
+          companyName: updateProfileModel.companyName,
+          companyRegno: updateProfileModel.companyRegno,
+          city: updateProfileModel.city,
+          postalCode: updateProfileModel.postalCode,
+          countryCode: updateProfileModel.countryCode,
+          description: updateProfileModel.description,
+          state: updateProfileModel.state,
+          addressLine1: updateProfileModel.addressLine1,
+          addressLine2: updateProfileModel.addressLine2));
+    } catch (error) {
+      // Return failure if there's an exception
+      return left(Failure('Failed to retrieve logs: $error'));
+    }
   }
-}
 
-  
+  @override
+  Future<Either<Failure, UpdateProfileEntity>> getUpdateProfile(
+      {required String Did, required String OwnerAddress}) async {
+    try {
+      // Fetching the activity logs from remote datasource
+      UpdateProfileModel updateProfileModel = await profileRemoteDatasource
+          .getUpdateProfile(did: Did, OwnerAddress: OwnerAddress);
+      print('verify email response: ${updateProfileModel.ownerDid}');
+
+      // Check if groupedLogs is not null
+      return right(UpdateProfileEntity(
+          ownerDid: updateProfileModel.ownerDid,
+          firstName: updateProfileModel.firstName,
+          lastName: updateProfileModel.lastName,
+          country: updateProfileModel.country,
+          phoneNumber: updateProfileModel.phoneNumber,
+          accountType: updateProfileModel.accountType,
+          companyName: updateProfileModel.companyName,
+          companyRegno: updateProfileModel.companyRegno,
+          city: updateProfileModel.city,
+          postalCode: updateProfileModel.postalCode,
+          countryCode: updateProfileModel.countryCode,
+          description: updateProfileModel.description,
+          state: updateProfileModel.state,
+          addressLine1: updateProfileModel.addressLine1,
+          addressLine2: updateProfileModel.addressLine2));
+    } catch (error) {
+      // Return failure if there's an exception
+      return left(Failure('Failed to retrieve logs: $error'));
+    }
+  }
 }

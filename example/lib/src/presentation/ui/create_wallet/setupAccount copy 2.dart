@@ -8,7 +8,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/common/widgets/circularProgress.dart';
-import 'package:polygonid_flutter_sdk_example/src/presentation/ui/create_wallet/loading.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/create_wallet/widget/glassEffect.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_event.dart';
@@ -121,8 +120,8 @@ class _SetUpScreenState extends State<SetUpScreen>
               ? _buildCreateIdentityButton(enabled)
               : Column(
                   children: [
-                    // _buildCreateIdentityButton(enabled),
-                    // SizedBox(height: 10),
+                    _buildRemoveIdentityButton(enabled),
+                    SizedBox(height: 10),
                     _buildHaveIdentityButton(enabled),
                   ],
                 );
@@ -139,8 +138,7 @@ class _SetUpScreenState extends State<SetUpScreen>
            // Set the flag for creating identity
           print('Creating identity...');
         _bloc.add(const HomeEvent.createIdentity());
-        // isCreatingIdentity = true;
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const LoadingPage()));
+        isCreatingIdentity = true;
         },
         key: CustomWidgetsKeys.homeScreenButtonCreateIdentity, // Unique Key
         child: FrostedGlassBox(
@@ -153,18 +151,18 @@ class _SetUpScreenState extends State<SetUpScreen>
             bloc: _bloc,
 
             builder: (context, state) {
-              // if (state is LoadedIdentifierHomeState) {
+              if (state is LoadedIdentifierHomeState && isCreatingIdentity) {
                 
-              //   WidgetsBinding.instance.addPostFrameCallback((_) {
-              //     Navigator.push(
-              //       context,
-              //       MaterialPageRoute(
-              //         builder: (context) => const SetupPasswordScreen(),
-              //       ),
-              //     );
-              //   });
-              //   // isCreatingIdentity = false; 
-              // }
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SetupPasswordScreen(),
+                    ),
+                  );
+                });
+                isCreatingIdentity = false; 
+              }
 
               return Text(
                 'Create New DID',
@@ -183,8 +181,6 @@ class _SetUpScreenState extends State<SetUpScreen>
       ),
     );
   }
-
-  
 
   Widget _buildRemoveIdentityButton(bool enabled) {
     return AbsorbPointer(

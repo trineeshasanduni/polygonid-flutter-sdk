@@ -65,6 +65,16 @@ final class freeSpaceEvent extends AddPlansEvent {
   });
 }
 
+final class planPriceEvent extends AddPlansEvent {
+  final String plan;
+  final int month;
+
+  const planPriceEvent( {
+    required this.plan,
+    required this.month,
+  });
+}
+
 
 
 

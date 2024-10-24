@@ -54,6 +54,13 @@ abstract class ProfileRemoteDatasource {
     required String State,
     required String AddressLine1,
     required String AddressLine2,
+    // required int ProfileImage,
+    required String OwnerAddress,
+  });
+
+  Future<UpdateProfileModel> getUpdateProfile({
+    required String did,
+    required String OwnerAddress,
   });
   
   

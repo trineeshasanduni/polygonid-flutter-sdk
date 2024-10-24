@@ -1,16 +1,21 @@
 import 'dart:convert';
 import 'dart:ffi';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:polygonid_flutter_sdk_example/src/data/secure_storage.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/common/widgets/circularProgress.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/bloc/add_plans_bloc.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/widget/basicPlanButton.dart';
 import 'package:polygonid_flutter_sdk_example/utils/deploayContract.dart';
 import 'package:polygonid_flutter_sdk_example/utils/image_resource.dart';
 import 'package:polygonid_flutter_sdk_example/utils/secure_storage_keys.dart';
@@ -18,6 +23,7 @@ import 'package:web3modal_flutter/web3modal_flutter.dart';
 
 class AddPlans extends StatefulWidget {
   final String? did;
+  // final bool isBlureffect;
   const AddPlans({super.key, required this.did});
 
   @override
@@ -40,23 +46,79 @@ class _AddPlansState extends State<AddPlans> {
   final _invoiceAbiPath = 'assets/abi/BethelInvoice.json';
 
   final _InvoidContractAddress = '0xB05c8A8c54DDA3E4e785FD033AB63a50e09b9521';
+
+  final _contractAddress1 =
+      EthereumAddress.fromHex('0x6B7Cd2b0863e9e80b425566fEbBe15309Bb1803d');
+
+  final _senderAddress =
+      EthereumAddress.fromHex('0x4534f51a912faf5dc3b799b1230ff33e8ea4f0ba');
+
+  final _mainAddress =
+      EthereumAddress.fromHex('0xe107bFe5623c95fA97Aa45bd259Da6e0cB590350');
+
+  // final _tokenAddress = '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063';
   // Variable to track verification status
   bool _isVerified = false;
   String _displayText = "Initial Text";
 
   bool _isFreePlanActivated = false;
+  late W3MService _w3mService;
+
+  final _becx = W3MChainInfo(
+    chainName: 'Polygon Mainnet',
+    chainId: '137',
+    namespace: 'eip155:137',
+    tokenName: 'BECX',
+    rpcUrl:
+        'https://polygon-mainnet.g.alchemy.com/v2/pHKWzuctaLCPxAKYc0c8bKQA8d85oPlk',
+    blockExplorer: W3MBlockExplorer(
+      name: 'polygonscan',
+      url: 'https://polygonscan.com/',
+    ),
+  );
 
   @override
   void initState() {
     super.initState();
     _deployPlans();
+    _initWalletService();
     _addPlansBloc = getIt<AddPlansBloc>();
     GetStorage.init();
 
     // Retrieve saved verification status from storage
     final storage = GetStorage();
     _isVerified = storage.read('isVerified') ?? false;
+
+    // _initW3MService();
   }
+
+  void _initWalletService() async {
+    W3MChainPresets.chains.putIfAbsent(_becx.chainId, () => _becx);
+    _w3mService = W3MService(
+      projectId: 'fe65e1d4350f3699c3aa913768035e39',
+      metadata: const PairingMetadata(
+        name: 'Web3Modal Flutter Example',
+        description: 'Web3Modal Flutter Example',
+        url: 'https://www.walletconnect.com/',
+        icons: ['https://walletconnect.com/walletconnect-logo.png'],
+        redirect: Redirect(
+          native: 'w3m://',
+          universal: 'https://www.walletconnect.com',
+        ),
+      ),
+    );
+    await _w3mService.init();
+
+    final WalletAddress14 = _w3mService.session?.address;
+
+    print('walletAddress123: $WalletAddress14');
+    print('walletAddress plan: ${_w3mService.session?.address}');
+  }
+
+// For making API calls
+
+  Future<void> sendBecxToken(String privateKey, String tokenAddress,
+      String mainWalletAddress, String becxAmount) async {}
 
   Future<void> _deployPlans() async {
     final fileStorageService =
@@ -115,30 +177,35 @@ class _AddPlansState extends State<AddPlans> {
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
       body: SafeArea(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            // SizedBox(height: 10),
-            // Text('Plans',
-            // style: TextStyle(
-            //   color: Theme.of(context).secondaryHeaderColor,
-            //   fontSize: 20,
-            //   fontFamily: GoogleFonts.robotoMono().fontFamily,
-            //   fontWeight: FontWeight.w300,
-            // )),
-            SizedBox(height: 10),
-            Expanded(
-              // Only use Expanded here for the TabBarView
-              child: DefaultTabController(
-                length: 4,
-                child: _buildTabView(),
-              ),
+        child: Stack(children: [
+          LiquidPullToRefresh(
+            color: Theme.of(context).colorScheme.primary,
+            onRefresh: _onRefresh,
+            animSpeedFactor: 2.0,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                _buildHeader(),
+                SizedBox(height: 10),
+                Expanded(
+                  // Only use Expanded here for the TabBarView
+                  child: DefaultTabController(
+                    length: 4,
+                    child: _buildTabView(),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ]),
       ),
     );
+  }
+
+  Future<void> _onRefresh() async {
+    print("Refreshing data...");
+    await _deployPlans(); // Call the initialization logic again
+    await Future.delayed(Duration(seconds: 2)); // Simulate a network call
   }
 
   Widget _buildTabView() {
@@ -196,6 +263,7 @@ class _AddPlansState extends State<AddPlans> {
                 'ADD 0\$ PER MONTH',
                 'assets/images/paperPlane.png'),
             SizedBox(height: 20),
+
             _buildAnimatedContainer(
               isExpanded2,
               "Starter Plan",
@@ -214,9 +282,34 @@ class _AddPlansState extends State<AddPlans> {
                 'Blockchain-Based Secure',
                 'Decentralized Data Protection'
               ],
-              'ADD 10\$',
+              'ADD 10\$ Per Month',
               'assets/images/rocket2.png',
             ),
+            // Basicplanbutton(
+            //   month: 1,
+            //   isExpanded: isExpanded2,
+            //   title: "Starter Plan",
+            //   subtitle: "10\$",
+            //   onTap: () {
+            //     setState(() {
+            //       isExpanded2 = !isExpanded2;
+            //     });
+            //   },
+            //   description:
+            //       'Perfect for those managing large files or extensive data, ensuring your information is stored safely.',
+            //   features: [
+            //     'Unlimited Uploads',
+            //     'Upto 1000GB storage space',
+            //     'Hack-Proof',
+            //     'ZKP Protected',
+            //     'Blockchain-Based Secure',
+            //     'Decentralized Data Protection'
+            //   ],
+            //   name1: 'ADD 10\$ Per Month',
+            //   icon: 'assets/images/rocket2.png',
+            //   isFreePlanActivated: _isFreePlanActivated,
+            //   // addPlansBloc: _addPlansBloc,
+            // ),
             SizedBox(height: 20),
             _buildAnimatedContainer(isExpanded3, "Advance Plan", "30\$", () {
               setState(() {
@@ -455,13 +548,13 @@ class _AddPlansState extends State<AddPlans> {
           print('createProof input: ${state.ProofResponse.input}');
 
           _addPlansBloc.add(verifyuserEvent(
-                      A: state.ProofResponse.a as List<String>,
-                      B: state.ProofResponse.b as List<List<String>>,
-                      C: state.ProofResponse.c as List<String>,
-                      Inputs: state.ProofResponse.input as List<String>,
-                      Owner: owner1,
-                      Did: widget.did!, // change here
-                    ));
+            A: state.ProofResponse.a as List<String>,
+            B: state.ProofResponse.b as List<List<String>>,
+            C: state.ProofResponse.c as List<String>,
+            Inputs: state.ProofResponse.input as List<String>,
+            Owner: owner1,
+            Did: widget.did!, // change here
+          ));
           // return Center(
           //   child: Column(
           //     mainAxisAlignment: MainAxisAlignment.center,
@@ -619,6 +712,190 @@ class _AddPlansState extends State<AddPlans> {
     );
   }
 
+  Widget _buildPlan(String name, int month, String plan) {
+    // print('tap tap');
+    return BlocBuilder<AddPlansBloc, AddPlansState>(
+      bloc: _addPlansBloc,
+      builder: (context, state) {
+        final storage = GetStorage();
+        final owner1 = storage.read('walletAddress');
+
+        if (state is PriceLoading) {
+          return Center(
+            // child: Loading(
+            //   Loadingcolor: Theme.of(context).primaryColor,
+            //   color: Theme.of(context).colorScheme.secondary,
+            // ),
+            child: Text(state.message,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.secondary,
+                  fontSize: 14,
+                )),
+          );
+        }
+
+        if (state is PlanPriceFailure) {
+          return const Center(
+            child: Text('Failed to Fetch Price',
+                style: TextStyle(color: Colors.red)),
+          );
+        }
+
+        if (state is PriceUpdated) {
+          final price = {jsonDecode(state.priceResponse.price.toString())};
+
+          print('price11: ${jsonDecode(state.priceResponse.price.toString())}');
+
+          transferToken(jsonDecode(state.priceResponse.price.toString()));
+        }
+
+        return Center(
+          child: TextButton(
+            onPressed:
+                // _isFreePlanActivated
+                //     ? null // Disable the button when the plan is already activated
+                //     :
+                () {
+              // _initW3MService();
+              // Add the event when the button is pressed
+              _addPlansBloc.add(planPriceEvent(plan: plan, month: month));
+            },
+            child: _buildButton(
+              name,
+              Theme.of(context).colorScheme.secondary,
+              Theme.of(context).primaryColor,
+              Theme.of(context).primaryColor,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> transferToken(double price) async {
+    // Format the value to wei as BigInt
+    BigInt _formatValue(double amount, {int decimals = 18}) {
+      return BigInt.from(amount * BigInt.from(10).pow(decimals).toDouble());
+    }
+
+    final transferValue = _formatValue(price, decimals: 18);
+    print('Transferring amount: $transferValue wei');
+
+    try {
+      print('Fetching Web3Modal service...');
+      // Launch the connected wallet
+      _w3mService.launchConnectedWallet();
+
+      // Load ABI only once if possible (move out if it's reusable)
+      final abiFile = await rootBundle.loadString('assets/abi/BethToken.json');
+      if (abiFile.isEmpty) throw FormatException('ABI file is empty');
+
+      final jsonAbi = jsonDecode(abiFile);
+      final _abiCode =
+          ContractAbi.fromJson(jsonEncode(jsonAbi['abi']), 'BethToken');
+      final _contract = DeployedContract(_abiCode, _contractAddress1);
+      print('Contract loaded: $_contract');
+
+      // Perform the approve operation
+      final approveSuccess = await _performApprove(_contract, transferValue);
+      print('approveSuccess: $approveSuccess');
+      if (!approveSuccess) return;
+
+      // Perform the transfer if approve was successful
+      final transferSuccess = await _performTransfer(_contract, transferValue);
+      _handleTransactionResult(transferSuccess);
+    } catch (e) {
+      _handleError(e);
+    }
+  }
+
+// Approve the transfer
+  Future<bool> _performApprove(DeployedContract contract, BigInt value) async {
+    print('Executing approve function...');
+    try {
+      final approveResult = await _w3mService.requestWriteContract(
+        topic: _w3mService.session?.topic.toString() ?? '',
+        chainId: "eip155:137",
+        deployedContract: contract,
+        functionName: 'approve',
+        transaction: Transaction(
+          from: EthereumAddress.fromHex(_w3mService.session?.address ?? ''),
+        ),
+        parameters: [_mainAddress, value],
+      );
+      print('Approve successful: $approveResult');
+      return await _checkTxHash(approveResult.toString());
+    } catch (e) {
+      print('Approve failed: $e');
+      return false;
+    }
+  }
+
+// Execute the transfer
+  Future<bool> _performTransfer(DeployedContract contract, BigInt value) async {
+    print('Executing transfer function...');
+    try {
+      final transferResult = await _w3mService.requestWriteContract(
+        topic: _w3mService.session?.topic.toString() ?? '',
+        chainId: "eip155:137",
+        deployedContract: contract,
+        functionName: 'transfer',
+        transaction: Transaction(
+          from: EthereumAddress.fromHex(_w3mService.session?.address ?? ''),
+        ),
+        parameters: [_mainAddress, value],
+      );
+      print('Transfer successful: $transferResult');
+      return await _checkTxHash(transferResult.toString());
+    } catch (e) {
+      print('Transfer failed: $e');
+      return false;
+    }
+  }
+
+// Handle transaction result (either success or failure)
+  void _handleTransactionResult(bool isSuccess) {
+    final snackBar = SnackBar(
+      content: Text(
+        isSuccess ? 'Transaction successful' : 'Transaction failed',
+        style: TextStyle(color: isSuccess ? Colors.green : Colors.red),
+      ),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+// Handle transaction errors
+  void _handleError(Object error) {
+    if (error.toString().contains('User denied transaction signature')) {
+      print('Transaction signature denied by the user.');
+    } else {
+      print('Error during transfer: $error');
+    }
+  }
+
+  Future<bool> _checkTxHash(String txHash) async {
+    bool isSuccess = false;
+
+    // Add logic to check the transaction status here.
+    // For example, calling a blockchain API to check the status of the txHash.
+
+    while (!isSuccess) {
+      // Call your blockchain transaction check method
+      // Example: checkTransaction(txHash) which returns true/false
+      isSuccess = await isTransactionSuccessful(txHash);
+
+      if (isSuccess) {
+        print('Transaction successful with hash: $txHash');
+        // Dispatch the event to create proof after the transaction is successful
+        return true;
+      } else {
+        print('Transaction is not yet successful. Retrying...');
+        await Future.delayed(Duration(seconds: 5)); // Poll every 5 seconds
+      }
+    }
+    return false;
+  }
+
   // Async function to check if the transaction hash is successful
   Future<void> _checkTxHashStatus(String txHash, String owner) async {
     bool isSuccess = false;
@@ -757,7 +1034,12 @@ class _AddPlansState extends State<AddPlans> {
         ],
       ),
       trailing: GestureDetector(
-        onTap: _deployPlans,
+        // onTap: _deployPlans,
+        onTap: () => sendBecxToken(
+            '',
+            '0x6B7Cd2b0863e9e80b425566fEbBe15309Bb1803d',
+            '0x6515703199f08aF2595D034eaE3749D37E124550',
+            '1'),
         child: Container(
           width: 30,
           height: 30,
@@ -997,15 +1279,9 @@ class _AddPlansState extends State<AddPlans> {
                       if (title == "Basic Plan") ...[
                         _buildAddPlan(name1),
                       ],
-                      // if (title == "Starter Plan") ...[
-                      //   _buildAddPlan(name1),
-                      // ],
-
-                      // _addSpaceBloc.add(freeSpaceEvent(
-                      //   owner: owner1,
-                      //   did: widget.did.toString(),
-                      // ));
-                      // }),
+                      if (title == "Starter Plan") ...[
+                        _buildPlan(name1, 1, "MONTH_1_STARTER"),
+                      ],
                     ],
                   ],
                 ),

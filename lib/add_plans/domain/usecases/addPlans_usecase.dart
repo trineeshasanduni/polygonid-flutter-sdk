@@ -3,6 +3,7 @@ import 'dart:ffi';
 import 'package:fpdart/fpdart.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/entities/addPlans_entity.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/entities/freeSpace_entity.dart';
+import 'package:polygonid_flutter_sdk/add_plans/domain/entities/priceModel.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/repositories/addPlans_repository.dart';
 import 'package:polygonid_flutter_sdk/common/errors/server_failure.dart';
 import 'package:polygonid_flutter_sdk/common/usecase/usecase.dart';
@@ -35,6 +36,7 @@ class AddUserUsecase implements UseCase<AddPlansEntity, UseCaseParams> {
         Owner: params.owner);
   }
 }
+
 class CreateProofUsecase implements UseCase<AddPlansEntity, CreatProofParams> {
   final AddPlansRepository addPlansRepository;
   const CreateProofUsecase(this.addPlansRepository);
@@ -42,9 +44,7 @@ class CreateProofUsecase implements UseCase<AddPlansEntity, CreatProofParams> {
   Future<Either<Failure, AddPlansEntity>> call(CreatProofParams params) async {
     print('registering12: ${params.txhash}');
     return await addPlansRepository.createProof(
-        account: params.account,
-        txhash: params.txhash);
-        
+        account: params.account, txhash: params.txhash);
   }
 }
 
@@ -61,7 +61,6 @@ class VerifyUsecase implements UseCase<AddPlansEntity, VerifyParams> {
         Inputs: params.input,
         Owner: params.owner,
         Did: params.did);
-        
   }
 }
 
@@ -73,27 +72,41 @@ class FreeSpaceUsecase implements UseCase<FreeSpaceEntity, FreeSpaceParams> {
     print('registering1234: ${params.did}');
     print('registering12341: ${params.owner}');
     return await addSpaceRepository.freeSpace(
-        did: params.did,
-        owner: params.owner);
+        did: params.did, owner: params.owner);
   }
 }
 
-class FreeSpaceParams{
-  
-  final String did;
-  final String owner;
- 
-
-  FreeSpaceParams(
-      {required this.did,
-      required this.owner,
-     
-     });
+class PlanPriceUsecase implements UseCase<PriceEntity, PlanPriceParams> {
+  final AddPlansRepository addSpaceRepository;
+  const PlanPriceUsecase(this.addSpaceRepository);
+  @override
+  Future<Either<Failure, PriceEntity>> call(PlanPriceParams params) async {
+    print('plan 123: ${params.plan}');
+    print('plan month: ${params.month}');
+    return await addSpaceRepository.getPlanPrice(
+        plan: params.plan, month: params.month);
+  }
 }
 
+class PlanPriceParams {
+  final String plan;
+  final int month;
 
+  PlanPriceParams({
+    required this.plan,
+    required this.month,
+  });
+}
 
+class FreeSpaceParams {
+  final String did;
+  final String owner;
 
+  FreeSpaceParams({
+    required this.did,
+    required this.owner,
+  });
+}
 
 class UseCaseParams {
   final String did;
@@ -101,29 +114,25 @@ class UseCaseParams {
   final String nullifier;
   final String commitment;
 
-  UseCaseParams(
-      {required this.did,
-      required this.owner,
-      required this.nullifier,
-      required this.commitment,
-     });
+  UseCaseParams({
+    required this.did,
+    required this.owner,
+    required this.nullifier,
+    required this.commitment,
+  });
 }
 
-class CreatProofParams{
-  
+class CreatProofParams {
   final String account;
   final String txhash;
 
-
   CreatProofParams({
-    
     required this.account,
     required this.txhash,
   });
 }
 
-class VerifyParams{
-  
+class VerifyParams {
   final List<String> a;
   final List<List<String>> b;
   final List<String> c;

@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:polygonid_flutter_sdk/dashboard/data/dataSources/networkUsage_remote_dataSource.dart';
 import 'package:polygonid_flutter_sdk/dashboard/data/models/networkUsageModel.dart';
 
+import '../../models/networkUsageModel.dart';
+
 class NetworkRemoteDatasourceImpl implements NetworkRemoteDatasource {
   final http.Client client;
 

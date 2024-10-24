@@ -15,6 +15,7 @@ class UpdateProfileModel {
   String? state;
   String? addressLine1;
   String? addressLine2;
+  String? Street; 
 
   UpdateProfileModel(
       {this.ownerDid,
@@ -32,7 +33,8 @@ class UpdateProfileModel {
       this.description,
       this.state,
       this.addressLine1,
-      this.addressLine2});
+      this.addressLine2,
+      this.Street});
 
   UpdateProfileModel.fromJson(Map<String, dynamic> json) {
     ownerDid = json['OwnerDid'];
@@ -51,6 +53,7 @@ class UpdateProfileModel {
     state = json['State'];
     addressLine1 = json['AddressLine1'];
     addressLine2 = json['AddressLine2'];
+    Street = json['Street'];
   }
 
   Map<String, dynamic> toJson() {
@@ -71,6 +74,7 @@ class UpdateProfileModel {
     data['State'] = this.state;
     data['AddressLine1'] = this.addressLine1;
     data['AddressLine2'] = this.addressLine2;
+    data['Street'] = this.Street;
     return data;
   }
 }

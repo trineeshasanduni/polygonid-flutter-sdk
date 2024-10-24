@@ -177,43 +177,121 @@ class VerifyTelParams {
 
 ///////////////////////////////update user profile//////////////////
 
-// class UpdateProfileUsecase
-//     implements UseCase<UpdateProfileEntity, UpdateProfileParam> {
-//   final ProfileRepository profileRepository;
-//   const UpdateProfileUsecase(this.profileRepository);
+class UpdateProfileUsecase
+    implements UseCase<UpdateProfileEntity, UpdateProfileParam> {
+  final ProfileRepository profileRepository;
+  const UpdateProfileUsecase(this.profileRepository);
 
-//   @override
-//   Future<Either<Failure, UpdateProfileEntity>> call(
-//       UpdateProfileParam params) async {
-//     print('registering12: ${params.OwnerEmail}');
-//     return await profileRepository.updateUserProfile(
-//       OwnerDid: params.OwnerDid,
-//       OwnerEmail: params.OwnerEmail,
-//       FirstName: params.FirstName,
-//       LastName: params.LastName,
+  @override
+  Future<Either<Failure, UpdateProfileEntity>> call(
+      UpdateProfileParam params) async {
+    print('registering12: ${params.OwnerEmail}');
+    return await profileRepository.updateUserProfile(
+      OwnerDid: params.OwnerDid,
+      OwnerEmail: params.OwnerEmail,
+      FirstName: params.FirstName,
+      LastName: params.LastName,
+      City: params.City,
+      Country: params.Country,
+      AddressLine1: params.AddressLine1,
+      AddressLine2: params.AddressLine2,
+      PostalCode: params.PostalCode,
+      PhoneNumber:params.PhoneNumber,
+      AccountType: params.AccountType,
+      CompanyName: params.CompanyName,
+      CompanyRegno: params.CompanyRegno,
+      CountryCode: params.CountryCode,
+      Description: params.Description,
+      Street: params.Street,
+      State: params.State,
+      // ProfileImage: params.ProfileImage,
+      OwnerAddress: params.OwnerAddress,
 
       
-      
-      
-//     );
-//   }
-// }
+    );
+  }
+}
 
-// class UpdateProfileParam {
-//   final String OwnerDid;
-//   final String OwnerEmail;
-//   final String FirstName;
-//   final String LastName;
+class GetUpdateProfileUsecase
+    implements UseCase<UpdateProfileEntity, GetUpdateProfileParams> {
+  final ProfileRepository profileRepository;
+  const GetUpdateProfileUsecase(this.profileRepository);
+
+  @override
+  Future<Either<Failure, UpdateProfileEntity>> call(
+      GetUpdateProfileParams params) async {
+    print('registering12: ${params.Did}');
+    return await profileRepository.getUpdateProfile(
+      Did: params.Did,
+      OwnerAddress: params.OwnerAddress,
+      
+
+    );
+  }
+}
+
+class GetUpdateProfileParams {
+  final String Did;
+  final String OwnerAddress;
+
+
+  GetUpdateProfileParams({
+    required this.Did,
+    required this.OwnerAddress,
+  
+  });
+}
+
+class UpdateProfileParam {
+  final String OwnerDid;
+  final String OwnerEmail;
+  final String FirstName;
+  final String LastName;
+  final String City;
+  final String Country;
+  final String AddressLine1;
+  final String AddressLine2;
+  final String PostalCode;
+  final String PhoneNumber;
+  final String CountryCode;
+  final String Description;
+  final String Street;
+  final String State;
+  final String AccountType;
+  final String CompanyRegno;
+  final String CompanyName;
+  // final int ProfileImage;
+  final String OwnerAddress;
+
   
 
-//   UpdateProfileParam({
-//     required this.OwnerDid,
-//     required this.OwnerEmail,
-//     required this.FirstName,
-//     required this.LastName
-//   });
+  
+
+  UpdateProfileParam({
+    required this.OwnerDid,
+    required this.OwnerEmail,
+    required this.FirstName,
+    required this.LastName,
+    required this.City,
+    required this.Country,
+    required this.AddressLine1,
+    required this.AddressLine2,
+    required this.PostalCode,
+    required this.PhoneNumber,
+    required this.CountryCode,
+    required this.Description,
+    required this.Street,
+    required this.State,
+    required this.AccountType,
+    required this.CompanyName,
+    required this.CompanyRegno,
+    // required this.ProfileImage,
+    required this.OwnerAddress,
+
+
+  });
 
 
 
   
-// }
+}

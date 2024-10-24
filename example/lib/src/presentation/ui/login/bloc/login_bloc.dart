@@ -37,7 +37,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       this.statusUsecase)
       : super(LoginInitial()) {
     on<LoginWithCredentials>((event, emit) async {
-      emit(LoginLoading());
+      emit(LoginLoading('Starting login'));
       final failureOrLogins = await loginDone();
       failureOrLogins.fold((failure) => emit(LoginFailure(failure.toString())),
           (login) => emit(LoginSuccess(login)));
@@ -55,7 +55,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
   ///
   Future<void> _handleLoginStatus(onGetStatusEvent event, Emitter<LoginState> emit) async {
-  emit(LoginLoading());
+  emit(LoginLoading('Authenticating'));
 
   final status = await statusUsecase(UseCaseParams(sessionId: event.sessionId));
   print('status get: $status');
@@ -117,7 +117,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     required String privateKey,
     required Emitter<LoginState> emit,
   }) async {
-    emit(LoginLoading());
+    emit(LoginLoading('Authenticating user '));
 
     final ChainConfigEntity currentChain =
         await _polygonIdSdk.getSelectedChain();

@@ -47,6 +47,7 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dash
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/download_bloc/download_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/file_bloc/file_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/share_bloc/share_bloc.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/bloc/home_id_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/login/bloc/login_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/bloc/add_plans_bloc.dart';
@@ -83,6 +84,7 @@ Future<void> init() async {
   ShareDependencies();
   profileDependencies();
   networkUsageDependencies();
+  // HomeIdDependencies();
   _initGetit();
 }
 
@@ -193,6 +195,10 @@ void DownloadDependencies() {
   getIt.registerLazySingleton(() => DownloadUsecase(getIt()));
 }
 
+// void HomeIdDependencies() {
+//   getIt.registerFactory(() => HomeIdBloc(getIt()));
+// }
+
 void ShareDependencies() {
   getIt.registerFactory(() => ShareBloc(getIt(), getIt(), getIt(), getIt(), getIt()));
 
@@ -209,6 +215,7 @@ void addPlansDependencies() {
         getIt(),
         getIt(),
         getIt(),
+        getIt(),
       ));
 
   // Use cases
@@ -217,6 +224,7 @@ void addPlansDependencies() {
   getIt.registerLazySingleton(() => CreateProofUsecase(getIt()));
   getIt.registerLazySingleton(() => VerifyUsecase(getIt()));
   getIt.registerLazySingleton(() => FreeSpaceUsecase(getIt()));
+  getIt.registerLazySingleton(() => PlanPriceUsecase(getIt()));
 
   // // Repositories
   getIt.registerLazySingleton<AddPlansRepository>(
@@ -229,7 +237,7 @@ void addPlansDependencies() {
 
 void profileDependencies() {
   getIt.registerFactory(() => ProfileBloc(
-        getIt(),getIt(),getIt(),getIt(),getIt(),getIt()
+        getIt(),getIt(),getIt(),getIt(),getIt(),getIt(),getIt(),getIt()
 
       ));
 
@@ -240,6 +248,8 @@ void profileDependencies() {
   getIt.registerLazySingleton(() =>GetVerifyEmailUsecase(getIt()));
   getIt.registerLazySingleton(() =>VerifyTelUsecase(getIt()));
   getIt.registerLazySingleton(() =>ValidateOTPUsecase(getIt()));
+  getIt.registerLazySingleton(() =>UpdateProfileUsecase(getIt()));
+  getIt.registerLazySingleton(() =>GetUpdateProfileUsecase(getIt()));
 
 
 

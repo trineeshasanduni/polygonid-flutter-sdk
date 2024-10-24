@@ -4,8 +4,10 @@ import 'package:fpdart/fpdart.dart';
 import 'package:polygonid_flutter_sdk/add_plans/data/dataSources/remote/addPlans_remote_datasource_impl.dart';
 import 'package:polygonid_flutter_sdk/add_plans/data/model/addPlans_model.dart';
 import 'package:polygonid_flutter_sdk/add_plans/data/model/freeSpace_model.dart';
+import 'package:polygonid_flutter_sdk/add_plans/data/model/priceModel.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/entities/addPlans_entity.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/entities/freeSpace_entity.dart';
+import 'package:polygonid_flutter_sdk/add_plans/domain/entities/priceModel.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/repositories/addPlans_repository.dart';
 import 'package:polygonid_flutter_sdk/common/errors/server_failure.dart';
 // import 'package:polygonid_flutter_sdk/login/data/dataSources/login_remote_datasource.dart';
@@ -120,6 +122,24 @@ class AddplansRepositoryImpl implements AddPlansRepository {
 
       return right(FreeSpaceEntity(
         TXHash : addSpaceModel.TXHash,
+      ));
+    } catch (e) {
+      return Left(Failure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, PriceEntity>> getPlanPrice(
+      {required String plan, required int month}) async {
+    try {
+      final PriceModel priceModel =
+          await addPlansRemoteDatasource.getPlanPrice(
+        Plan: plan,
+        Month: month,
+      );
+
+      return right(PriceEntity(
+        price : priceModel.price,
       ));
     } catch (e) {
       return Left(Failure());

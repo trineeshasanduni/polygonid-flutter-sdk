@@ -44,7 +44,8 @@ class FileData {
 
 class Files extends StatefulWidget {
   final String? did;
-  const Files({super.key, required this.did});
+  final bool isBlureffect;
+  const Files({super.key, required this.did, required this.isBlureffect});
 
   @override
   State<Files> createState() => _FilesState();
@@ -86,6 +87,7 @@ class _FilesState extends State<Files> {
   String _fileCount = '0';
   String _fileUsage = '0MiB';
   bool isLoading = false;
+  var _isBlureffect = false;
 
   @override
   void initState() {
@@ -644,20 +646,31 @@ class _FilesState extends State<Files> {
               }
             },
             builder: (context, state) {
-              return Column(
+              return Stack(
                 children: [
-                  _buildHeader(),
-                  const SizedBox(height: 10),
-                  _buildFileSelectionButton(),
-                  const SizedBox(height: 20),
-                  DefaultTabController(
-                      length: 2,
-                      animationDuration: const Duration(milliseconds: 500),
-                      child: _buildTabView()),
-                  // _buildFileList(),
-                  const SizedBox(height: 20),
-                  _fileUpoading(),
-                  const SizedBox(height: 20),
+                  Column(
+                    children: [
+                      _buildHeader(),
+                      const SizedBox(height: 10),
+                      _buildFileSelectionButton(),
+                      const SizedBox(height: 20),
+                      DefaultTabController(
+                          length: 2,
+                          animationDuration: const Duration(milliseconds: 500),
+                          child: _buildTabView()),
+                      // _buildFileList(),
+                      const SizedBox(height: 20),
+                      _fileUpoading(),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                  if (widget.isBlureffect) // Replace with a condition when you want the blur effect
+            BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+              child: Container(
+                color: Colors.black.withOpacity(0.1), // Optional dark overlay
+              ),
+            ),
                 ],
               );
             },
@@ -863,8 +876,7 @@ class _FilesState extends State<Files> {
                                     fileData.fileHash,
                                     fileData.fileName),
                               ),
-                             
-                              
+
                               // SizedBox(width: 10),
                             ],
                           ),
@@ -1074,9 +1086,10 @@ class _FilesState extends State<Files> {
                                     batch_hash: batchHash,
                                   ));
                                 },
-                                child: TransperantButton(text:'Share',
-                                width: MediaQuery.of(context).size.width / 4)),
-                                  
+                                child: TransperantButton(
+                                    text: 'Share',
+                                    width:
+                                        MediaQuery.of(context).size.width / 4)),
                           );
                         },
                       ),
@@ -1091,7 +1104,6 @@ class _FilesState extends State<Files> {
       },
     );
   }
-
 
   Future<void> _showDownloadUrl(BuildContext context, Uri url) async {
     showModalBottomSheet(
@@ -1125,10 +1137,6 @@ class _FilesState extends State<Files> {
               top: 16,
             ),
             child: Column(
-              mainAxisSize:
-                  MainAxisSize.min, // Minimize height based on content
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Center(
                   child: Container(
@@ -1144,31 +1152,37 @@ class _FilesState extends State<Files> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                Column(
+                  mainAxisSize:
+                      MainAxisSize.min, // Minimize height based on content
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Text(
-                      'Now You can Download File',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).secondaryHeaderColor,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Now You can Download File',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).secondaryHeaderColor,
+                          ),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 20),
+                    GestureDetector(
+                        onTap: () => setState(() {
+                              launchUrl(url,
+                                  mode: LaunchMode.externalApplication);
+                            }),
+                        child: TransperantButton(
+                            text: 'Click here to Download File',
+                            width: MediaQuery.of(context).size.width)),
+                    const SizedBox(height: 20),
                   ],
                 ),
-                const SizedBox(height: 20),
-                GestureDetector(
-                    onTap: () => setState(() {
-                          launchUrl(url, mode: LaunchMode.externalApplication);
-                        }),
-                    child: TransperantButton(
-                        text: 'Click here to Download File',
-                        width: MediaQuery.of(context).size.width
-                        
-                       
-                       )),
-                const SizedBox(height: 20),
               ],
             ),
           ),
@@ -1177,19 +1191,7 @@ class _FilesState extends State<Files> {
     );
   }
 
-  void _showCountdownSnackbar(BuildContext context, int remainingTime) {
-    // Clear existing snackbar before showing a new one
-    ScaffoldMessenger.of(context).clearSnackBars();
-
-    // Show snackbar with the remaining time
-    final snackBar = SnackBar(
-      content: Text('State will reset in $remainingTime seconds.'),
-      duration: Duration(seconds: 1), // Snackbar will be visible for 1 second
-    );
-
-    // Show the snackbar
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-  }
+  
 
   Widget _buildurlLink(String url) {
     return GestureDetector(
@@ -1236,7 +1238,7 @@ class _FilesState extends State<Files> {
           });
         }
         if (filestate is VerifiedClaims && filestate.batchhash == batchHash) {
-          // _showSnackbar('File id Verified successfully:',
+          // _showSnackbar('File is Verified successfully:',
           //     Theme.of(context).colorScheme.secondary);
           // _buildFileList(true);
           isVerified = true;
@@ -1407,26 +1409,7 @@ class _FilesState extends State<Files> {
             // _fileBloc.add(ResetFileStateEvent());
           });
 
-          // Start a 30-second timer
-          // int remainingTime = 15; // 30 seconds countdown
-          // Timer? countdownTimer;
-          // WidgetsBinding.instance.addPostFrameCallback((_) {
-          //   // Show countdown UI (e.g., Snackbar)
-          //   _showCountdownSnackbar(context, remainingTime);
-          // });
-          // // Timer for updating the countdown every second
-          // countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-          //   remainingTime--;
-          //   if (remainingTime > 0) {
-          //     // Update countdown UI
-          //     _showCountdownSnackbar(context, remainingTime);
-          //   } else {
-          //     // Timer is finished, reset the states
-          //     _downloadBloc.add(ResetDownloadStateEvent());
-          //     _fileBloc.add(ResetFileStateEvent());
-          //     countdownTimer?.cancel(); // Stop the timer
-          //   }
-          // });
+          
           // Show download URL after URL is ready
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             await _showDownloadUrl(context, downloadLink);

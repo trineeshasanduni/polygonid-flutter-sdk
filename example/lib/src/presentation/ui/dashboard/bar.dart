@@ -91,6 +91,41 @@ class _LineChartSample2State extends State<LineChartSample2> {
 
             return Stack(
               children: <Widget>[
+                Positioned(
+                  right: 8,
+                  child: GestureDetector(
+                    onTap: () {
+                      print('tap 1');
+                      _initActivityLogs();
+                    },
+                    child: Container(
+                      height: 32,
+                      width: 92,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Text('Avg',
+                            //     style: TextStyle(
+                            //         color: Theme.of(context).colorScheme.background,
+                            //         fontSize: 12,
+                            //         fontFamily: GoogleFonts.robotoMono().fontFamily,
+                            //         fontWeight: FontWeight.w300)),
+                            Icon(
+                              Icons.refresh,
+                              color: Theme.of(context).colorScheme.background,
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 AspectRatio(
                   aspectRatio: 1.50,
                   child: Padding(
@@ -172,35 +207,7 @@ class _LineChartSample2State extends State<LineChartSample2> {
       fontSize: 10,
     );
 
-    String text;
-    switch (value.toInt()) {
-      case 0:
-        text = '0';
-        break;
-      case 2:
-        text = (2 * maxUsage / 10).toStringAsFixed(2);
-        break;
-      case 4:
-        text = (4 * maxUsage / 10).toStringAsFixed(2);
-        break;
-      case 6:
-        text = (6 * maxUsage / 10).toStringAsFixed(2);
-        break;
-      case 8:
-        text = (8 * maxUsage).toStringAsFixed(2);
-        break;
-      case 10:
-        text = (maxUsage).toStringAsFixed(2);
-        break;
-      default:
-        return Container();
-    }
-
-    return Text(
-      text,
-      style: style,
-      textAlign: TextAlign.left,
-    );
+    return Text('${value.toStringAsFixed(2)}', style: style);
   }
 
   LineChartData mainData(List<NetworkUsageEntity> usage) {

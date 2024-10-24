@@ -61,6 +61,15 @@ abstract class ProfileRepository {
     required String State,
     required String AddressLine1,
     required String AddressLine2,
+    // required int ProfileImage,
+    required String OwnerAddress,
+    
+  });
+
+  Future<Either<Failure, UpdateProfileEntity>> getUpdateProfile({
+    required String Did,
+    required String OwnerAddress,
+  
     
   });
   }

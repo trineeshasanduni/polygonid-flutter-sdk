@@ -90,6 +90,18 @@ final class Validate extends ProfileState {
   const Validate(this.otp);
 }
 
+final class ProfileUpdated extends ProfileState {
+  final UpdateProfileEntity profile;
+
+  const ProfileUpdated(this.profile);
+}
+
+final class DataUpdated extends ProfileState {
+  final UpdateProfileEntity profile;
+
+  const DataUpdated(this.profile);
+}
+
 
 
 

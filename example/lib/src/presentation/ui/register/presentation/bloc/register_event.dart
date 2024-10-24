@@ -59,7 +59,7 @@ final class onClickClaim extends RegisterEvent {
   onClickClaim(this.claimModel);
 }
 
-final class clickScanQrCode extends RegisterEvent {}
+final class clickRegisterScanQrCode extends RegisterEvent {}
 
 final class OnScanQrCodeResponse extends RegisterEvent {
   final String? response;

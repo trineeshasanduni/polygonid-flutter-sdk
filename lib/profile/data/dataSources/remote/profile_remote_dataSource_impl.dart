@@ -258,6 +258,8 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
     required String State,
     required String AddressLine1,
     required String AddressLine2,
+    // required int ProfileImage,
+    required String OwnerAddress,
   }) async {
     print('update profile');
     try {
@@ -278,10 +280,12 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
         "Street": Street,
         "State": State,
         "AddressLine1": AddressLine1,
-        "AddressLine2": AddressLine2
+        "AddressLine2": AddressLine2,
+        // "ProfileImage": ProfileImage,
+        "OwnerAddress": OwnerAddress
       };
       // Define the URI for the use-space API endpoint
-      final uri = Uri.parse('$BASE_URL/otp-validate');
+      final uri = Uri.parse('$BASE_URL/update-user-profile');
 
       // Make the POST request with the proper headers and body
       final response = await client.put(
@@ -289,11 +293,12 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(data),
       );
-      print('data update profile: $data');
+      print('data update profile: ${response.body}');
 
       print('update profile status code: ${response.statusCode}');
       Map<String, dynamic> jsonResponse = jsonDecode(response.body);
       final responseProof = UpdateProfileModel.fromJson(jsonResponse);
+      print('jsonResponse: $responseProof');
       // final fileResponse = VerifyEmailModel(
 
       // );
@@ -307,6 +312,36 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
     } catch (error) {
       print('Error during update profile: $error');
       throw Exception('Failed to update profile');
+    }
+  }
+
+
+  @override
+  Future<UpdateProfileModel> getUpdateProfile({
+    required String did,
+    required String OwnerAddress,
+  }) async {
+    try {
+      final response = await client
+          .get(Uri.parse('$BASE_URL/get-user-profile?OwnerDid=$did&OwnerAddress=$OwnerAddress'));
+
+      print('get profile status1: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        print('fetch get profile status code: ${response.statusCode}');
+        final getProfile = jsonDecode(response.body);
+
+        print('isVerified: $getProfile');
+
+        final profileModel = UpdateProfileModel.fromJson(getProfile);
+        print("verified response: ${profileModel.toJson()}");
+        return profileModel;
+      } else {
+        throw Exception('Failed to load verified: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching verified: $e');
+      throw Exception('Failed to fetch verified');
     }
   }
 }

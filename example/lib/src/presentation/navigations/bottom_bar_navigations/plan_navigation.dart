@@ -3,6 +3,7 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/widget/a
 
 class PlanNav extends StatefulWidget {
   final String? did;
+  // final bool isBlureffect;
   const PlanNav({
     super.key,
     required this.did,

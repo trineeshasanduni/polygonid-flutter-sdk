@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -18,9 +20,10 @@ import 'package:polygonid_flutter_sdk_example/utils/custom_strings.dart';
 import 'package:polygonid_flutter_sdk_example/utils/image_resource.dart';
 
 class Credencials extends StatefulWidget {
+  final  bool isBlureffect;
     final ClaimsBloc _bloc;
 
-   Credencials({Key? key, })
+   Credencials({Key? key, required this.isBlureffect, })
   : _bloc = getIt<ClaimsBloc>(),
         super(key: key);
 
@@ -66,39 +69,49 @@ class _CredencialsState extends State<Credencials> {
     return Scaffold(
         backgroundColor: Theme.of(context).primaryColor,
         body: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: menuItems.length,
-                  itemBuilder: (context, index) {
-                    final item = menuItems[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: GestureDetector(
-                        onTap: () {
-                          // Pass the selected category to ClaimsScreen
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ClaimsScreen(category: item['category']!),
-                            ),
-                          );
-                        },
-                        child: Stack(
-                          children: [
-                            _buildBackgroundImage(item['image']!),
-                            _buildTextOverlay(item['title']!, item['subtitle']!),
-                          ],
+          child: Stack(
+            children:[ Column(
+              children: [
+                _buildHeader(),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: menuItems.length,
+                    itemBuilder: (context, index) {
+                      final item = menuItems[index];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: GestureDetector(
+                          onTap: () {
+                            // Pass the selected category to ClaimsScreen
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ClaimsScreen(category: item['category']!),
+                              ),
+                            );
+                          },
+                          child: Stack(
+                            children: [
+                              _buildBackgroundImage(item['image']!),
+                              _buildTextOverlay(item['title']!, item['subtitle']!),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
+                _buildBottomBar(),
+                _buildBlocListener(),
+              ],
+            ),
+            if (widget.isBlureffect)
+            BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+              child: Container(
+                color: Colors.black.withOpacity(0.1), // Optional dark overlay
               ),
-              _buildBottomBar(),
-              _buildBlocListener(),
+            ),
             ],
           ),
         ),

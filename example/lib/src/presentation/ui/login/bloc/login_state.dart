@@ -9,7 +9,11 @@ sealed class LoginState extends Equatable {
 
 final class LoginInitial extends LoginState {}
 
-final class LoginLoading extends LoginState {}
+final class LoginLoading extends LoginState {
+  final String message;
+
+  const LoginLoading(this.message);
+}
 
 final class LoginSuccess extends LoginState {
   final LoginEntity response;

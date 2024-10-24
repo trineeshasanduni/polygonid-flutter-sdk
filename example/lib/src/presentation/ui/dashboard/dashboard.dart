@@ -10,10 +10,12 @@ import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gradient_borders/box_borders/gradient_box_border.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'package:polygonid_flutter_sdk/identity/libs/bjj/eddsa_babyjub.dart';
 import 'package:polygonid_flutter_sdk_example/src/data/secure_storage.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/bethelBottomBar.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/plan_navigation.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/create_wallet/loading.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/bar.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/customCurveEdge.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard_bloc/dashboard_bloc.dart';
@@ -34,8 +36,9 @@ import 'package:http/http.dart' as http;
 
 class Dashboard extends StatefulWidget {
   final String? did;
+  final bool isBlureffect;
 
-  const Dashboard({super.key, required this.did});
+  const Dashboard({super.key, required this.did, required this.isBlureffect});
 
   @override
   State<Dashboard> createState() => _DashboardState();
@@ -60,9 +63,11 @@ class _DashboardState extends State<Dashboard> {
 
   final storage = const FlutterSecureStorage();
   var _isUserAdded = false;
-    late final DashboardBloc _dashboardBloc;
+  var _isBlureffect = false;
+  late final DashboardBloc _dashboardBloc;
 
-
+  String _fileCount = '0';
+  String _fileUsage = '0MiB';
 
   @override
   void initState() {
@@ -70,9 +75,8 @@ class _DashboardState extends State<Dashboard> {
     _initW3MService();
     _initializeData();
     _deployGetUderDid();
-      _dashboardBloc = getIt<DashboardBloc>();
+    _dashboardBloc = getIt<DashboardBloc>();
     _initActivityLogs();
-    
   }
 
   void _initW3MService() async {
@@ -92,6 +96,10 @@ class _DashboardState extends State<Dashboard> {
     await _w3mService.init();
 
     final WalletAddress = _w3mService.session?.address;
+    final topic = _w3mService.session?.topic;
+
+    print('topic123: $topic');
+
     print('walletAddress123: $WalletAddress');
     final storage = GetStorage();
     storage.write('walletAddress', WalletAddress);
@@ -106,7 +114,7 @@ class _DashboardState extends State<Dashboard> {
       print('timing');
       bool isConnect = await _w3mService.isConnected;
 
-      print("isMetaMaskConnected11: $isConnect");
+      print("isMetaMaskConnected12: $isConnect");
       setState(() {
         isConnected = isConnect;
       });
@@ -114,12 +122,40 @@ class _DashboardState extends State<Dashboard> {
         print('connected: $isConnected');
         // _showWelcomeDialog();
         _deployContract();
+        _isBlureffect = false;
       } else {
-        _showMetamaskBottomSheet();
+        print('not connected: $isConnected');
+        // _showMetamaskBottomSheet();
+        _isBlureffect = widget.isBlureffect;
         // _deployContract();
       }
     });
     // _loadButtons();
+  }
+
+  Future<void> _deployFileCount() async {
+    final fileStorageService =
+        FileStorageService(rpcUrl, _ContractAddress, _AbiPath);
+
+    try {
+      await fileStorageService.initializeWeb3Client();
+      final did = jsonDecode(widget.did.toString());
+      final contract = await fileStorageService.loadContract('FileStorage');
+      final result = await fileStorageService
+          .callContractFunction(contract, 'getTotalFilesCount', []);
+      print('result:${result![0]}');
+
+      final fileSizeInBytes = (result[1] as BigInt).toInt();
+      final fileSizeInMiB = fileSizeInBytes / (1024 * 1024);
+      print('${fileSizeInMiB.toStringAsFixed(2)} MiB');
+
+      setState(() {
+        _fileCount = result![0].toString();
+        _fileUsage = '${fileSizeInMiB.toStringAsFixed(2)}' + 'MiB';
+      });
+    } catch (e) {
+      print('An error occurred: $e');
+    }
   }
 
   Future<void> _deployContract() async {
@@ -155,9 +191,11 @@ class _DashboardState extends State<Dashboard> {
         // Check if the inner list is empty
         if (innerList.isEmpty) {
           print('The result contains an empty list');
-          _showWelcomeBottomSheet();
+          _isBlureffect = widget.isBlureffect;
+          // _showWelcomeBottomSheet();
         } else {
           print('The result contains a non-empty list: $innerList');
+          _isBlureffect = !widget.isBlureffect;
 
           // Normalize the wallet address (trim, and convert to lowercase for comparison)
           final normalizedWalletAddress = walletAddress1?.toLowerCase().trim();
@@ -169,11 +207,10 @@ class _DashboardState extends State<Dashboard> {
 
           if (addressFound) {
             print('Wallet address is in the list, no need to show alert');
-          
           } else {
             print('innerList does not contain walletAddress1');
             // Show the alert since walletAddress1 is not in the inner list
-            _showAddressDialog(innerList); // Pass the list of addresses
+            // _showAddressDialog(innerList); // Pass the list of addresses
           }
         }
       } else {
@@ -279,7 +316,6 @@ class _DashboardState extends State<Dashboard> {
                     }).toList(),
                   ),
                 ),
-               
                 const SizedBox(height: 20),
               ],
             ),
@@ -310,15 +346,14 @@ class _DashboardState extends State<Dashboard> {
       } else {
         _isUserAdded = false;
         print('free plan not activated');
-
       }
     } catch (e) {
       print('An error occurred: $e');
     }
   }
 
-  void _loadButtons() {
-    Column(
+  Widget _loadButtons() {
+    return Column(
       children: !isConnected
           ? [
               W3MNetworkSelectButton(service: _w3mService),
@@ -326,168 +361,174 @@ class _DashboardState extends State<Dashboard> {
             ]
           : [
               W3MAccountButton(service: _w3mService),
+              W3MConnectWalletButton(service: _w3mService),
+
               // Text(WalletAddress.toString()),
             ],
     );
   }
 
-void _showWelcomeBottomSheet() {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    backgroundColor: Colors.transparent,
-    builder: (BuildContext context) {
-      return Container(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height / 3,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color.fromARGB(255, 68, 91, 0),
-              Theme.of(context).primaryColor,
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+  void _showWelcomeBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height / 3,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 68, 91, 0),
+                Theme.of(context).primaryColor,
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 16,
-          right: 16,
-          top: 16,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: MediaQuery.of(context).size.width / 4,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Theme.of(context).secondaryHeaderColor.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(5),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: MediaQuery.of(context).size.width / 4,
+                height: 4,
+                decoration: BoxDecoration(
+                  color:
+                      Theme.of(context).secondaryHeaderColor.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                margin: const EdgeInsets.only(top: 5),
               ),
-              margin: const EdgeInsets.only(top: 5),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Welcome!',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                fontFamily: GoogleFonts.robotoMono().fontFamily,
+              const SizedBox(height: 20),
+              Text(
+                'Welcome!',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  fontFamily: GoogleFonts.robotoMono().fontFamily,
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'You have no active plans. \nPlease navigate to Add Plans Page',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                fontFamily: GoogleFonts.robotoMono().fontFamily,
+              const SizedBox(height: 10),
+              Text(
+                'You have no active plans. \nPlease navigate to Add Plans Page',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontFamily: GoogleFonts.robotoMono().fontFamily,
+                ),
               ),
-            ),
-            TextButton(
-              onPressed: () {
-                // Navigator.pop(context); // Close the bottom sheet first
-                PlanNav(did: widget.did,); // Navigate to PlanNav and push AddPlans
-              },
-              child: Text('Add Plans'),
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      );
-    },
-  );
-}
-
+              TextButton(
+                onPressed: () {
+                  // Navigator.pop(context); // Close the bottom sheet first
+                  PlanNav(
+                    did: widget.did,
+                    // isBlureffect: widget.isBlureffect,
+                  ); // Navigate to PlanNav and push AddPlans
+                },
+                child: Text('Add Plans'),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   void _showMetamaskBottomSheet() {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    backgroundColor: Colors.transparent, // Transparent for custom background styling
-    builder: (BuildContext context) {
-      return Container(
-        height: MediaQuery.of(context).size.height / 3,
-        width: MediaQuery.of(context).size.width,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color.fromARGB(255, 68, 91, 0),
-              Theme.of(context).primaryColor,
-            ], // Gradient background
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor:
+          Colors.transparent, // Transparent for custom background styling
+      builder: (BuildContext context) {
+        return Container(
+          height: MediaQuery.of(context).size.height / 3,
+          width: MediaQuery.of(context).size.width,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 68, 91, 0),
+                Theme.of(context).primaryColor,
+              ], // Gradient background
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 16,
-          right: 16,
-          top: 16,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Container(
-              width: MediaQuery.of(context).size.width / 4,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Theme.of(context).secondaryHeaderColor.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(5),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Container(
+                width: MediaQuery.of(context).size.width / 4,
+                height: 4,
+                decoration: BoxDecoration(
+                  color:
+                      Theme.of(context).secondaryHeaderColor.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                margin: const EdgeInsets.only(top: 5),
               ),
-              margin: const EdgeInsets.only(top: 5),
-            ),
-            const Text(
-              'Welcome to \nBethelZkp Storage!',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
+              const Text(
+                'Welcome to \nBethelZkp Storage!',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const Text(
-              'You have to connect with MetaMask .',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14),
-            ),
-            // Image.asset('assets/images/metamaskImg.png', width: 50, height: 50),
-            Column(
-                            children: !isConnected
-                                ? [
-                                    W3MNetworkSelectButton(service: _w3mService),
-                                    W3MConnectWalletButton(service: _w3mService),
-                                  ]
-                                : [
-                                    W3MAccountButton(
-                                      service: _w3mService,
-                                    ),
-                                    W3MConnectWalletButton(service: _w3mService,
-                                    
-                                    ),
-                                    // Text(WalletAddress.toString()),
-                                  ],
-                          ),
-            const SizedBox(height: 20),
-            
-          ],
-        ),
-      );
-    },
-  );
-}
+              const Text(
+                'You have to connect with MetaMask .',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14),
+              ),
+              // Image.asset('assets/images/metamaskImg.png', width: 50, height: 50),
+              Column(
+                children: !isConnected
+                    ? [
+                        W3MNetworkSelectButton(service: _w3mService),
+                        W3MConnectWalletButton(service: _w3mService),
+                      ]
+                    : [
+                        W3MAccountButton(
+                          service: _w3mService,
+                        ),
+                        W3MConnectWalletButton(
+                          service: _w3mService,
+                        ),
+                        // Text(WalletAddress.toString()),
+                      ],
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   Future<void> _initializeData() async {
     // Your initialization logic here (fetching data, etc.)
@@ -506,6 +547,7 @@ void _showWelcomeBottomSheet() {
 
     _initW3MService();
     _deployGetUderDid();
+    _deployFileCount();
 
     // Any other initialization logic...
   }
@@ -516,7 +558,7 @@ void _showWelcomeBottomSheet() {
     await Future.delayed(Duration(seconds: 2)); // Simulate a network call
   }
 
-void _initActivityLogs() {
+  void _initActivityLogs() {
     if (widget.did != null) {
       _dashboardBloc.add(networkUsageEvent(did: widget.did!));
     } else {
@@ -564,166 +606,200 @@ void _initActivityLogs() {
       const Color.fromARGB(255, 17, 148, 98),
       const Color(0xFF2CFFAE),
     ];
-    return  Scaffold(
-        backgroundColor: Theme.of(context).primaryColor,
-        body: SafeArea(
-          child: LiquidPullToRefresh(
-            color: Theme.of(context).colorScheme.primary,
-            onRefresh: _onRefresh,
-            animSpeedFactor: 2.0,
-            child: SingleChildScrollView(
-              child: SizedBox(
-                child: Column(
+    return Scaffold(
+      backgroundColor: Theme.of(context).primaryColor,
+      body: SafeArea(
+        child: LiquidPullToRefresh(
+          color: Theme.of(context).colorScheme.primary,
+          onRefresh: _onRefresh,
+          animSpeedFactor: 2.0,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                // TextFormField(
+                //   decoration: InputDecoration(
+                //     hintText: 'Search',
+                //     hintStyle: TextStyle(
+                //       color: Theme.of(context).colorScheme.secondary,
+                //     ),
+                //     prefixIcon: Icon(
+                //       Icons.search,
+                //       color: Theme.of(context).colorScheme.secondary,
+                //     ),
+                //     border: OutlineInputBorder(
+                //       borderRadius: BorderRadius.circular(20),
+                //       borderSide: BorderSide(
+                //         color: Theme.of(context).colorScheme.secondary,
+                //       ),
+                //     ),
+                //   ),
+                // ),
+                ListTile(
+                  title: Row(
+                    children: [
+                      Image.asset('assets/images/launcher_icon.png',
+                          width: 30, height: 30),
+                      RichText(
+                          text: TextSpan(
+                              text: 'zkp',
+                              style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
+                                  fontSize: 20,
+                                  fontFamily:
+                                      GoogleFonts.robotoMono().fontFamily,
+                                  fontWeight: FontWeight.w300),
+                              children: [
+                            TextSpan(
+                                text: 'STORAGE',
+                                style: TextStyle(
+                                    color:
+                                        Theme.of(context).secondaryHeaderColor,
+                                    fontSize: 20,
+                                    fontFamily:
+                                        GoogleFonts.robotoMono().fontFamily,
+                                    fontWeight: FontWeight.w300))
+                          ]))
+                    ],
+                  ),
+                  trailing: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      // color: Theme.of(context).colorScheme.primary,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: Theme.of(context).colorScheme.secondary,
+                          width: 1),
+                    ),
+                    child: GestureDetector(
+                      onTap: () {
+                        // _showWelcomeDialog();
+                        // _deployContract();
+                        // _showWelcomeBottomSheet();
+                        _showMetamaskBottomSheet();
+                      },
+                      child: Image.asset('assets/images/metamaskImg.png',
+                          width: 30, height: 30),
+                    ),
+                  ),
+                ),
+                Stack(
                   children: [
-                    ListTile(
-                      title: Row(
-                        children: [
-                          Image.asset('assets/images/launcher_icon.png',
-                              width: 30, height: 30),
-                          RichText(
-                              text: TextSpan(
-                                  text: 'zkp',
-                                  style: TextStyle(
-                                      color:
-                                          Theme.of(context).colorScheme.secondary,
-                                      fontSize: 20,
-                                      fontFamily:
-                                          GoogleFonts.robotoMono().fontFamily,
-                                      fontWeight: FontWeight.w300),
-                                  children: [
-                                TextSpan(
-                                    text: 'STORAGE',
-                                    style: TextStyle(
-                                        color: Theme.of(context)
-                                            .secondaryHeaderColor,
-                                        fontSize: 20,
-                                        fontFamily:
-                                            GoogleFonts.robotoMono().fontFamily,
-                                        fontWeight: FontWeight.w300))
-                              ]))
-                        ],
-                      ),
-                      // subtitle: Padding(
-                      //   padding: const EdgeInsets.only(top: 20.0),
-                      //   child: Container(
-                      //     decoration: BoxDecoration(
-                      //         // color: Theme.of(context).secondaryHeaderColor.withOpacity(0.8),
-                      //         borderRadius: BorderRadius.circular(20),
-                      //         border: Border.all(
-                      //             color: Theme.of(context).colorScheme.secondary,
-                      //             width: 1)),
-                      //     child: Column(
-                      //       children: !isConnected
-                      //           ? [
-                      //               W3MNetworkSelectButton(service: _w3mService),
-                      //               W3MConnectWalletButton(service: _w3mService),
-                      //             ]
-                      //           : [
-                      //               W3MAccountButton(
-                      //                 service: _w3mService,
-                      //               ),
-                      //               W3MConnectWalletButton(service: _w3mService,
-                                    
-                      //               ),
-                      //               // Text(WalletAddress.toString()),
-                      //             ],
-                      //     ),
-                      //   ),
-                      // ),
-                      trailing: Container(
-                        width: 30,
-                        height: 30,
-                        decoration: BoxDecoration(
-                          // color: Theme.of(context).colorScheme.primary,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                              color: Theme.of(context).colorScheme.secondary,
-                              width: 1),
-                        ),
-                        child: GestureDetector(
-                          onTap: () {
-                            // _showWelcomeDialog();
-                            // _deployContract();
-                            // _showWelcomeBottomSheet();
-                            _showMetamaskBottomSheet();
-                          },
-                          child: Image.asset('assets/images/metamaskImg.png',
-                              width: 30, height: 30),
-                          
-                        ),
-                      ),
-                    ),
-
-                    
-          
-                    ListTile(
-                      title: Text('My Storage',
-                          style: TextStyle(
-                              color: Theme.of(context)
-                                  .appBarTheme
-                                  .titleTextStyle
-                                  ?.color,
-                              fontSize: 12,
-                              fontFamily: GoogleFonts.robotoMono().fontFamily,
-                              fontWeight: FontWeight.w300)),
-                      trailing: GestureDetector(
-                        onTap: () =>{},
-                        child: Text('See all',
-                            style: TextStyle(
-                                color: Theme.of(context)
-                                    .secondaryHeaderColor
-                                    .withOpacity(0.3),
-                                fontSize: 10,
-                                fontFamily: GoogleFonts.robotoMono().fontFamily,
-                                fontWeight: FontWeight.w300)),
-                      ),
-                    ),
-                    _watchlist(),
-                    SizedBox(height: 30),
-                    _barChart(),
-                    SizedBox(height: 30),
-                    _recentUploads(),
-                    SizedBox(height: 30),
-                    // _pieChart(),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 20.0),
-                      child: PieChart(
-                        dataMap: dataMap,
-                        animationDuration: Duration(milliseconds: 800),
-                        chartLegendSpacing: 32,
-                        chartRadius: MediaQuery.of(context).size.width / 3.2,
-                        colorList: colorList,
-                        initialAngleInDegree: 0,
-                        chartType: ChartType.ring,
-                        ringStrokeWidth: 32,
-                        centerText: "Storage",
-                        legendOptions: LegendOptions(
-                          showLegendsInRow: false,
-                          legendPosition: LegendPosition.right,
-                          showLegends: true,
-                          // legendShape: _BoxShape.circle,
-                          legendTextStyle: TextStyle(
-                            fontWeight: FontWeight.bold,
+                    Column(
+                      children: [
+                        ListTile(
+                          title: Text('My Storage',
+                              style: TextStyle(
+                                  color: Theme.of(context)
+                                      .appBarTheme
+                                      .titleTextStyle
+                                      ?.color,
+                                  fontSize: 12,
+                                  fontFamily:
+                                      GoogleFonts.robotoMono().fontFamily,
+                                  fontWeight: FontWeight.w300)),
+                          trailing: GestureDetector(
+                            onTap: () => {},
+                            child: Text('See all',
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .secondaryHeaderColor
+                                        .withOpacity(0.3),
+                                    fontSize: 10,
+                                    fontFamily:
+                                        GoogleFonts.robotoMono().fontFamily,
+                                    fontWeight: FontWeight.w300)),
                           ),
                         ),
-                        chartValuesOptions: ChartValuesOptions(
-                          showChartValueBackground: true,
-                          showChartValues: true,
-                          showChartValuesInPercentage: false,
-                          showChartValuesOutside: false,
-                          decimalPlaces: 1,
+                        _watchlist(),
+                        SizedBox(height: 30),
+                        _barChart(),
+                        SizedBox(height: 30),
+                        _recentUploads(),
+                        SizedBox(height: 30),
+                        // _pieChart(),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 20.0),
+                          child: PieChart(
+                            dataMap: dataMap,
+                            animationDuration: Duration(milliseconds: 800),
+                            chartLegendSpacing: 32,
+                            chartRadius:
+                                MediaQuery.of(context).size.width / 3.2,
+                            colorList: colorList,
+                            initialAngleInDegree: 0,
+                            chartType: ChartType.ring,
+                            ringStrokeWidth: 32,
+                            centerText: "Storage",
+                            legendOptions: LegendOptions(
+                              showLegendsInRow: false,
+                              legendPosition: LegendPosition.right,
+                              showLegends: true,
+                              // legendShape: _BoxShape.circle,
+                              legendTextStyle: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            chartValuesOptions: ChartValuesOptions(
+                              showChartValueBackground: true,
+                              showChartValues: true,
+                              showChartValuesInPercentage: false,
+                              showChartValuesOutside: false,
+                              decimalPlaces: 1,
+                            ),
+                            // gradientList: ---To add gradient colors---
+                            // emptyColorGradient: ---Empty Color gradient---
+                          ),
+                        )
+                      ],
+                    ),
+                    if (widget
+                        .isBlureffect) // Replace with a condition when you want the blur effect
+                      BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                        child: Container(
+                          color: Colors.red
+                              .withOpacity(0.1), // Optional dark overlay
                         ),
-                        // gradientList: ---To add gradient colors---
-                        // emptyColorGradient: ---Empty Color gradient---
                       ),
-                    )
+                      if (widget
+                        .isBlureffect) 
+                    Positioned(
+                      // top: MediaQuery.of(context).size.height / 1.5,
+                      child: ListTile(
+                        
+                        
+                        trailing: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            // color: Theme.of(context).colorScheme.primary,
+                            borderRadius: BorderRadius.circular(50),
+                            border: Border.all(
+                                color: Theme.of(context).colorScheme.secondary,
+                                width: 1),
+                          ),
+                          child: GestureDetector(
+                            onTap: () {
+                              // _showWelcomeDialog();
+                              // _deployContract();
+                              // _showWelcomeBottomSheet();
+                              _showMetamaskBottomSheet();
+                            },
+                            child: Image.asset('assets/images/metamaskImg.png',
+                                width: 30, height: 30),
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-              ),
+              ],
             ),
           ),
         ),
-      
+      ),
     );
   }
 
@@ -734,7 +810,7 @@ void _initActivityLogs() {
         'title': 'Folders',
         'subtitle': 'Total',
         'icon': Icons.folder,
-        'route': SetupPasswordScreen()
+        'route': (LoadingPage())
       },
       {
         'title': 'Files',
@@ -742,12 +818,12 @@ void _initActivityLogs() {
         'icon': Icons.file_open,
         'route': ()
       },
-      // {
-      //   'title': 'Storage',
-      //   'subtitle': 'Total',
-      //   'icon': Icons.storage,
-      //   'route': MyFiles()
-      // },
+      {
+        'title': 'Storage Plan',
+        'subtitle': 'Status',
+        'icon': Icons.storage,
+        'route': ()
+      },
     ];
     return SizedBox(
       height: 120,
@@ -891,39 +967,42 @@ void _initActivityLogs() {
               ),
             ),
           ),
-           LineChartSample2(did: widget.did),
-          Positioned(
-            right: 8,
-            child: Container(
-              height: 32,
-              width: 92,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    GestureDetector(
-                      onTap: (){_initActivityLogs();},
-                      child: Text('Avg',
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.background,
-                              fontSize: 12,
-                              fontFamily: GoogleFonts.robotoMono().fontFamily,
-                              fontWeight: FontWeight.w300)),
-                    ),
-                    Icon(
-                      Icons.arrow_drop_down,
-                      color: Theme.of(context).colorScheme.background,
-                      size: 20,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          LineChartSample2(did: widget.did),
+          // Positioned(
+          //   right: 8,
+          //   child: GestureDetector(
+          //     onTap: () {
+          //       print('tap 1');
+          //       _initActivityLogs();
+          //     },
+          //     child: Container(
+          //       height: 32,
+          //       width: 92,
+          //       decoration: BoxDecoration(
+          //         color: Theme.of(context).colorScheme.primary,
+          //         borderRadius: BorderRadius.circular(20),
+          //       ),
+          //       child: Center(
+          //         child: Row(
+          //           mainAxisAlignment: MainAxisAlignment.center,
+          //           children: [
+          //             // Text('Avg',
+          //             //     style: TextStyle(
+          //             //         color: Theme.of(context).colorScheme.background,
+          //             //         fontSize: 12,
+          //             //         fontFamily: GoogleFonts.robotoMono().fontFamily,
+          //             //         fontWeight: FontWeight.w300)),
+          //             Icon(
+          //               Icons.refresh,
+          //               color: Theme.of(context).colorScheme.background,
+          //               size: 20,
+          //             ),
+          //           ],
+          //         ),
+          //       ),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );

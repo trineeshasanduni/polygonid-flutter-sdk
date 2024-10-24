@@ -57,7 +57,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
     on<fetchAndSaveQrClaims>(_fetchAndSaveQrClaims);
     on<getQrClaims>(_getQrClaims);
     
-    on<clickScanQrCode>(_handleClickScanQrCode);
+    on<clickRegisterScanQrCode>(_handleClickScanQrCode);
     on<OnScanQrCodeResponse>(_handleScanQrCodeResponse);
     on<getCallbackUrl>(_handleCallbackUrl);
   }
@@ -66,7 +66,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
   ///////register using callback////////
 
   void _handleClickScanQrCode(
-      clickScanQrCode event, Emitter<RegisterState> emit) {
+      clickRegisterScanQrCode event, Emitter<RegisterState> emit) {
         print('fetching qr code');
     emit(NavigateToQrCodeScanner());
   }

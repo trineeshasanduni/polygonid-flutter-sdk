@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
@@ -23,16 +24,18 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  var fname = TextEditingController();
+  final TextEditingController fnameController = TextEditingController();
   var lname = TextEditingController();
   var aLine1 = TextEditingController();
   var aLine2 = TextEditingController();
   var zipcode = TextEditingController();
   var tel = TextEditingController();
   var city = TextEditingController();
-  var state = TextEditingController();
+  var states = TextEditingController();
   var email = TextEditingController();
   var country = TextEditingController();
+
+  final FocusNode fnameFocusNode = FocusNode();
 
   late final ProfileBloc _profileBloc;
   final isEmailValid = false;
@@ -53,15 +56,31 @@ class _EditProfilePageState extends State<EditProfilePage> {
     //   });
     // });
 
-    tel.addListener(() {
-      setState(() {
-        // Check if the email field is not empty
-        isTel = tel.text.isNotEmpty;
-        print('isEmailValid: $isTel');
-      });
-    });
+    // tel.addListener(() {
+    //   setState(() {
+    //     // Check if the email field is not empty
+    //     isTel = tel.text.isNotEmpty;
+    //     print('isEmailValid: $isTel');
+    //   });
+    // });
+    final storage = GetStorage();
+    final walletAddress1 = storage.read('walletAddress');
+    print('walletAddress profile: $walletAddress1');
 
-    _profileBloc.add(GetVerifyEmailEvent(Did: jsonDecode(widget.did!)));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _profileBloc.add(GetVerifyEmailEvent(Did: jsonDecode(widget.did!)));
+      _profileBloc.add(GetUpdateProfileEvent(
+          Did: jsonDecode(widget.did!), OwnerAddress: walletAddress1));
+    });
+    // _profileBloc.add(GetUpdateProfileEvent(
+    //     Did: jsonDecode(widget.did!), OwnerAddress: walletAddress1));
+  }
+
+  @override
+  void dispose() {
+    fnameController.dispose();
+    fnameFocusNode.dispose();
+    super.dispose();
   }
 
   void _showSnackbar(String message, Color? backgroundColor) {
@@ -80,6 +99,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final String Did = jsonDecode(widget.did!);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Theme.of(context).primaryColor,
       appBar: AppBar(
         // title: Text('Edit Profile'),
@@ -97,226 +117,259 @@ class _EditProfilePageState extends State<EditProfilePage> {
           child: Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-            child: Column(
-              children: [
-                // Profile Image with Edit Icon
-                Stack(
+            child: BlocBuilder<ProfileBloc, ProfileState>(
+              bloc: _profileBloc,
+              builder: (context, state) {
+                if (state is DataUpdated) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    setState(() {
+                      if (fnameController.text.isEmpty)
+                        fnameController.text = state.profile.firstName ?? '';
+                      if (lname.text.isEmpty)
+                        lname.text = state.profile.lastName ?? '';
+                      if (city.text.isEmpty)
+                        city.text = state.profile.city ?? '';
+                      if (country.text.isEmpty)
+                        country.text = state.profile.country ?? '';
+                      if (aLine1.text.isEmpty)
+                        aLine1.text = state.profile.addressLine1 ?? '';
+                      if (aLine2.text.isEmpty)
+                        aLine2.text = state.profile.addressLine2 ?? '';
+                      if (zipcode.text.isEmpty)
+                        zipcode.text = state.profile.postalCode ?? '';
+                      if (tel.text.isEmpty)
+                        tel.text = state.profile.phoneNumber ?? '';
+                      if (states.text.isEmpty)
+                        states.text = state.profile.state ?? '';
+                    });
+                  });
+                }
+
+                return Column(
                   children: [
-                    CircleAvatar(
-                      radius: 50,
-                      // backgroundImage: AssetImage('assets/images/avatar.jpg'), // Replace with your image
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: InkWell(
-                        onTap: () {
-                          // Implement your image edit functionality here
-                        },
-                        child: Container(
-                          height: 35,
-                          width: 35,
-                          decoration: BoxDecoration(
-                            color: Colors.yellow,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.camera_alt,
-                            color: Colors.black,
-                          ),
+                    // Profile Image with Edit Icon
+                    Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          // backgroundImage: AssetImage('assets/images/avatar.jpg'), // Replace with your image
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20),
-
-                // Full Name Field
-                buildTextField(
-                    label: 'First Name',
-                    icon: Icons.person,
-                    hintText: 'Enter your first name',
-                    controller: fname),
-                buildTextField(
-                    label: 'Last Name',
-                    icon: Icons.person,
-                    hintText: 'Enter your first name',
-                    controller: lname),
-                BlocBuilder<ProfileBloc, ProfileState>(
-                  bloc: _profileBloc,
-                  builder: (context, state) {
-                    if (state is EmailUpdated) {
-                      // setState(() {
-                      email.text = state.email.userEmail!;
-                      isVerified = state.email.isVerified!;
-                      print('verified: $isVerified');
-
-                      print('email: ${state.email.userEmail}');
-                      // });
-                    }
-                    return buildTextField(
-                      label: 'E-Mail',
-                      icon: Icons.email,
-                      hintText: 'example@gmail.com',
-                      keyboardType: TextInputType.emailAddress,
-                      controller: email,
-                    );
-                  },
-                ),
-                isVerified
-                    ? const SizedBox(
-                        height: 10,
-                      )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: email.text.isNotEmpty
-                                ? () async {
-                                    _profileBloc.add(VerifyEmailEvent(
-                                        Did: Did, UserEmail: email.text));
-
-                                    _showEmailVerify(context, Did, email);
-                                  }
-                                : null, // Disable button when email is empty
-                            child: Text(
-                              'Verify Email',
-                              style: TextStyle(
-                                color: email.text.isNotEmpty
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Colors
-                                        .grey, // Change text color when disabled
-                                fontSize: 12,
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: InkWell(
+                            onTap: () {
+                              // Implement your image edit functionality here
+                            },
+                            child: Container(
+                              height: 35,
+                              width: 35,
+                              decoration: BoxDecoration(
+                                color: Colors.yellow,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.camera_alt,
+                                color: Colors.black,
                               ),
                             ),
                           ),
-                        ],
-                      ),
-
-                // Phone Number Field
-                // buildTextField(
-                //     label: 'Phone No',
-                //     icon: Icons.phone,
-                //     hintText: '',
-                //     keyboardType: TextInputType.phone,
-                //     controller: tel),
-                IntlPhoneField(
-                  decoration: InputDecoration(
-                    hintStyle: TextStyle(
-                      color: Theme.of(context).colorScheme.secondary,
-                      fontFamily: GoogleFonts.robotoMono().fontFamily,
-                      fontSize: 12,
+                        ),
+                      ],
                     ),
-                    labelText: 'Phone Number',
-                    prefixIcon: Icon(Icons.phone,
-                        color: Theme.of(context).colorScheme.secondary),
-                    filled: true,
-                    fillColor: Theme.of(context).primaryColor,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
+                    SizedBox(height: 20),
+
+                    // Full Name Field
+                    buildTextField(
+                        label: 'First Name',
+                        focusNode: fnameFocusNode,
+                        icon: Icons.person,
+                        hintText: 'Enter your first name',
+                        controller: fnameController),
+                    buildTextField(
+                        label: 'Last Name',
+                        icon: Icons.person,
+                        hintText: 'Enter your first name',
+                        controller: lname),
+                    BlocBuilder<ProfileBloc, ProfileState>(
+                      bloc: _profileBloc,
+                      builder: (context, state) {
+                        if (state is EmailUpdated) {
+                          // setState(() {
+                          email.text = state.email.userEmail!;
+                          isVerified = state.email.isVerified!;
+                          print('verified: $isVerified');
+
+                          print('email: ${state.email.userEmail}');
+                          // });
+                        }
+                        return buildTextField(
+                          label: 'E-Mail',
+                          icon: Icons.email,
+                          hintText: 'example@gmail.com',
+                          keyboardType: TextInputType.emailAddress,
+                          controller: email,
+                        );
+                      },
                     ),
-                  ),
-                  initialCountryCode: 'LK',
-                  onChanged: (phone) {
-                    setState(() {
-                      countrycode = phone.countryCode;
-                    });
-                  },
-                  controller: tel,
-                ),
-                isTelVerified
-                    ? const SizedBox()
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: isTel
-                                ? () {
-                                    String countryCodeWithoutPlus =
-                                        countrycode.replaceAll("+", "");
-                                    print(
-                                        'telp: ${countryCodeWithoutPlus + tel.text}');
-                                    _profileBloc.add(VerifyTelEvent(
-                                      DID: Did,
-                                      Mobile: countryCodeWithoutPlus + tel.text,
-                                    ));
+                    isVerified
+                        ? const SizedBox(
+                            height: 10,
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: email.text.isNotEmpty
+                                    ? ()  {
+                                        _profileBloc.add(VerifyEmailEvent(
+                                            Did: Did, UserEmail: email.text));
 
-                                    _showTelVerify(context, Did);
-                                  }
-                                : null,
-                            child: BlocBuilder<ProfileBloc, ProfileState>(
-                              bloc: _profileBloc,
-                              builder: (context, state) {
-                                if (state is Sending) {
-                                  return Center(
-                                    child: Loading(
-                                      Loadingcolor:
-                                          Theme.of(context).primaryColor,
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                    ),
-                                  );
-                                }
-
-                                if (state is OTPSend) {
-                                  _showSnackbar(
-                                      'OTP sent successfully!,\nCheck your Phone and enter OTP here',
-                                      Colors.green);
-                                }
-                                return Text(
-                                  'Verify Phone No',
+                                        _showEmailVerify(context, Did, email);
+                                      }
+                                    : null, // Disable button when email is empty
+                                child: Text(
+                                  'Verify Email',
                                   style: TextStyle(
-                                    color: isTel
+                                    color: email.text.isNotEmpty
                                         ? Theme.of(context).colorScheme.primary
-                                        : Colors.grey,
+                                        : Colors
+                                            .grey, // Change text color when disabled
                                     fontSize: 12,
                                   ),
-                                );
-                              },
-                            ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+
+                    // Phone Number Field
+                    // buildTextField(
+                    //     label: 'Phone No',
+                    //     icon: Icons.phone,
+                    //     hintText: '',
+                    //     keyboardType: TextInputType.phone,
+                    //     controller: tel),
+                    IntlPhoneField(
+                      decoration: InputDecoration(
+                        hintStyle: TextStyle(
+                          color: Theme.of(context).colorScheme.secondary,
+                          fontFamily: GoogleFonts.robotoMono().fontFamily,
+                          fontSize: 12,
+                        ),
+                        labelText: 'Phone Number',
+                        prefixIcon: Icon(Icons.phone,
+                            color: Theme.of(context).colorScheme.secondary),
+                        filled: true,
+                        fillColor: Theme.of(context).primaryColor,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
                       ),
+                      initialCountryCode: 'LK',
+                      onChanged: (phone) {
+                        setState(() {
+                          countrycode = phone.countryCode;
+                        });
+                      },
+                      controller: tel,
+                    ),
+                    isTelVerified
+                        ? const SizedBox()
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  tel.text.isNotEmpty
+                                      ? _profileBloc.add(VerifyTelEvent(
+                                          DID: Did,
+                                          Mobile:
+                                              countrycode.replaceAll("+", "") + tel.text,
+                                        ))
+                                      : null;
 
-                buildTextField(
-                    label: 'Address Line 1',
-                    icon: Icons.add_location,
-                    hintText: 'Enter your address line 1',
-                    controller: aLine1),
-                buildTextField(
-                    label: 'Address Line 2',
-                    icon: Icons.add_location,
-                    hintText: 'Enter your address line 2',
-                    controller: aLine2),
-                buildTextField(
-                    label: 'City',
-                    icon: Icons.place,
-                    hintText: 'Enter your city',
-                    controller: city),
-                buildTextField(
-                    label: 'State',
-                    icon: Icons.business,
-                    hintText: 'Enter your state',
-                    controller: state),
-                buildTextField(
-                    label: 'Zip code',
-                    icon: Icons.code,
-                    hintText: 'Enter your zip code',
-                    controller: zipcode),
+                                  tel.text.isNotEmpty
+                                      ? _showTelVerify(context, Did)
+                                      : null;
+                                },
+                                child: BlocBuilder<ProfileBloc, ProfileState>(
+                                  bloc: _profileBloc,
+                                  builder: (context, state) {
+                                    if (state is Sending) {
+                                      return Center(
+                                        child: Loading(
+                                          Loadingcolor:
+                                              Theme.of(context).primaryColor,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                        ),
+                                      );
+                                    }
 
-                buildTextField(
-                    label: 'Country',
-                    icon: Icons.flag,
-                    hintText: 'Enter your country',
-                    controller: country),
+                                    if (state is OTPSend) {
+                                      _showSnackbar(
+                                          'OTP sent successfully!,\nCheck your Phone and enter OTP here',
+                                          Colors.green);
+                                    }
+                                    return Text(
+                                      'Verify Phone No',
+                                      style: TextStyle(
+                                        color: tel.text.isNotEmpty
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                            : Colors.grey,
+                                        fontSize: 12,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
 
-                SizedBox(height: 30),
+                    buildTextField(
+                        label: 'Address Line 1',
+                        icon: Icons.add_location,
+                        hintText: 'Enter your address line 1',
+                        controller: aLine1),
+                    buildTextField(
+                        label: 'Address Line 2',
+                        icon: Icons.add_location,
+                        hintText: 'Enter your address line 2',
+                        controller: aLine2),
+                    buildTextField(
+                        label: 'City',
+                        icon: Icons.place,
+                        hintText: 'Enter your city',
+                        controller: city),
+                    buildTextField(
+                        label: 'State',
+                        icon: Icons.business,
+                        hintText: 'Enter your state',
+                        controller: states),
+                    buildTextField(
+                        label: 'Zip code',
+                        icon: Icons.code,
+                        hintText: 'Enter your zip code',
+                        controller: zipcode),
 
-                // Edit Profile Button
-                _buildEdtdButton(),
+                    buildTextField(
+                        label: 'Country',
+                        icon: Icons.flag,
+                        hintText: 'Enter your country',
+                        controller: country),
 
-                // Joined Date and Delete Button
-              ],
+                    SizedBox(height: 30),
+
+                    // Edit Profile Button
+                    _buildEdtdButton(),
+
+                    // Joined Date and Delete Button
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -325,18 +378,92 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Widget _buildEdtdButton() {
+    final storage = GetStorage();
+    final walletAddress1 = storage.read('walletAddress');
+
     return GestureDetector(
       onTap: () {
         print('did: ${jsonDecode(widget.did!)}');
-        _profileBloc.add(GetVerifyEmailEvent(Did: jsonDecode(widget.did!)));
+        _profileBloc.add(UpdateProfileEvent(
+          OwnerDid: jsonDecode(widget.did!),
+          OwnerEmail: email.text,
+          FirstName: fnameController.text,
+          LastName: lname.text,
+          City: city.text,
+          Country: country.text,
+          AddressLine1: aLine1.text,
+          AddressLine2: aLine2.text,
+          PostalCode: zipcode.text,
+          PhoneNumber: tel.text,
+          CountryCode: countrycode,
+          Description: 'description',
+          Street: 'street',
+          State: states.text,
+          AccountType: 'accountType',
+          CompanyName: 'companyName',
+          CompanyRegno: 'companyRegno',
+          OwnerAddress: walletAddress1,
+        ));
       },
-      child: _buildButton(
-          context,
-          'Edit Profile',
-          Theme.of(context).colorScheme.primary,
-          Theme.of(context).colorScheme.secondary,
-          Colors.black,
-          Theme.of(context).primaryColor),
+      child: BlocBuilder<ProfileBloc, ProfileState>(
+        bloc: _profileBloc,
+        builder: (context, state) {
+          // Show loading indicator when updating
+          if (state is Updating) {
+            return Center(
+              child: Loading(
+                Loadingcolor: Theme.of(context).primaryColor,
+                color: Theme.of(context).colorScheme.secondary,
+              ),
+            );
+          }
+
+          // Show snackbar if profile update fails
+          // if (state is UpdateFailed) {
+          //   _showSnackbar('Profile Update Failed: ${state.message}', Colors.red);
+          // }
+
+          // Handle successful profile update
+          if (state is ProfileUpdated) {
+            _showSnackbar('Profile Updated Successfully', Colors.green);
+
+            // Avoid re-triggering the event if not necessary
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              // You can check for a flag or state change here if necessary
+              _profileBloc.add(GetUpdateProfileEvent(
+                  Did: jsonDecode(widget.did!), OwnerAddress: walletAddress1));
+            });
+          }
+
+          // When data is updated, populate the form fields once
+          if (state is DataUpdated) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              // Set values to fields only if they are not already set
+              if (fnameController.text.isEmpty && lname.text.isEmpty) {
+                fnameController.text = state.profile.firstName ?? '';
+                lname.text = state.profile.lastName ?? '';
+                city.text = state.profile.city ?? '';
+                country.text = state.profile.country ?? '';
+                aLine1.text = state.profile.addressLine1 ?? '';
+                aLine2.text = state.profile.addressLine2 ?? '';
+                zipcode.text = state.profile.postalCode ?? '';
+                tel.text = state.profile.phoneNumber ?? '';
+                states.text = state.profile.state ?? '';
+              }
+            });
+          }
+
+          // Build the edit profile button
+          return _buildButton(
+            context,
+            'Edit Profile',
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.secondary,
+            Colors.black,
+            Theme.of(context).primaryColor,
+          );
+        },
+      ),
     );
   }
 
@@ -379,6 +506,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     required String label,
     required IconData icon,
     required String hintText,
+     FocusNode? focusNode,
     required TextEditingController controller,
     TextInputType keyboardType = TextInputType.text,
     bool isPassword = false,
@@ -393,6 +521,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           fontFamily: GoogleFonts.robotoMono().fontFamily,
           fontSize: 12,
         ),
+        focusNode: focusNode,
         controller: controller,
         keyboardType: keyboardType,
         obscureText: isPassword,

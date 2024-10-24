@@ -42,6 +42,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       network: chain.network,
       method: chain.method,
     );
+    print('loaded did: $identifier');
     emit(HomeState.loaded(identifier: identifier));
   }
 

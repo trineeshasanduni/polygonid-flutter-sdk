@@ -5,7 +5,8 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/credencials.da
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard.dart';
 
 class ClaimsNav extends StatefulWidget {
-  const ClaimsNav({super.key});
+  final bool isBlureffect;
+  const ClaimsNav({super.key, required this.isBlureffect});
 
   @override
   State<ClaimsNav> createState() => _ClaimsNavState();
@@ -23,7 +24,7 @@ class _ClaimsNavState extends State<ClaimsNav> {
           settings: settings,
           builder: (BuildContext context) {
             
-            return  Credencials();
+            return  Credencials(isBlureffect:widget.isBlureffect);
           },
         );
       },

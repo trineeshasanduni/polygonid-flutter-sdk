@@ -4,6 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/entities/addPlans_entity.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/entities/freeSpace_entity.dart';
+import 'package:polygonid_flutter_sdk/add_plans/domain/entities/priceModel.dart';
 import 'package:polygonid_flutter_sdk/add_plans/domain/usecases/addPlans_usecase.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard_bloc/dashboard_bloc.dart';
 
@@ -16,13 +17,15 @@ class AddPlansBloc extends Bloc<AddPlansEvent, AddPlansState> {
   final CreateProofUsecase createProofUsecase;
   final VerifyUsecase verifyUsecase;
    final FreeSpaceUsecase freeSpaceUsecase;
+   final PlanPriceUsecase planPriceUsecase;
 
-  AddPlansBloc(this.generateSecretsUsecase,this.addUserUsecase, this.createProofUsecase,this.verifyUsecase,this.freeSpaceUsecase) : super(AddPlansInitial()) {
+  AddPlansBloc(this.generateSecretsUsecase,this.addUserUsecase, this.createProofUsecase,this.verifyUsecase,this.freeSpaceUsecase,this.planPriceUsecase) : super(AddPlansInitial()) {
     on<GenerateSecretsEvent>(_handleGenerateSecrets); 
     on<addUserEvent>(_handleAddUser);
     on<createProofEvent>(_handleProof);
     on<verifyuserEvent>(_handleVerifyUser);
     on<freeSpaceEvent>(_handleFreeSpace);
+    on<planPriceEvent>(_handlePlanPrice);
 
   }
 
@@ -102,6 +105,21 @@ class AddPlansBloc extends Bloc<AddPlansEvent, AddPlansState> {
          failureOrFreeSpace.fold(
       (failure) => emit(AddPlansFailure(failure.toString())),
       (freeSpace) => emit(FreeSpaceAdded(freeSpace)),
+    );  
+  }
+
+  Future<void> _handlePlanPrice(
+      planPriceEvent event, Emitter<AddPlansState> emit) async {
+    emit(PriceLoading( "Price Allocating"));
+    final failureOrPlanPrice = await planPriceUsecase(PlanPriceParams(
+
+          plan: event.plan,
+          month: event.month
+          
+          ));
+         failureOrPlanPrice.fold(
+      (failure) => emit(PlanPriceFailure(failure.toString())),
+      (planPrice) => emit(PriceUpdated(planPrice)),
     );  
   }
 
