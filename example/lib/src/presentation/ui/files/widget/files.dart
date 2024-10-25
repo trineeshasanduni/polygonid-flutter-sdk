@@ -32,6 +32,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:web3dart/web3dart.dart';
 import 'package:web3modal_flutter/utils/debouncer.dart';
 import 'package:web_socket_channel/io.dart';
+import 'package:animated_snack_bar/animated_snack_bar.dart';
 
 class FileData {
   final String fileName;
@@ -44,8 +45,8 @@ class FileData {
 
 class Files extends StatefulWidget {
   final String? did;
-  final bool isBlureffect;
-  const Files({super.key, required this.did, required this.isBlureffect});
+  // final bool isBlureffect;
+  const Files({super.key, required this.did});
 
   @override
   State<Files> createState() => _FilesState();
@@ -162,10 +163,20 @@ class _FilesState extends State<Files> {
     }
   }
 
-  void _showSnackbar(String message, Color? backgroundColor) {
+  void _showSnackbar(
+    String message,
+    Color? backgroundColor,
+    IconData? ic,
+  ) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(message),
+        content: Row(
+          children: [
+            Icon(ic, color: Colors.white),
+            const SizedBox(width: 10),
+            Text(message, style: const TextStyle(color: Colors.white)),
+          ],
+        ),
         duration: const Duration(seconds: 5),
         behavior: SnackBarBehavior.floating,
         backgroundColor: backgroundColor,
@@ -522,6 +533,13 @@ class _FilesState extends State<Files> {
         return true;
       } else {
         print("Transaction failed or still pending.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Transaction failed or still pending.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
         return false;
       }
     } catch (e) {
@@ -584,12 +602,13 @@ class _FilesState extends State<Files> {
         if (OwnerDid.characters == did.characters) {
           print('ok');
           _showSnackbar('File shared successfully',
-              Theme.of(context).colorScheme.secondary);
+              Theme.of(context).colorScheme.secondary, Icons.check_circle);
           // Close the AlertDialog after DIDs match
           Navigator.of(dialogContext).pop(); // Close the dialog
         } else {
           print('not ok');
-          _showSnackbar('File is not shared successfully', Colors.red);
+          _showSnackbar('File is not shared successfully', Colors.red,
+              Icons.error_outline);
         }
 
         // Dispatch the event to create proof after the transaction is successful
@@ -606,6 +625,9 @@ class _FilesState extends State<Files> {
     final walletAddress = storage.read('walletAddress');
     print('walletAddress : $walletAddress');
 
+    final isFreePlan = storage.read('isFreePlanActivated');
+    print('isFreePlan: $isFreePlan');
+
     return BlocProvider(
       create: (_) => _fileBloc,
       child: Scaffold(
@@ -614,7 +636,7 @@ class _FilesState extends State<Files> {
           child: BlocConsumer<FileBloc, FileState>(
             listener: (context, state) async {
               if (state is FileUploadFailed) {
-                _showSnackbar("File Upload Failed", Colors.red);
+                _showSnackbar("File Upload Failed", Colors.red, Icons.error);
               }
               if (state is FileUploaded) {
                 for (var file in dataResult) {
@@ -631,7 +653,7 @@ class _FilesState extends State<Files> {
                 await _checkUseSpaceTxHashStatus(txHash);
 
                 _showSnackbar('Files uploaded successfully',
-                    Theme.of(context).colorScheme.secondary);
+                    Theme.of(context).colorScheme.secondary, Icons.check_circle);
 
                 setState(() {
                   fileDataList.clear(); // Clear old file data
@@ -664,13 +686,16 @@ class _FilesState extends State<Files> {
                       const SizedBox(height: 20),
                     ],
                   ),
-                  if (widget.isBlureffect) // Replace with a condition when you want the blur effect
-            BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-              child: Container(
-                color: Colors.black.withOpacity(0.1), // Optional dark overlay
-              ),
-            ),
+                  if (isFreePlan == null ||
+                      isFreePlan ==
+                          false) // Replace with a condition when you want the blur effect
+                    BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                      child: Container(
+                        color: Colors.black
+                            .withOpacity(0.1), // Optional dark overlay
+                      ),
+                    ),
                 ],
               );
             },
@@ -711,10 +736,15 @@ class _FilesState extends State<Files> {
       builder: (context, state) {
         if (state is FileUploading) {
           return Center(
-            child: Loading(
-              Loadingcolor: Theme.of(context).primaryColor,
-              color: Theme.of(context).colorScheme.secondary,
-            ),
+            // child: Loading(
+            //   Loadingcolor: Theme.of(context).primaryColor,
+            //   color: Theme.of(context).colorScheme.secondary,
+            // ),
+            child: Text(state.message,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.secondary,
+                  fontSize: 14,
+                )),
           );
         }
         return const SizedBox.shrink();
@@ -1063,7 +1093,7 @@ class _FilesState extends State<Files> {
                           }
                           if (state is ShareFailed) {
                             _showSnackbar(
-                                'Share failed: ${state.message}', Colors.red);
+                                'Share failed: ${state.message}', Colors.red,Icons.error);
                           }
                           if (state is Shared) {
                             // Call the transaction hash check method
@@ -1191,8 +1221,6 @@ class _FilesState extends State<Files> {
     );
   }
 
-  
-
   Widget _buildurlLink(String url) {
     return GestureDetector(
       onTap: () {
@@ -1224,7 +1252,7 @@ class _FilesState extends State<Files> {
           );
         }
         if (filestate is FileVerifyFailed) {
-          _showSnackbar('Verify failed: ${filestate.message}', Colors.red);
+          _showSnackbar('Verify failed: ${filestate.message}', Colors.red,Icons.error);
         }
         if (filestate is VerifySuccess && filestate.batchhash == batchHash) {
           final response = jsonEncode(filestate.response.claim?.toJson());
@@ -1285,7 +1313,7 @@ class _FilesState extends State<Files> {
           );
         }
         if (shareState is ShareFailed) {
-          _showSnackbar('Verify failed: ${shareState.message}', Colors.red);
+          _showSnackbar('Verify failed: ${shareState.message}', Colors.red,Icons.error);
         }
         if (shareState is ShareVerifySuccess &&
             shareState.batchhash == batchHash) {
@@ -1352,7 +1380,10 @@ class _FilesState extends State<Files> {
           _handleDownloadVerifyButton(downloadState, downloadState.batchhash);
         }
         if (downloadState is DownloadFailed) {
-          _showSnackbar('Download failed', Colors.red);
+          _showSnackbar('Download failed', Colors.red, Icons.error);
+          Future.delayed(const Duration(seconds: 10), () {
+            _downloadBloc.add(ResetDownloadStateEvent());
+          });
         }
 
         if (downloadState is StatusLoaded &&
@@ -1409,7 +1440,6 @@ class _FilesState extends State<Files> {
             // _fileBloc.add(ResetFileStateEvent());
           });
 
-          
           // Show download URL after URL is ready
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             await _showDownloadUrl(context, downloadLink);
@@ -1455,7 +1485,10 @@ class _FilesState extends State<Files> {
           _handleDownloadVerifyButton(downloadState, downloadState.batchhash);
         }
         if (downloadState is DownloadFailed) {
-          _showSnackbar('Download failed', Colors.red);
+          _showSnackbar('Download failed', Colors.red, Icons.error);
+          Future.delayed(const Duration(seconds: 10), () {
+            _downloadBloc.add(ResetDownloadStateEvent());
+          });
         }
 
         if (downloadState is StatusLoaded &&

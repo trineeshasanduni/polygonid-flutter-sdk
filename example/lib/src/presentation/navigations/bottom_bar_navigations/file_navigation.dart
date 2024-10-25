@@ -4,8 +4,8 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/widget/f
 
 class FileNav extends StatefulWidget {
   final String? did;
-  final bool isBlureffect;
-  const FileNav({super.key, required this.did, required this.isBlureffect});
+  // final bool isBlureffect;
+  const FileNav({super.key, required this.did});
 
   @override
   State<FileNav> createState() => _FileNavState();
@@ -23,7 +23,7 @@ class _FileNavState extends State<FileNav> {
           settings: settings,
           builder: (BuildContext context) {
            
-            return  Files(did: widget.did,isBlureffect:widget.isBlureffect);
+            return  Files(did: widget.did);
           },
         );
       },

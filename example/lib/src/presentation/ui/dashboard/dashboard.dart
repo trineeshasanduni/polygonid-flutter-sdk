@@ -16,8 +16,8 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/bethelBottomBar.d
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/plan_navigation.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/create_wallet/loading.dart';
-import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/bar.dart';
-import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/customCurveEdge.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/widget/bar.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/widget/customCurveEdge.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard_bloc/dashboard_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_state.dart';
@@ -36,9 +36,9 @@ import 'package:http/http.dart' as http;
 
 class Dashboard extends StatefulWidget {
   final String? did;
-  final bool isBlureffect;
+  // final bool isBlureffect;
 
-  const Dashboard({super.key, required this.did, required this.isBlureffect});
+  const Dashboard({super.key, required this.did});
 
   @override
   State<Dashboard> createState() => _DashboardState();
@@ -47,6 +47,7 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   late W3MService _w3mService;
   bool isConnected = false;
+  var name = '';
   var httpClient = http.Client();
 
   Web3Client? _web3Client;
@@ -61,7 +62,7 @@ class _DashboardState extends State<Dashboard> {
 
   final _ContractAddress = '0x665e346D9c68587Bd51C53eAd71e0F5367E7950C';
 
-  final storage = const FlutterSecureStorage();
+  final storage = GetStorage();
   var _isUserAdded = false;
   var _isBlureffect = false;
   late final DashboardBloc _dashboardBloc;
@@ -114,19 +115,29 @@ class _DashboardState extends State<Dashboard> {
       print('timing');
       bool isConnect = await _w3mService.isConnected;
 
+      final getName = await _w3mService.session?.connectedWalletName;
+      storage.write('walletName', getName);
+      print('name123: $name');
+
+      storage.write('isConnected', isConnect);
+
+      // isConnected = storage.read('isConnected');
+
       print("isMetaMaskConnected12: $isConnect");
       setState(() {
-        isConnected = isConnect;
+        isConnected = storage.read('isConnected');
+        name = storage.read('walletName');
+        print('name124: $name');
       });
       if (isConnected == true) {
         print('connected: $isConnected');
         // _showWelcomeDialog();
         _deployContract();
-        _isBlureffect = false;
+        // _isBlureffect = false;
       } else {
         print('not connected: $isConnected');
         // _showMetamaskBottomSheet();
-        _isBlureffect = widget.isBlureffect;
+        // _isBlureffect = widget.isBlureffect;
         // _deployContract();
       }
     });
@@ -191,11 +202,11 @@ class _DashboardState extends State<Dashboard> {
         // Check if the inner list is empty
         if (innerList.isEmpty) {
           print('The result contains an empty list');
-          _isBlureffect = widget.isBlureffect;
+          // _isBlureffect = widget.isBlureffect;
           // _showWelcomeBottomSheet();
         } else {
           print('The result contains a non-empty list: $innerList');
-          _isBlureffect = !widget.isBlureffect;
+          // _isBlureffect = !widget.isBlureffect;
 
           // Normalize the wallet address (trim, and convert to lowercase for comparison)
           final normalizedWalletAddress = walletAddress1?.toLowerCase().trim();
@@ -278,7 +289,7 @@ class _DashboardState extends State<Dashboard> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Please switch to Correct Wallet Address',
+                  'Please Use Correct Wallet Address',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.secondary,
                     fontSize: 12,
@@ -342,10 +353,10 @@ class _DashboardState extends State<Dashboard> {
         setState(() {
           _isUserAdded = true;
         });
-        print('free plan activated');
+        print('getUserDid ');
       } else {
         _isUserAdded = false;
-        print('free plan not activated');
+        print('getUserDid not activated');
       }
     } catch (e) {
       print('An error occurred: $e');
@@ -353,8 +364,9 @@ class _DashboardState extends State<Dashboard> {
   }
 
   Widget _loadButtons() {
+    final iSConnect = storage.read('isConnected');
     return Column(
-      children: !isConnected
+      children: !iSConnect
           ? [
               W3MNetworkSelectButton(service: _w3mService),
               W3MConnectWalletButton(service: _w3mService),
@@ -448,6 +460,7 @@ class _DashboardState extends State<Dashboard> {
   }
 
   void _showMetamaskBottomSheet() {
+    final iSConnect = storage.read('isConnected');
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -500,14 +513,16 @@ class _DashboardState extends State<Dashboard> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const Text(
-                'You have to connect with MetaMask .',
+              Text(
+                iSConnect
+                    ? ' You are connected with Metamask'
+                    : 'You have to connect with Any Wallet',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14),
               ),
               // Image.asset('assets/images/metamaskImg.png', width: 50, height: 50),
               Column(
-                children: !isConnected
+                children: !iSConnect
                     ? [
                         W3MNetworkSelectButton(service: _w3mService),
                         W3MConnectWalletButton(service: _w3mService),
@@ -575,6 +590,9 @@ class _DashboardState extends State<Dashboard> {
     print('account12: $account');
     print('account123: $account1');
 
+    final isFreePlan = storage.read('isFreePlanActivated');
+    print('isFreePlan dash: $isFreePlan');
+
     if (walletAddress != null && walletAddress.isNotEmpty) {
       // Write to SecureStorage, ensuring to await the async operation
       SecureStorage.write(
@@ -606,6 +624,7 @@ class _DashboardState extends State<Dashboard> {
       const Color.fromARGB(255, 17, 148, 98),
       const Color(0xFF2CFFAE),
     ];
+
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
       body: SafeArea(
@@ -616,24 +635,6 @@ class _DashboardState extends State<Dashboard> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // TextFormField(
-                //   decoration: InputDecoration(
-                //     hintText: 'Search',
-                //     hintStyle: TextStyle(
-                //       color: Theme.of(context).colorScheme.secondary,
-                //     ),
-                //     prefixIcon: Icon(
-                //       Icons.search,
-                //       color: Theme.of(context).colorScheme.secondary,
-                //     ),
-                //     border: OutlineInputBorder(
-                //       borderRadius: BorderRadius.circular(20),
-                //       borderSide: BorderSide(
-                //         color: Theme.of(context).colorScheme.secondary,
-                //       ),
-                //     ),
-                //   ),
-                // ),
                 ListTile(
                   title: Row(
                     children: [
@@ -679,8 +680,9 @@ class _DashboardState extends State<Dashboard> {
                         // _showWelcomeBottomSheet();
                         _showMetamaskBottomSheet();
                       },
-                      child: Image.asset('assets/images/metamaskImg.png',
-                          width: 30, height: 30),
+                      child: name == "MetaMask Wallet"
+                          ? Image.asset('assets/images/metamaskImg.png')
+                          : Icon(Icons.wallet),
                     ),
                   ),
                 ),
@@ -754,8 +756,8 @@ class _DashboardState extends State<Dashboard> {
                         )
                       ],
                     ),
-                    if (widget
-                        .isBlureffect) // Replace with a condition when you want the blur effect
+                    if (isFreePlan == null ||
+                        !isFreePlan) // Replace with a condition when you want the blur effect
                       BackdropFilter(
                         filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
                         child: Container(
@@ -763,36 +765,39 @@ class _DashboardState extends State<Dashboard> {
                               .withOpacity(0.1), // Optional dark overlay
                         ),
                       ),
-                      if (widget
-                        .isBlureffect) 
-                    Positioned(
-                      // top: MediaQuery.of(context).size.height / 1.5,
-                      child: ListTile(
-                        
-                        
-                        trailing: Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            // color: Theme.of(context).colorScheme.primary,
-                            borderRadius: BorderRadius.circular(50),
-                            border: Border.all(
-                                color: Theme.of(context).colorScheme.secondary,
-                                width: 1),
-                          ),
-                          child: GestureDetector(
-                            onTap: () {
-                              // _showWelcomeDialog();
-                              // _deployContract();
-                              // _showWelcomeBottomSheet();
-                              _showMetamaskBottomSheet();
-                            },
-                            child: Image.asset('assets/images/metamaskImg.png',
-                                width: 30, height: 30),
+                    if (isFreePlan == null || !isFreePlan)
+                      Positioned(
+                        // top: MediaQuery.of(context).size.height / 1.5,
+                        child: ListTile(
+                          trailing: Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              // color: Theme.of(context).colorScheme.primary,
+                              borderRadius: BorderRadius.circular(50),
+                              border: Border.all(
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
+                                  width: 1),
+                            ),
+                            child: GestureDetector(
+                              onTap: () {
+                                // _showWelcomeDialog();
+                                // _deployContract();
+                                // _showWelcomeBottomSheet();
+                                _showMetamaskBottomSheet();
+                              },
+                              child: name == "MetaMask Wallet"
+                                  ? Image.asset(
+                                      'assets/images/digital-wallet.png',
+                                      width: 20,
+                                      height: 20)
+                                  : Image.asset('assets/images/metamaskImg.png',
+                                      width: 30, height: 30),
+                            ),
                           ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ],

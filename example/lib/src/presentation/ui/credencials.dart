@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:polygonid_flutter_sdk/iden3comm/domain/entities/common/iden3_message_entity.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
@@ -20,10 +21,10 @@ import 'package:polygonid_flutter_sdk_example/utils/custom_strings.dart';
 import 'package:polygonid_flutter_sdk_example/utils/image_resource.dart';
 
 class Credencials extends StatefulWidget {
-  final  bool isBlureffect;
+  // final  bool isBlureffect;
     final ClaimsBloc _bloc;
 
-   Credencials({Key? key, required this.isBlureffect, })
+   Credencials({Key? key,  })
   : _bloc = getIt<ClaimsBloc>(),
         super(key: key);
 
@@ -64,8 +65,11 @@ class _CredencialsState extends State<Credencials> {
 
   ];
 
+  final storage = GetStorage();
+
   @override
   Widget build(BuildContext context) {
+    final isFreePlan = storage.read('isFreePlanActivated');
     return Scaffold(
         backgroundColor: Theme.of(context).primaryColor,
         body: SafeArea(
@@ -105,7 +109,7 @@ class _CredencialsState extends State<Credencials> {
                 _buildBlocListener(),
               ],
             ),
-            if (widget.isBlureffect)
+            if (isFreePlan == null|| !isFreePlan  )
             BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
               child: Container(

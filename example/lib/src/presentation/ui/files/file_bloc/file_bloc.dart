@@ -65,7 +65,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
   }
 
   void _handleFileUpload(FileuploadEvent event, Emitter<FileState> emit) async {
-    emit(FileUploading());
+    emit(FileUploading("Uploading file"));
     final uploadResponse = await fileUsecase(UseCaseParams(
         did: event.did, ownerDid: event.ownerDid, fileData: event.fileData));
     uploadResponse.fold(
@@ -82,7 +82,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
 
   void _handleUseSpace(UseSpaceEvent event, Emitter<FileState> emit) async {
     print('fetching use space12');
-    emit(FileUploading());
+    emit(FileUploading('allocating space'));
     final useSpaceResponse = await useSpaceUsecase(UseSpaceParam(
         did: event.did, ownerDid: event.ownerDid, batchSize: event.batchSize));
     useSpaceResponse.fold(
@@ -99,7 +99,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
 
   void _handleGetFileName(
       GetFileNameEvent event, Emitter<FileState> emit) async {
-    emit(FileUploading());
+    emit(FileUploading('Uploading file'));
     final fileNameResponse =
         await getFileNameUsecase(FileNameParam(BatchHash: event.BatchHash,Verify: event.Verify));
     fileNameResponse.fold(

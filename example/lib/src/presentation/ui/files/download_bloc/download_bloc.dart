@@ -31,12 +31,11 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
   final CidsUsecase cidsUsecase;
   final DownloadUsecase downloadUsecase;
 
-
   static const SelectedProfile _defaultProfile = SelectedProfile.public;
   SelectedProfile selectedProfile = _defaultProfile;
 
   DownloadBloc(this.downloadVerify, this._qrcodeParserUtils, this._polygonIdSdk,
-      this.statusUsecase,this.cidsUsecase, this.downloadUsecase)
+      this.statusUsecase, this.cidsUsecase, this.downloadUsecase)
       : super(DownloadInitial()) {
     on<onClickDownload>(_handleDownloadVerify);
     on<onDownloadResponse>(_handleDownloadResponse);
@@ -44,8 +43,8 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     on<GetCidsEvent>(_handleGetCids);
     on<onClickDownloadUrl>(_handleDownloadUrl);
     on<ResetDownloadStateEvent>((event, emit) {
-  emit(DownloadInitial());  // Reset state to initial
-});
+      emit(DownloadInitial()); // Reset state to initial
+    });
   }
 
   Future<void> _handleDownloadVerify(
@@ -57,13 +56,13 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
         didU: event.didU));
     failureOrdownload.fold(
         (failure) => emit(DownloadFailed(failure.toString())),
-        (download) => emit(DownloadSuccess(download,event.batch_hash )));
+        (download) => emit(DownloadSuccess(download, event.batch_hash)));
   }
 
   Future<void> _handleDownloadResponse(
       onDownloadResponse event, Emitter<DownloadState> emit) async {
     String? DownloadResponse = event.response;
-    
+
     print('download response get: $DownloadResponse');
     if (DownloadResponse == null || DownloadResponse.isEmpty) {
       emit(const DownloadFailed("Download Response failed"));
@@ -87,11 +86,10 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
       }
 
       await _authenticate(
-        iden3message: iden3message,
-        privateKey: privateKey,
-        emit: emit,
-        batchHash: event.batchHash!
-      );
+          iden3message: iden3message,
+          privateKey: privateKey,
+          emit: emit,
+          batchHash: event.batchHash!);
       print('authdownload done');
     } catch (error) {
       emit(DownloadFailed("Download response is not valid"));
@@ -181,16 +179,18 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
       },
       (did) {
         print('Emitting StatusLoaded downloaddd with DID: $did');
-        emit(StatusLoaded(did,event.batch_hash ));
+        emit(StatusLoaded(did, event.batch_hash));
       },
     );
   }
 
-  void _handleGetCids(
-      GetCidsEvent event, Emitter<DownloadState> emit) async {
+  void _handleGetCids(GetCidsEvent event, Emitter<DownloadState> emit) async {
     emit(GettingCids());
-    final fileNameResponse =
-        await cidsUsecase(CidsParams(index: event.index,did: event.did,owner: event.owner,BatchHash: event.batch_hash));
+    final fileNameResponse = await cidsUsecase(CidsParams(
+        index: event.index,
+        did: event.did,
+        owner: event.owner,
+        BatchHash: event.batch_hash));
     fileNameResponse.fold(
       (failure) {
         print('failure get: $failure');
@@ -198,7 +198,7 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
       },
       (cids) {
         print('Emitting StatusLoaded with DID15: $cids');
-        emit(CidsGot(cids, event.batch_hash ));
+        emit(CidsGot(cids, event.batch_hash));
       },
     );
   }
@@ -214,7 +214,7 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
         Cids: event.Cids));
     failureOrdownloadurl.fold(
         (failure) => emit(DownloadFailed(failure.toString())),
-        (downloadurl) => emit(DownloadUrlSuccess(downloadurl, event.BatchHash )));
+        (downloadurl) =>
+            emit(DownloadUrlSuccess(downloadurl, event.BatchHash)));
   }
-
 }

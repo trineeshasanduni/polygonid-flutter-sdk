@@ -17,8 +17,8 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/splash/widgets
 
 class MyProfile extends StatefulWidget {
   final String? did;
-  final bool isBlureffect;
-  const MyProfile({super.key, required this.did, required this.isBlureffect});
+  // final bool isBlureffect;
+  const MyProfile({super.key, required this.did});
 
   @override
   State<MyProfile> createState() => _MyProfileState();
@@ -29,6 +29,8 @@ class _MyProfileState extends State<MyProfile> {
   var fname = 'New ';
   var lname = 'User';
   var fullname = 'New User';
+
+  final storage = GetStorage(); 
 
   @override
   void initState() {
@@ -79,11 +81,14 @@ class _MyProfileState extends State<MyProfile> {
             '...' +
             didValue.substring(didValue.length - 4)
         : didValue;
+        final isFreePlan = storage.read('isFreePlanActivated');
 
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
       body: SafeArea(
+        
         child: Stack(
+          
           children:[ SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -291,7 +296,7 @@ class _MyProfileState extends State<MyProfile> {
               ),
             ),
           ),
-          if (widget.isBlureffect)
+          if ( isFreePlan == null|| !isFreePlan )
             BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
               child: Container(

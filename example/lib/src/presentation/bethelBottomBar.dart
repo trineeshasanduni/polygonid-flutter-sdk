@@ -15,6 +15,7 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/botto
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/profile_navigation.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/widget/add_plans.dart';
 import 'package:polygonid_flutter_sdk_example/utils/deploayContract.dart';
+import 'package:web3modal_flutter/services/magic_service/models/frame_message.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
 import 'package:http/http.dart' as http;
 
@@ -32,6 +33,7 @@ class BethelBottomBar extends StatefulWidget {
 class BethelBottomBarState extends State<BethelBottomBar> {
   int currentIndex = 0;
   var httpClient = http.Client();
+  var name;
   Web3Client? _web3Client;
   var rpcUrl =
       'https://polygon-mainnet.g.alchemy.com/v2/pHKWzuctaLCPxAKYc0c8bKQA8d85oPlk';
@@ -149,23 +151,37 @@ class BethelBottomBarState extends State<BethelBottomBar> {
     final WW = await storage.read('walletAddress');
     print('ww: $WW');
 
+    final getName = await _w3mService.session?.connectedWalletName;
+      storage.write('walletName', getName);
+
     // Ensure service is properly initialized
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.delayed(Duration(seconds: 3));
       // Set your desired delay
       print('timing');
-      bool isConnect = await _w3mService.isConnected;
+      final isConnect = await _w3mService.isConnected;
+      storage.write('isConnected', isConnect);
 
-      print("isMetaMaskConnected11: $isConnect");
+       isConnected = await storage.read('isConnected');
+
+      print('iscoonected metamask: $isConnect');
+
+      print("isMetaMaskConnected11: $isConnected");
       setState(() {
-        isConnected = isConnect;
+        // isConnected = isConnect;
+               isConnected = storage.read('isConnected');
+               name = storage.read('walletName');
+               print('123: $isConnected');
+
       });
       if (isConnected == true) {
         print('connected1: $isConnected');
         // _showWelcomeDialog();
         _deployContract();
         _deployPlans();
-        _isBlureffect = false;
+        print('isfreeplanactivated: srotage: ${storage.read('isFreePlanActivated')}');
+        //   storage.write('_isBlureffect', false);
+        // _isBlureffect = false;
       } else {
         // _showMetamaskAlert(context);
         print('not connected1: $isConnected');
@@ -176,90 +192,9 @@ class BethelBottomBarState extends State<BethelBottomBar> {
     // _loadButtons();
   }
 
-  void _showMetamaskBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      backgroundColor:
-          Colors.transparent, // Transparent for custom background styling
-      builder: (BuildContext context) {
-        return Container(
-          height: MediaQuery.of(context).size.height / 3,
-          width: MediaQuery.of(context).size.width,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color.fromARGB(255, 68, 91, 0),
-                Theme.of(context).primaryColor,
-              ], // Gradient background
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Container(
-                width: MediaQuery.of(context).size.width / 4,
-                height: 4,
-                decoration: BoxDecoration(
-                  color:
-                      Theme.of(context).secondaryHeaderColor.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                margin: const EdgeInsets.only(top: 5),
-              ),
-              const Text(
-                'Welcome to \nBethelZkp Storage!',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const Text(
-                'You have to connect with MetaMask .',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14),
-              ),
-              // Image.asset('assets/images/metamaskImg.png', width: 50, height: 50),
-              Column(
-                children: !isConnected
-                    ? [
-                        W3MNetworkSelectButton(service: _w3mService),
-                        W3MConnectWalletButton(service: _w3mService),
-                      ]
-                    : [
-                        W3MAccountButton(
-                          service: _w3mService,
-                        ),
-                        W3MConnectWalletButton(
-                          service: _w3mService,
-                        ),
-                        // Text(WalletAddress.toString()),
-                      ],
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   Future<void> _showMetamaskAlert(BuildContext context) async {
+    final isConnect = storage.read('isConnected');
     print('fetching metamask alert');
     showDialog(
       context: context,
@@ -301,7 +236,7 @@ class BethelBottomBarState extends State<BethelBottomBar> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Please Connect with Wallet!',
+                 !isConnect ? 'Please Connect with Wallet!': 'You are Connected with...',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
@@ -310,7 +245,7 @@ class BethelBottomBarState extends State<BethelBottomBar> {
                 ),
                 Column(
                   children: 
-                  !isConnected
+                  !isConnect
                       ? [
                           W3MNetworkSelectButton(service: _w3mService),
                           W3MConnectWalletButton(service: _w3mService),
@@ -347,12 +282,12 @@ class BethelBottomBarState extends State<BethelBottomBar> {
 
       if (freePlanActivate![0] == true) {
         setState(() {
-          _isFreePlanActivated = true;
+          storage.write('isFreePlanActivated', true);
           _isBlureffect = false;
         });
         print('free plan activated');
       } else {
-        _isFreePlanActivated = false;
+        storage.write('isFreePlanActivated', false);
         _isBlureffect = true;
         print('free plan not activated');
       }
@@ -564,7 +499,7 @@ class BethelBottomBarState extends State<BethelBottomBar> {
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      'Please switch to Correct Wallet Address',
+                      'Please Use Correct Wallet Address',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.secondary,
                         fontSize: 12,
@@ -621,8 +556,9 @@ class BethelBottomBarState extends State<BethelBottomBar> {
   }
 
   Widget _loadButtons() {
+    final isConnect = storage.read('isConnected');
     return Column(
-      children: !isConnected
+      children: !isConnect
           ? [
               W3MNetworkSelectButton(service: _w3mService),
               W3MConnectWalletButton(service: _w3mService),
@@ -691,8 +627,12 @@ class BethelBottomBarState extends State<BethelBottomBar> {
           setState(() {
             currentIndex = index;
           });
+          final storage = GetStorage();
+          final isFreePlanActivated = storage.read('isFreePlanActivated');
 
-          if (!_isFreePlanActivated) {
+          final isConnected = storage.read('isConnected');
+
+          if (!isFreePlanActivated) {
             _showaAddPlanAlert();
           }
 
@@ -712,21 +652,21 @@ class BethelBottomBarState extends State<BethelBottomBar> {
           children: <Widget>[
             DashboardNav(
               did: widget.did,
-              isBlureffect: _isBlureffect,
+              
             ),
             FileNav(
               did: widget.did,
-              isBlureffect: _isBlureffect,
+              // isBlureffect: _isBlureffect,
             ),
             PlanNav(
               did: widget.did,
             ),
             ClaimsNav(
-              isBlureffect: _isBlureffect,
+              // isBlureffect: _isBlureffect,
             ),
             ProfileNav(
               did: widget.did,
-              isBlureffect: _isBlureffect,
+              // isBlureffect: _isBlureffect,
             ),
           ],
         ),

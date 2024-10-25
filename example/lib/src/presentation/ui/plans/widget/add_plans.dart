@@ -64,6 +64,8 @@ class _AddPlansState extends State<AddPlans> {
   bool _isFreePlanActivated = false;
   late W3MService _w3mService;
 
+  final storage = GetStorage();
+
   final _becx = W3MChainInfo(
     chainName: 'Polygon Mainnet',
     chainId: '137',
@@ -134,11 +136,11 @@ class _AddPlansState extends State<AddPlans> {
 
       if (freePlanActivate![0] == true) {
         setState(() {
-          _isFreePlanActivated = true;
+          storage.write('isFreePlanActivated', true);
         });
-        print('free plan activated');
+        print('free plan activated12');
       } else {
-        _isFreePlanActivated = false;
+        storage.write('isFreePlanActivated', false);
         print('free plan not activated');
       }
     } catch (e) {
@@ -162,6 +164,13 @@ class _AddPlansState extends State<AddPlans> {
         return true;
       } else {
         print("Transaction failed or still pending.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Transaction failed or still pending.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
         return false;
       }
     } catch (e) {
@@ -174,6 +183,8 @@ class _AddPlansState extends State<AddPlans> {
 
   @override
   Widget build(BuildContext context) {
+    final _isFreePlanActive = storage.read('isFreePlanActivated') ?? false;
+    print('isfreePlan build: $_isFreePlanActive');
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
       body: SafeArea(
@@ -191,7 +202,7 @@ class _AddPlansState extends State<AddPlans> {
                   // Only use Expanded here for the TabBarView
                   child: DefaultTabController(
                     length: 4,
-                    child: _buildTabView(),
+                    child: _buildTabView(_isFreePlanActive),
                   ),
                 ),
               ],
@@ -208,7 +219,7 @@ class _AddPlansState extends State<AddPlans> {
     await Future.delayed(Duration(seconds: 2)); // Simulate a network call
   }
 
-  Widget _buildTabView() {
+  Widget _buildTabView(bool isFreePlanActive) {
     return Column(
       children: [
         const TabBar(
@@ -225,10 +236,10 @@ class _AddPlansState extends State<AddPlans> {
           // Keep this Expanded, as TabBarView should fill available space
           child: TabBarView(
             children: [
-              _handleOneMonth(),
-              _handleThreeMonth(),
-              _handleSixMonth(),
-              _handleOneYear(),
+              _handleOneMonth(isFreePlanActive),
+              _handleThreeMonth(isFreePlanActive),
+              _handleSixMonth(isFreePlanActive),
+              _handleOneYear(isFreePlanActive),
             ],
           ),
         ),
@@ -236,7 +247,7 @@ class _AddPlansState extends State<AddPlans> {
     );
   }
 
-  Widget _handleOneMonth() {
+  Widget _handleOneMonth(bool isFreePlanActive) {
     return SingleChildScrollView(
       // Scrollable content for large expanded plans
       child: Padding(
@@ -261,30 +272,27 @@ class _AddPlansState extends State<AddPlans> {
                   'Decentralized Data Protection'
                 ],
                 'ADD 0\$ PER MONTH',
-                'assets/images/paperPlane.png'),
+                'assets/images/paperPlane.png',
+                isFreePlanActive),
             SizedBox(height: 20),
 
-            _buildAnimatedContainer(
-              isExpanded2,
-              "Starter Plan",
-              "10\$",
-              () {
-                setState(() {
-                  isExpanded2 = !isExpanded2;
-                });
-              },
-              'Perfect for those managing large files or extensive data, ensuring your information is stored safely.',
-              [
-                'Unlimited Uploads',
-                'Upto 1000GB storage space',
-                'Hack-Proof',
-                'ZKP Protected',
-                'Blockchain-Based Secure',
-                'Decentralized Data Protection'
-              ],
-              'ADD 10\$ Per Month',
-              'assets/images/rocket2.png',
-            ),
+            _buildAnimatedContainer(isExpanded2, "Starter Plan", "10\$", () {
+              setState(() {
+                isExpanded2 = !isExpanded2;
+              });
+            },
+                'Perfect for those managing large files or extensive data, ensuring your information is stored safely.',
+                [
+                  'Unlimited Uploads',
+                  'Upto 1000GB storage space',
+                  'Hack-Proof',
+                  'ZKP Protected',
+                  'Blockchain-Based Secure',
+                  'Decentralized Data Protection'
+                ],
+                'ADD 10\$ Per Month',
+                'assets/images/rocket2.png',
+                isFreePlanActive),
             // Basicplanbutton(
             //   month: 1,
             //   isExpanded: isExpanded2,
@@ -326,14 +334,15 @@ class _AddPlansState extends State<AddPlans> {
                   'Decentralized Data Protection'
                 ],
                 'ADD 30\$ PER MONTH',
-                'assets/images/plane.png'),
+                'assets/images/plane.png',
+                isFreePlanActive),
           ],
         ),
       ),
     );
   }
 
-  Widget _handleThreeMonth() {
+  Widget _handleThreeMonth(bool isFreePlanActive) {
     return SingleChildScrollView(
       // Scrollable content for large expanded plans
       child: Padding(
@@ -342,27 +351,23 @@ class _AddPlansState extends State<AddPlans> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(height: 40),
-            _buildAnimatedContainer(
-              isExpanded2,
-              "Starter Plan",
-              "30\$",
-              () {
-                setState(() {
-                  isExpanded2 = !isExpanded2;
-                });
-              },
-              'Perfect for those managing large files or extensive data, ensuring your information is stored safely.',
-              [
-                'Unlimited Uploads',
-                'Upto 1000GB storage space',
-                'Hack-Proof',
-                'ZKP Protected',
-                'Blockchain-Based Secure',
-                'Decentralized Data Protection'
-              ],
-              'ADD 30\$',
-              'assets/images/rocket2.png',
-            ),
+            _buildAnimatedContainer(isExpanded2, "Starter Plan", "30\$", () {
+              setState(() {
+                isExpanded2 = !isExpanded2;
+              });
+            },
+                'Perfect for those managing large files or extensive data, ensuring your information is stored safely.',
+                [
+                  'Unlimited Uploads',
+                  'Upto 1000GB storage space',
+                  'Hack-Proof',
+                  'ZKP Protected',
+                  'Blockchain-Based Secure',
+                  'Decentralized Data Protection'
+                ],
+                'ADD 30\$',
+                'assets/images/rocket2.png',
+                isFreePlanActive),
             SizedBox(height: 20),
             _buildAnimatedContainer(isExpanded3, "Advance Plan", "90\$", () {
               setState(() {
@@ -379,14 +384,15 @@ class _AddPlansState extends State<AddPlans> {
                   'Decentralized Data Protection'
                 ],
                 'ADD 90\$ PER MONTH',
-                'assets/images/plane.png'),
+                'assets/images/plane.png',
+                isFreePlanActive),
           ],
         ),
       ),
     );
   }
 
-  Widget _handleSixMonth() {
+  Widget _handleSixMonth(bool isFreePlanActive) {
     return SingleChildScrollView(
       // Scrollable content for large expanded plans
       child: Padding(
@@ -395,27 +401,23 @@ class _AddPlansState extends State<AddPlans> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(height: 40),
-            _buildAnimatedContainer(
-              isExpanded2,
-              "Starter Plan",
-              "60\$",
-              () {
-                setState(() {
-                  isExpanded2 = !isExpanded2;
-                });
-              },
-              'Perfect for those managing large files or extensive data, ensuring your information is stored safely.',
-              [
-                'Unlimited Uploads',
-                'Upto 1000GB storage space',
-                'Hack-Proof',
-                'ZKP Protected',
-                'Blockchain-Based Secure',
-                'Decentralized Data Protection'
-              ],
-              'ADD 60\$',
-              'assets/images/rocket2.png',
-            ),
+            _buildAnimatedContainer(isExpanded2, "Starter Plan", "60\$", () {
+              setState(() {
+                isExpanded2 = !isExpanded2;
+              });
+            },
+                'Perfect for those managing large files or extensive data, ensuring your information is stored safely.',
+                [
+                  'Unlimited Uploads',
+                  'Upto 1000GB storage space',
+                  'Hack-Proof',
+                  'ZKP Protected',
+                  'Blockchain-Based Secure',
+                  'Decentralized Data Protection'
+                ],
+                'ADD 60\$',
+                'assets/images/rocket2.png',
+                isFreePlanActive),
             SizedBox(height: 20),
             _buildAnimatedContainer(isExpanded3, "Advance Plan", "180\$", () {
               setState(() {
@@ -432,14 +434,15 @@ class _AddPlansState extends State<AddPlans> {
                   'Decentralized Data Protection'
                 ],
                 'ADD 180\$ PER MONTH',
-                'assets/images/plane.png'),
+                'assets/images/plane.png',
+                isFreePlanActive),
           ],
         ),
       ),
     );
   }
 
-  Widget _handleOneYear() {
+  Widget _handleOneYear(bool isFreePlanActive) {
     return SingleChildScrollView(
       // Scrollable content for large expanded plans
       child: Padding(
@@ -448,27 +451,23 @@ class _AddPlansState extends State<AddPlans> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(height: 40),
-            _buildAnimatedContainer(
-              isExpanded2,
-              "Starter Plan",
-              "120\$",
-              () {
-                setState(() {
-                  isExpanded2 = !isExpanded2;
-                });
-              },
-              'Perfect for those managing large files or extensive data, ensuring your information is stored safely.',
-              [
-                'Unlimited Uploads',
-                'Upto 1000GB storage space',
-                'Hack-Proof',
-                'ZKP Protected',
-                'Blockchain-Based Secure',
-                'Decentralized Data Protection'
-              ],
-              'ADD 120\$',
-              'assets/images/rocket2.png',
-            ),
+            _buildAnimatedContainer(isExpanded2, "Starter Plan", "120\$", () {
+              setState(() {
+                isExpanded2 = !isExpanded2;
+              });
+            },
+                'Perfect for those managing large files or extensive data, ensuring your information is stored safely.',
+                [
+                  'Unlimited Uploads',
+                  'Upto 1000GB storage space',
+                  'Hack-Proof',
+                  'ZKP Protected',
+                  'Blockchain-Based Secure',
+                  'Decentralized Data Protection'
+                ],
+                'ADD 120\$',
+                'assets/images/rocket2.png',
+                isFreePlanActive),
             SizedBox(height: 20),
             _buildAnimatedContainer(isExpanded3, "Advance Plan", "360\$", () {
               setState(() {
@@ -485,14 +484,15 @@ class _AddPlansState extends State<AddPlans> {
                   'Decentralized Data Protection'
                 ],
                 'ADD 360\$ PER MONTH',
-                'assets/images/plane.png'),
+                'assets/images/plane.png',
+                isFreePlanActive),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAddPlan(String name) {
+  Widget _buildAddPlan(String name, bool isFreePlanActive) {
     // print('tap tap');
     return BlocBuilder<AddPlansBloc, AddPlansState>(
       bloc: _addPlansBloc,
@@ -660,6 +660,7 @@ class _AddPlansState extends State<AddPlans> {
 
         if (!_isVerified) {
           print('isVerified: $_isVerified');
+          print('isfreePlanActivated butn: $_isFreePlanActivated');
           return Center(
             child: TextButton(
               onPressed:
@@ -671,14 +672,14 @@ class _AddPlansState extends State<AddPlans> {
                 _addPlansBloc.add(GenerateSecretsEvent());
               },
               child: _buildButton(
-                _isFreePlanActivated ? "Activated" : name,
-                _isFreePlanActivated
+                isFreePlanActive ? "Activated" : name,
+                isFreePlanActive
                     ? Theme.of(context).primaryColor
                     : Theme.of(context).colorScheme.secondary,
-                _isFreePlanActivated
+                isFreePlanActive
                     ? Colors.redAccent[700]
                     : Theme.of(context).primaryColor,
-                _isFreePlanActivated
+                isFreePlanActive
                     ? Colors.redAccent[700]
                     : Theme.of(context).primaryColor,
               ),
@@ -688,6 +689,8 @@ class _AddPlansState extends State<AddPlans> {
           // WidgetsBinding.instance.addPostFrameCallback((_) {
           // _deployPlans();
           // });
+          final isfreePlan = storage.read('isFreePlanActivated');
+          print('isfreePlan new: $isfreePlan');
 
           return Center(
             // child: Text(
@@ -695,14 +698,14 @@ class _AddPlansState extends State<AddPlans> {
             //   style: TextStyle(color: Colors.grey),
             // ),
             child: _buildButton(
-              _isFreePlanActivated ? "Activated" : name,
-              _isFreePlanActivated
+              isFreePlanActive ? "Activated" : name,
+              isFreePlanActive
                   ? Theme.of(context).primaryColor
                   : Theme.of(context).colorScheme.secondary,
-              _isFreePlanActivated
+              isFreePlanActive
                   ? Colors.redAccent[700]
                   : Theme.of(context).primaryColor,
-              _isFreePlanActivated
+              isFreePlanActive
                   ? Colors.redAccent[700]
                   : Theme.of(context).primaryColor,
             ),
@@ -773,105 +776,117 @@ class _AddPlansState extends State<AddPlans> {
   }
 
   Future<void> transferToken(double price) async {
-    // Format the value to wei as BigInt
+    // Format the value to wei
     BigInt _formatValue(double amount, {int decimals = 18}) {
       return BigInt.from(amount * BigInt.from(10).pow(decimals).toDouble());
     }
 
-    final transferValue = _formatValue(price, decimals: 18);
+    final transferValue = _formatValue(10, decimals: 18);
     print('Transferring amount: $transferValue wei');
 
     try {
       print('Fetching Web3Modal service...');
+
       // Launch the connected wallet
       _w3mService.launchConnectedWallet();
 
-      // Load ABI only once if possible (move out if it's reusable)
+      // Load ABI from the asset file
       final abiFile = await rootBundle.loadString('assets/abi/BethToken.json');
       if (abiFile.isEmpty) throw FormatException('ABI file is empty');
 
       final jsonAbi = jsonDecode(abiFile);
       final _abiCode =
           ContractAbi.fromJson(jsonEncode(jsonAbi['abi']), 'BethToken');
+
       final _contract = DeployedContract(_abiCode, _contractAddress1);
       print('Contract loaded: $_contract');
 
-      // Perform the approve operation
-      final approveSuccess = await _performApprove(_contract, transferValue);
-      print('approveSuccess: $approveSuccess');
-      if (!approveSuccess) return;
-
-      // Perform the transfer if approve was successful
-      final transferSuccess = await _performTransfer(_contract, transferValue);
-      _handleTransactionResult(transferSuccess);
-    } catch (e) {
-      _handleError(e);
-    }
-  }
-
-// Approve the transfer
-  Future<bool> _performApprove(DeployedContract contract, BigInt value) async {
-    print('Executing approve function...');
-    try {
+      // Execute the approve function and wait for the result
+      print('Executing approve function...');
       final approveResult = await _w3mService.requestWriteContract(
         topic: _w3mService.session?.topic.toString() ?? '',
         chainId: "eip155:137",
-        deployedContract: contract,
+        deployedContract: _contract,
         functionName: 'approve',
         transaction: Transaction(
-          from: EthereumAddress.fromHex(_w3mService.session?.address ?? ''),
+          from: EthereumAddress.fromHex(
+              _w3mService.session?.address ?? ''), // Use the wallet address
         ),
-        parameters: [_mainAddress, value],
+        parameters: [
+          _mainAddress, // Ensure _mainAddress is a valid Ethereum address
+          transferValue, // Token amount in wei
+        ],
       );
-      print('Approve successful: $approveResult');
-      return await _checkTxHash(approveResult.toString());
-    } catch (e) {
-      print('Approve failed: $e');
-      return false;
-    }
-  }
+      // if(_checkTxHashStatus(approveResult)){
+      //   print('Transaction successful with hash: $approveResult');
+      // }
+      // await _checkTxHashStatus(approveResult);
 
-// Execute the transfer
-  Future<bool> _performTransfer(DeployedContract contract, BigInt value) async {
-    print('Executing transfer function...');
-    try {
+      print('Approve successful: ${approveResult}');
+
+       bool txConfirmed = await _waitForTransactionReceipt(approveResult);
+    if (txConfirmed) {
+      print('Transaction confirmed successfully.');
+    } else {
+      print('Transaction failed or took too long to confirm.');
+    }
+
+      final isSuccessful = await _checkTxHash(approveResult);
+
+      print('isSuccessful approve: $isSuccessful');
+
+      // Now execute the transfer function after approve is successful
+      print('Executing transfer function...');
+      if(isSuccessful){
       final transferResult = await _w3mService.requestWriteContract(
         topic: _w3mService.session?.topic.toString() ?? '',
-        chainId: "eip155:137",
-        deployedContract: contract,
+        chainId: "eip155:137", // Ensure you are connected to the correct chain
+        deployedContract: _contract,
         functionName: 'transfer',
         transaction: Transaction(
-          from: EthereumAddress.fromHex(_w3mService.session?.address ?? ''),
+          from: EthereumAddress.fromHex(
+              _w3mService.session?.address ?? ''), // Use the wallet address
         ),
-        parameters: [_mainAddress, value],
+        parameters: [
+          _mainAddress, // Ensure _mainAddress is a valid Ethereum address
+          transferValue, // Token amount in wei
+        ],
       );
       print('Transfer successful: $transferResult');
-      return await _checkTxHash(transferResult.toString());
+      }
+
+      
     } catch (e) {
-      print('Transfer failed: $e');
-      return false;
+      if (e.toString().contains('User denied transaction signature')) {
+        print('Transaction signature denied by the user.');
+      } else {
+        print('Error during transfer: $e');
+      }
     }
   }
 
-// Handle transaction result (either success or failure)
-  void _handleTransactionResult(bool isSuccess) {
-    final snackBar = SnackBar(
-      content: Text(
-        isSuccess ? 'Transaction successful' : 'Transaction failed',
-        style: TextStyle(color: isSuccess ? Colors.green : Colors.red),
-      ),
-    );
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  Future<bool> _waitForTransactionReceipt(String txHash) async {
+    print('fetching tx hash');
+    
+  const int maxAttempts = 50;
+  const Duration waitDuration = Duration(seconds: 5);
+
+  final client = Web3Client(
+        "https://polygon-mainnet.g.alchemy.com/v2/SOxCgJzw6PLvC02g238nlDqJRq83_j3k",
+        Client());
+
+  for (int attempt = 0; attempt < maxAttempts; attempt++) {
+    final receipt = await client.getTransactionReceipt(txHash);
+    if (receipt != null) {
+      print('Transaction confirmed with status: ${receipt.status}');
+      return receipt.status ?? false; // true if successful, false if failed
+    }
+    print('Waiting for transaction confirmation... (Attempt ${attempt + 1})');
+    await Future.delayed(waitDuration);
   }
 
-// Handle transaction errors
-  void _handleError(Object error) {
-    if (error.toString().contains('User denied transaction signature')) {
-      print('Transaction signature denied by the user.');
-    } else {
-      print('Error during transfer: $error');
-    }
-  }
+  return false; // Return false if max attempts reached and no confirmation
+}
 
   Future<bool> _checkTxHash(String txHash) async {
     bool isSuccess = false;
@@ -890,10 +905,10 @@ class _AddPlansState extends State<AddPlans> {
         return true;
       } else {
         print('Transaction is not yet successful. Retrying...');
-        await Future.delayed(Duration(seconds: 5)); // Poll every 5 seconds
+        await Future.delayed(Duration(seconds: 5));
       }
     }
-    return false;
+    return false; // Ensure a boolean value is always returned
   }
 
   // Async function to check if the transaction hash is successful
@@ -903,23 +918,23 @@ class _AddPlansState extends State<AddPlans> {
     // Add logic to check the transaction status here.
     // For example, calling a blockchain API to check the status of the txHash.
 
-    while (!isSuccess) {
-      // Call your blockchain transaction check method
-      // Example: checkTransaction(txHash) which returns true/false
-      isSuccess = await isTransactionSuccessful(txHash);
+    // while (!isSuccess) {
+    // Call your blockchain transaction check method
+    // Example: checkTransaction(txHash) which returns true/false
+    isSuccess = await isTransactionSuccessful(txHash);
 
-      if (isSuccess) {
-        print('Transaction successful with hash: $txHash');
-        // Dispatch the event to create proof after the transaction is successful
-        _addPlansBloc.add(createProofEvent(
-          owner: owner,
-          txhash: txHash,
-        ));
-      } else {
-        print('Transaction is not yet successful. Retrying...');
-        await Future.delayed(Duration(seconds: 5)); // Poll every 5 seconds
-      }
+    if (isSuccess) {
+      print('Transaction successful with hash: $txHash');
+      // Dispatch the event to create proof after the transaction is successful
+      _addPlansBloc.add(createProofEvent(
+        owner: owner,
+        txhash: txHash,
+      ));
+    } else {
+      print('Transaction is not yet successful. Retrying...');
+      await Future.delayed(Duration(seconds: 5)); // Poll every 5 seconds
     }
+    // }
   }
 
   Future<void> _checkProofTxHashStatus(
@@ -932,76 +947,76 @@ class _AddPlansState extends State<AddPlans> {
       String Did) async {
     bool isSuccess = false;
 
-    while (!isSuccess) {
-      isSuccess = await isTransactionSuccessful(txHash);
+    // while (!isSuccess) {
+    isSuccess = await isTransactionSuccessful(txHash);
 
-      if (isSuccess) {
-        print('proof Transaction successful with hash: $txHash');
-        _addPlansBloc.add(verifyuserEvent(
-          A: A,
-          B: B,
-          C: C,
-          Inputs: Inputs,
-          Owner: Owner,
-          Did: Did,
-        ));
-      } else {
-        print('proof Transaction is not yet successful. Retrying...');
-        await Future.delayed(Duration(seconds: 5)); // Poll every 5 seconds
-      }
+    if (isSuccess) {
+      print('proof Transaction successful with hash: $txHash');
+      _addPlansBloc.add(verifyuserEvent(
+        A: A,
+        B: B,
+        C: C,
+        Inputs: Inputs,
+        Owner: Owner,
+        Did: Did,
+      ));
+    } else {
+      print('proof Transaction is not yet successful. Retrying...');
+      await Future.delayed(Duration(seconds: 5)); // Poll every 5 seconds
     }
+    // }
   }
 
   Future<void> _checkVeridfyTxHashStatus(
       String txHash, String Owner, String Did) async {
     bool isSuccess = false;
 
-    while (!isSuccess) {
-      isSuccess = await isTransactionSuccessful(txHash);
+    // while (!isSuccess) {
+    isSuccess = await isTransactionSuccessful(txHash);
 
-      if (isSuccess) {
-        print('Verify Transaction successful with hash1: $txHash');
+    if (isSuccess) {
+      print('Verify Transaction successful with hash1: $txHash');
 
-        _addPlansBloc.add(freeSpaceEvent(
-          owner: Owner,
-          did: widget.did!,
-        ));
-      } else {
-        print('Verify Transaction is not yet successful. Retrying...');
-        await Future.delayed(Duration(seconds: 5)); // Poll every 5 seconds
-      }
+      _addPlansBloc.add(freeSpaceEvent(
+        owner: Owner,
+        did: widget.did!,
+      ));
+    } else {
+      print('Verify Transaction is not yet successful. Retrying...');
+      await Future.delayed(Duration(seconds: 5)); // Poll every 5 seconds
     }
+    // }
   }
 
   Future<void> _checkFreeSpaceTxHashStatus(String txHash) async {
     bool isSuccess = false;
 
     // Polling until the transaction is successful
-    while (!isSuccess) {
-      isSuccess = await isTransactionSuccessful(txHash);
+    // while (!isSuccess) {
+    isSuccess = await isTransactionSuccessful(txHash);
 
-      if (isSuccess) {
-        print('Verify Transaction successful with hash: $txHash');
+    if (isSuccess) {
+      print('Verify Transaction successful with hash: $txHash');
 
-        // Show a success message with a Snackbar
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Free Space Added Successfully',
-              style: TextStyle(color: Colors.green),
-            ),
+      // Show a success message with a Snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Free Space Added Successfully',
+            style: TextStyle(color: Colors.green),
           ),
-        );
+        ),
+      );
 
-        // Exit the function after transaction success
-        return;
-      } else {
-        print('Verify Transaction is not yet successful. Retrying...');
+      // Exit the function after transaction success
+      return;
+    } else {
+      print('Verify Transaction is not yet successful. Retrying...');
 
-        // Wait for 5 seconds before trying again
-        await Future.delayed(const Duration(seconds: 5));
-      }
+      // Wait for 5 seconds before trying again
+      await Future.delayed(const Duration(seconds: 5));
     }
+    // }
   }
 
   Widget _buildHeader() {
@@ -1068,12 +1083,15 @@ class _AddPlansState extends State<AddPlans> {
       String description,
       List<String> features,
       String name1,
-      String icon) {
+      String icon,
+      bool? isFreePlanActive) {
     return BlocBuilder<AddPlansBloc, AddPlansState>(
       bloc: _addPlansBloc,
       builder: (context, state) {
+       
         final storage = GetStorage();
         final owner1 = storage.read('walletAddress');
+         final freePlan = storage.read('isFreePlanActivated') ?? false;
         return GestureDetector(
           onTap: onTap, // Expands or collapses the container when tapped
           child: AnimatedContainer(
@@ -1083,7 +1101,7 @@ class _AddPlansState extends State<AddPlans> {
             height: isExpanded
                 ? MediaQuery.of(context).size.width * 1.4
                 : MediaQuery.of(context).size.width * 0.4,
-            decoration: title == "Basic Plan" && _isFreePlanActivated
+            decoration: title == "Basic Plan" && isFreePlanActive!
                 ? isExpanded
                     ? BoxDecoration(
                         gradient: LinearGradient(
@@ -1159,7 +1177,7 @@ class _AddPlansState extends State<AddPlans> {
                               width: 50, height: 50, fit: BoxFit.fill),
                           SizedBox(width: 30),
                           Text(
-                            title, // Display title text
+                           freePlan && title =="Basic Plan" && !isExpanded ? title + " Activated": title , // Display title text
                             style: isExpanded
                                 ? TextStyle(
                                     color: Colors.white,
@@ -1167,8 +1185,8 @@ class _AddPlansState extends State<AddPlans> {
                                     fontWeight: FontWeight.bold,
                                     fontFamily:
                                         GoogleFonts.robotoMono().fontFamily)
-                                : TextStyle(
-                                    color:
+                                :  TextStyle(
+                                    color: freePlan && title =="Basic Plan" ? Colors.redAccent[700] :
                                         Theme.of(context).colorScheme.secondary,
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -1277,7 +1295,7 @@ class _AddPlansState extends State<AddPlans> {
                       ),
                       // Button will now trigger the event when clicked
                       if (title == "Basic Plan") ...[
-                        _buildAddPlan(name1),
+                        _buildAddPlan(name1, isFreePlanActive!),
                       ],
                       if (title == "Starter Plan") ...[
                         _buildPlan(name1, 1, "MONTH_1_STARTER"),

@@ -3,9 +3,9 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/profile/widget
 
 class ProfileNav extends StatefulWidget {
     final String? did;
-    final bool isBlureffect;
+    // final bool isBlureffect;
 
-  const ProfileNav({super.key,required this.did, required this.isBlureffect});
+  const ProfileNav({super.key,required this.did});
 
   @override
   State<ProfileNav> createState() => _ProfileNavState();
@@ -25,7 +25,7 @@ class _ProfileNavState extends State<ProfileNav> {
             if (settings.name == "/myFiles") {
               // return const MyFiles();
             }
-            return  MyProfile(did:widget.did,isBlureffect: widget.isBlureffect,);
+            return  MyProfile(did:widget.did);
           },
         );
       },

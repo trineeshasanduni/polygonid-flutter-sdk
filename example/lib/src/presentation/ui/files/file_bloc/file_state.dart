@@ -9,7 +9,11 @@ sealed class FileState extends Equatable {
 
 final class FileInitial extends FileState {}
 
-final class FileUploading extends FileState {}
+final class FileUploading extends FileState {
+  final String message;
+
+  const FileUploading(this.message );
+}
 
 final class FileUploaded extends FileState {
   final FileEntity response;
@@ -55,6 +59,7 @@ final class UploadVerified extends FileState {
 
 class Fileverifying extends FileState {
   final String batchhash;
+  
   Fileverifying(this.batchhash);
 }
 final class FileVerifyFailed extends FileState {

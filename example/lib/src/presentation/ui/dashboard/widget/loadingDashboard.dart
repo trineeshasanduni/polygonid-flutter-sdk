@@ -4,28 +4,29 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/prese
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/widgets/setupPassword.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
-class LoadingPage extends StatefulWidget {
-  const LoadingPage({super.key});
+class DashboardLoading extends StatefulWidget {
+  const DashboardLoading({super.key});
 
   @override
-  State<LoadingPage> createState() => _LoadingPageState();
+  State<DashboardLoading> createState() => _DashboardLoadingState();
 }
 
-class _LoadingPageState extends State<LoadingPage> {
+class _DashboardLoadingState extends State<DashboardLoading> {
   @override
   void initState() {
     super.initState();
     // Set a timer to navigate after 5 seconds
-    Timer(const Duration(seconds: 5), () {
+    Timer(const Duration(seconds: 10), () {
       // Replace with your desired page route
-      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => const SetupPasswordScreen()));
+     Navigator.popAndPushNamed(context, '/dashboard');
+         
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).primaryColor,
       body: 
           Center(
             child: Column(

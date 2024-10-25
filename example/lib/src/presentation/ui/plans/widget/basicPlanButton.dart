@@ -482,6 +482,13 @@ Widget _buildPlan(String name, int month, String plan) {
         return true;
       } else {
         print("Transaction failed or still pending.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Transaction failed or still pending.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
         return false;
       }
     } catch (e) {
