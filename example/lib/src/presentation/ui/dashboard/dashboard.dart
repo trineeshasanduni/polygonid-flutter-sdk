@@ -766,37 +766,40 @@ class _DashboardState extends State<Dashboard> {
                         ),
                       ),
                     if (isFreePlan == null || !isFreePlan)
-                      Positioned(
-                        // top: MediaQuery.of(context).size.height / 1.5,
-                        child: ListTile(
-                          trailing: Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              // color: Theme.of(context).colorScheme.primary,
-                              borderRadius: BorderRadius.circular(50),
-                              border: Border.all(
-                                  color:
-                                      Theme.of(context).colorScheme.secondary,
-                                  width: 1),
-                            ),
-                            child: GestureDetector(
-                              onTap: () {
-                                // _showWelcomeDialog();
-                                // _deployContract();
-                                // _showWelcomeBottomSheet();
-                                _showMetamaskBottomSheet();
-                              },
-                              child: name == "MetaMask Wallet"
-                                  ? Image.asset(
-                                      'assets/images/digital-wallet.png',
-                                      width: 20,
-                                      height: 20)
-                                  : Image.asset('assets/images/metamaskImg.png',
-                                      width: 30, height: 30),
+                      Column(
+                        children: [
+                          
+                          Positioned(
+                            // top: MediaQuery.of(context).size.height / 1.5,
+                            child: ListTile(
+                              trailing: Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  // color: Theme.of(context).colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(50),
+                                  border: Border.all(
+                                      color:
+                                          Theme.of(context).colorScheme.secondary,
+                                      width: 1),
+                                ),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    // _showWelcomeDialog();
+                                    // _deployContract();
+                                    // _showWelcomeBottomSheet();
+                                    _showMetamaskBottomSheet();
+                                  },
+                                  child: name == "MetaMask Wallet"
+                                      ? Icon(Icons.wallet,
+                                          color: Theme.of(context).secondaryHeaderColor)
+                                      : Image.asset('assets/images/metamaskImg.png',
+                                          width: 30, height: 30),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
                   ],
                 ),

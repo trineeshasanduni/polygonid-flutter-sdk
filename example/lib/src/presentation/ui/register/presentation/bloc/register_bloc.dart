@@ -37,7 +37,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
       this.qrcodeParserUtils, this._polygonIdSdk, this._mapper)
       : super(RegisterInitial()) {
     on<SubmitSignup>((event, emit) async {
-      emit(RegisterLoading());
+      emit(RegisterLoading('Registering started'));
       print('registering');
       final res = await registerUsecase(UseCaseParams(
           did: event.did,
@@ -288,7 +288,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
 
     print('didIdentifier: $didIdentifier');
 
-    emit(RegisterLoading());
+    emit(RegisterLoading('fetching claims'));
 
     Iden3MessageEntity iden3message = event.iden3message;
     print('iden3message fetch: $iden3message');
@@ -324,7 +324,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
   }
 
   Future<void> _getClaims(getClaims event, Emitter<RegisterState> emit) async {
-    emit(RegisterLoading());
+    emit(RegisterLoading('Loading claims'));
 
     List<FilterEntity>? filters = event.filters;
 

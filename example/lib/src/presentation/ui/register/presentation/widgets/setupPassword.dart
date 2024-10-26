@@ -140,17 +140,21 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
             Column(
               children: [
 
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
-                  onPressed: () {
-                    // Navigator.of(context).pushReplacementNamed(Routes.homePath);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Signup(),
-                      ),
-                    );
-                  },
+                // IconButton(
+                //   icon: const Icon(Icons.close, color: Colors.white),
+                //   onPressed: () {
+                //     // Navigator.of(context).pushReplacementNamed(Routes.homePath);
+                //     Navigator.push(
+                //       context,
+                //       MaterialPageRoute(
+                //         builder: (context) => const Signup(),
+                //       ),
+                //     );
+                //   },
+                // ),
+
+                SizedBox(
+                  height: 40,
                 ),
                 _buildBlocContent(context),
                 const SizedBox(height: 20),
@@ -410,9 +414,26 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
           bloc: _registerBloc,
           builder: (BuildContext context, RegisterState state) {
             if (state is RegisterLoading) {
-              return Loading(
-                  Loadingcolor: Theme.of(context).primaryColor,
-                  color: Theme.of(context).colorScheme.secondary);
+              // return Loading(
+              //     Loadingcolor: Theme.of(context).primaryColor,
+              //     color: Theme.of(context).colorScheme.secondary);
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    state.message,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.secondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  LoadingAnimationWidget.progressiveDots(
+                    color: Theme.of(context).colorScheme.secondary,
+                    size: 30.0,
+                  )
+                ],
+              );
             }
             if (state is RegisterSuccess) {
               final statusCode = state.response.statusCode;

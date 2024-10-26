@@ -5,7 +5,11 @@ sealed class RegisterState {}
 
 final class RegisterInitial extends RegisterState {}
 
-final class RegisterLoading extends RegisterState {}
+final class RegisterLoading extends RegisterState {
+  final String message;
+
+  RegisterLoading(this.message);
+}
 
 final class RegisterQrLoading extends RegisterState {}
 

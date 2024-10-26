@@ -121,8 +121,8 @@ class _SetUpScreenState extends State<SetUpScreen>
               ? _buildCreateIdentityButton(enabled)
               : Column(
                   children: [
-                    // _buildCreateIdentityButton(enabled),
-                    // SizedBox(height: 10),
+                    _buildreCreateIdentityButton(enabled),
+                    SizedBox(height: 10),
                     _buildHaveIdentityButton(enabled),
                   ],
                 );
@@ -136,11 +136,19 @@ class _SetUpScreenState extends State<SetUpScreen>
       absorbing: !enabled,
       child: GestureDetector(
         onTap: () async {
-           // Set the flag for creating identity
-          print('Creating identity...');
-        _bloc.add(const HomeEvent.createIdentity());
-        // isCreatingIdentity = true;
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const LoadingPage()));
+          // Show the confirmation dialog
+          // bool shouldProceed = await _showConfirmationDialog(context);
+
+          // If user confirms, proceed with the action
+          // if (shouldProceed) {
+          //   print('Creating identity...');
+            _bloc.add(const HomeEvent.createIdentity());
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const LoadingPage()),
+            );
+          // }
         },
         key: CustomWidgetsKeys.homeScreenButtonCreateIdentity, // Unique Key
         child: FrostedGlassBox(
@@ -151,21 +159,7 @@ class _SetUpScreenState extends State<SetUpScreen>
           theColor: Colors.white.withOpacity(0.13),
           theChild: BlocBuilder<HomeBloc, HomeState>(
             bloc: _bloc,
-
             builder: (context, state) {
-              // if (state is LoadedIdentifierHomeState) {
-                
-              //   WidgetsBinding.instance.addPostFrameCallback((_) {
-              //     Navigator.push(
-              //       context,
-              //       MaterialPageRoute(
-              //         builder: (context) => const SetupPasswordScreen(),
-              //       ),
-              //     );
-              //   });
-              //   // isCreatingIdentity = false; 
-              // }
-
               return Text(
                 'Create New DID',
                 style: TextStyle(
@@ -184,14 +178,159 @@ class _SetUpScreenState extends State<SetUpScreen>
     );
   }
 
-  
+  Widget _buildreCreateIdentityButton(bool enabled) {
+    return AbsorbPointer(
+      absorbing: !enabled,
+      child: GestureDetector(
+        onTap: () async {
+          // Show the confirmation dialog
+          bool shouldProceed = await _showConfirmationDialog(context);
+
+          // If user confirms, proceed with the action
+          if (shouldProceed) {
+            print('Creating identity...');
+            _bloc.add(const HomeEvent.createIdentity());
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const LoadingPage()),
+            );
+          }
+        },
+        key: CustomWidgetsKeys.homeScreenButtonCreateIdentity, // Unique Key
+        child: FrostedGlassBox(
+          theWidth: MediaQuery.of(context).size.width,
+          theHeight: 50.0,
+          theX: 4.0,
+          theY: 4.0,
+          theColor: Colors.white.withOpacity(0.13),
+          theChild: BlocBuilder<HomeBloc, HomeState>(
+            bloc: _bloc,
+            builder: (context, state) {
+              return Text(
+                'Re-Create New DID',
+                style: TextStyle(
+                  fontSize: 12.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: GoogleFonts.robotoMono().fontFamily,
+                ),
+              );
+            },
+            buildWhen: (_, currentState) => currentState
+                is LoadedIdentifierHomeState, // Respond to this state
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Function to show the confirmation dialog
+  Future<bool> _showConfirmationDialog(BuildContext context) async {
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: false, // Prevents closing by tapping outside
+          builder: (BuildContext dialogContext) {
+            return AlertDialog(
+              backgroundColor: Color.fromARGB(255, 54, 72, 1),
+              titlePadding: EdgeInsets.all(0), // Remove default title padding
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 24.0), // Content padding
+              title: Column(
+                children: [
+                  SizedBox(height: 10),
+                  // Image at the top
+                  Image.asset(
+                    'assets/lottie/delete.gif', // Replace with your image asset
+                    height: 80, // Set the height of the image
+                  ),
+                  SizedBox(height: 10), // Spacing between image and text
+                  Text('Confirmation'),
+                  SizedBox(height: 10),
+                ],
+              ),
+              content: Text('Are you sure you want to create a new identity? \n'
+                  'This will remove the existing identity and all associated data.'),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('Cancel',
+                      style: TextStyle(color: Colors.redAccent[700])),
+                  onPressed: () {
+                    Navigator.of(dialogContext)
+                        .pop(false); // Close dialog and return false
+                  },
+                ),
+                // OutlinedButton(
+                //   style: OutlinedButton.styleFrom(
+                //     side: BorderSide(
+                //         color: Theme.of(context).secondaryHeaderColor,
+                //         width: 2.0), // Outline color and width
+                //     shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(
+                //             8.0)), // Optional: Rounded corners
+                //     padding: EdgeInsets.symmetric(
+                //         horizontal: 16.0, vertical: 8.0), // Adjust padding
+                //   ),
+                //   child: Text(
+                //     'Proceed',
+                //     style: TextStyle(
+                //       color:
+                //           Theme.of(context).secondaryHeaderColor, // Text color
+                //       fontWeight: FontWeight.bold, // Optional: Bold text
+                //     ),
+                //   ),
+                //   onPressed: () {
+                //     Navigator.of(dialogContext)
+                //         .pop(true); // Close dialog and return true
+                //   },
+                // ),
+
+                 GestureDetector(
+                  onTap: () {
+                    Navigator.of(dialogContext)
+                        .pop(true); },// Close dialog and return true,
+                   child: FrostedGlassBox(
+                             // key: CustomWidgetsKeys.homeScreenButtonRemoveIdentity,
+                             theWidth: MediaQuery.of(context).size.width/4,
+                             theHeight: 50.0,
+                             theX: 4.0,
+                             theY: 4.0,
+                             theColor: Colors.white.withOpacity(0.13),
+                             theChild: ShaderMask(
+                               shaderCallback: (bounds) => LinearGradient(
+                                 colors: [
+                                   Theme.of(context).colorScheme.primary,
+                                   Theme.of(context).colorScheme.secondary
+                                 ], // Customize your gradient colors
+                                 begin: Alignment.topLeft,
+                                 end: Alignment.bottomRight,
+                               ).createShader(bounds),
+                               child: Text(
+                                 'Confirm',
+                                 style: TextStyle(
+                                   fontSize: 14.0,
+                                   color: Theme.of(context)
+                      .secondaryHeaderColor, // This will be overridden by the gradient
+                                   fontWeight: FontWeight.w500,
+                                   fontFamily: GoogleFonts.robotoMono().fontFamily,
+                                 ),
+                               ),
+                             ),
+                           ),
+                 ),
+              ],
+            );
+          },
+        ) ??
+        false; // Return false if dialog is dismissed without selection
+  }
 
   Widget _buildRemoveIdentityButton(bool enabled) {
     return AbsorbPointer(
       absorbing: !enabled,
       child: GestureDetector(
         onTap: () async {
-          isCreatingIdentity = false; 
+          isCreatingIdentity = false;
           print('Removing identity...');
           _bloc.add(const HomeEvent.removeIdentity());
         },
