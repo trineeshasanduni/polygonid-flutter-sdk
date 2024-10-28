@@ -58,9 +58,10 @@ final class UploadVerified extends FileState {
 }
 
 class Fileverifying extends FileState {
+  final String message;
   final String batchhash;
   
-  Fileverifying(this.batchhash);
+  Fileverifying(this.batchhash,this.message);
 }
 final class FileVerifyFailed extends FileState {
   final String message;

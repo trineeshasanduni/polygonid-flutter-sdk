@@ -99,7 +99,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
 
   void _handleGetFileName(
       GetFileNameEvent event, Emitter<FileState> emit) async {
-    emit(FileUploading('Uploading file'));
+    emit(FileUploading('Updating'));
     final fileNameResponse =
         await getFileNameUsecase(FileNameParam(BatchHash: event.BatchHash,Verify: event.Verify));
     fileNameResponse.fold(
@@ -116,7 +116,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
 
   Future<void> _handleVerifyClick(
       VerifyUploadEvent event, Emitter<FileState> emit) async {
-    emit(Fileverifying(event.BatchHash));
+    emit(Fileverifying(event.BatchHash,'File verifying'));
     final failureOrVerify = await verifyUploadUsecase(
       VerifyUploadParam(
         BatchHash: event.BatchHash,
@@ -173,7 +173,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
 
     print('didIdentifier: $didIdentifier');
 
-    emit(Fileverifying(batchHash));
+    emit(Fileverifying(batchHash,'Fetching claim'));
 
     Iden3MessageEntity iden3message = event.iden3message;
     print('iden3message fetch: $iden3message');
@@ -210,7 +210,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
 
   Future<void> _getUploadVerifyClaims(getUploadVerifyClaims event, Emitter<FileState> emit) async {
 String batchHash = event.batchHash!;
-    emit(Fileverifying(batchHash));
+    emit(Fileverifying(batchHash,'Verifying Upload claim'));
 
     List<FilterEntity>? filters = event.filters;
 

@@ -10,6 +10,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:polygonid_flutter_sdk_example/src/data/secure_storage.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/common/widgets/circularProgress.dart';
@@ -501,11 +502,22 @@ class _AddPlansState extends State<AddPlans> {
         final owner1 = storage.read('walletAddress');
 
         if (state is AddPlansLoading) {
-          return Center(
-            child: Loading(
-              Loadingcolor: Theme.of(context).primaryColor,
-              color: Theme.of(context).colorScheme.secondary,
-            ),
+         return Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                state.message,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.secondary,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(width: 10),
+              LoadingAnimationWidget.progressiveDots(
+                color: Theme.of(context).colorScheme.secondary,
+                size: 30.0,
+              )
+            ],
           );
         }
 
@@ -724,16 +736,22 @@ class _AddPlansState extends State<AddPlans> {
         final owner1 = storage.read('walletAddress');
 
         if (state is PriceLoading) {
-          return Center(
-            // child: Loading(
-            //   Loadingcolor: Theme.of(context).primaryColor,
-            //   color: Theme.of(context).colorScheme.secondary,
-            // ),
-            child: Text(state.message,
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                state.message,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.secondary,
                   fontSize: 14,
-                )),
+                ),
+              ),
+              const SizedBox(width: 10),
+              LoadingAnimationWidget.progressiveDots(
+                color: Theme.of(context).colorScheme.secondary,
+                size: 30.0,
+              )
+            ],
           );
         }
 
@@ -776,94 +794,92 @@ class _AddPlansState extends State<AddPlans> {
   }
 
   Future<void> transferToken(double price) async {
-    // Format the value to wei
-    BigInt _formatValue(double amount, {int decimals = 18}) {
-      return BigInt.from(amount * BigInt.from(10).pow(decimals).toDouble());
+  // Format the value to wei
+  BigInt _formatValue(double amount, {int decimals = 18}) {
+    return BigInt.from(amount * BigInt.from(10).pow(decimals).toDouble());
+  }
+
+  final transferValue = _formatValue(10, decimals: 18);
+  print('Transferring amount: $transferValue wei');
+
+  try {
+    print('Fetching Web3Modal service...');
+
+    // Launch the connected wallet
+    _w3mService.launchConnectedWallet();
+
+    // Load ABI from the asset file
+    final abiFile = await rootBundle.loadString('assets/abi/BethToken.json');
+    if (abiFile.isEmpty) throw FormatException('ABI file is empty');
+
+    final jsonAbi = jsonDecode(abiFile);
+    final _abiCode = ContractAbi.fromJson(jsonEncode(jsonAbi['abi']), 'BethToken');
+
+    final _contract = DeployedContract(_abiCode, _contractAddress1);
+    print('Contract loaded: $_contract');
+
+    // Execute the approve function and wait for the result
+    print('Executing approve function...');
+    final approveResult = await _w3mService.requestWriteContract(
+      topic: _w3mService.session?.topic.toString() ?? '',
+      chainId: "eip155:137",
+      deployedContract: _contract,
+      functionName: 'approve',
+      transaction: Transaction(
+        from: EthereumAddress.fromHex(_w3mService.session?.address ?? ''),
+      ),
+      parameters: [
+        _mainAddress, // Ensure _mainAddress is a valid Ethereum address
+        transferValue, // Token amount in wei
+      ],
+    );
+
+    print('Approve successful with result: $approveResult');
+
+    // Wait for the transaction receipt to confirm the approval
+    bool isApprovalConfirmed = await _waitForTransactionReceipt(approveResult);
+    if (!isApprovalConfirmed) {
+      print('Approval transaction failed or timed out.');
+      return;
     }
 
-    final transferValue = _formatValue(10, decimals: 18);
-    print('Transferring amount: $transferValue wei');
+    print('Approval transaction confirmed.');
 
-    try {
-      print('Fetching Web3Modal service...');
+    // Now execute the transfer function after approve is successful
+    print('Executing transfer function...');
+    final transferResult = await _w3mService.requestWriteContract(
+      topic: _w3mService.session?.topic.toString() ?? '',
+      chainId: "eip155:137", // Ensure you are connected to the correct chain
+      deployedContract: _contract,
+      functionName: 'transfer',
+      transaction: Transaction(
+        from: EthereumAddress.fromHex(_w3mService.session?.address ?? ''),
+      ),
+      parameters: [
+        _mainAddress, // Ensure _mainAddress is a valid Ethereum address
+        transferValue, // Token amount in wei
+      ],
+    );
+    
+    print('Transfer successful with result: $transferResult');
 
-      // Launch the connected wallet
-      _w3mService.launchConnectedWallet();
-
-      // Load ABI from the asset file
-      final abiFile = await rootBundle.loadString('assets/abi/BethToken.json');
-      if (abiFile.isEmpty) throw FormatException('ABI file is empty');
-
-      final jsonAbi = jsonDecode(abiFile);
-      final _abiCode =
-          ContractAbi.fromJson(jsonEncode(jsonAbi['abi']), 'BethToken');
-
-      final _contract = DeployedContract(_abiCode, _contractAddress1);
-      print('Contract loaded: $_contract');
-
-      // Execute the approve function and wait for the result
-      print('Executing approve function...');
-      final approveResult = await _w3mService.requestWriteContract(
-        topic: _w3mService.session?.topic.toString() ?? '',
-        chainId: "eip155:137",
-        deployedContract: _contract,
-        functionName: 'approve',
-        transaction: Transaction(
-          from: EthereumAddress.fromHex(
-              _w3mService.session?.address ?? ''), // Use the wallet address
-        ),
-        parameters: [
-          _mainAddress, // Ensure _mainAddress is a valid Ethereum address
-          transferValue, // Token amount in wei
-        ],
-      );
-      // if(_checkTxHashStatus(approveResult)){
-      //   print('Transaction successful with hash: $approveResult');
-      // }
-      // await _checkTxHashStatus(approveResult);
-
-      print('Approve successful: ${approveResult}');
-
-       bool txConfirmed = await _waitForTransactionReceipt(approveResult);
-    if (txConfirmed) {
-      print('Transaction confirmed successfully.');
+    // Wait for the transaction receipt to confirm the transfer
+    bool isTransferConfirmed = await _waitForTransactionReceipt(transferResult);
+    if (isTransferConfirmed) {
+      print('Transfer transaction confirmed successfully.');
     } else {
-      print('Transaction failed or took too long to confirm.');
+      print('Transfer transaction failed or took too long to confirm.');
     }
 
-      final isSuccessful = await _checkTxHash(approveResult);
-
-      print('isSuccessful approve: $isSuccessful');
-
-      // Now execute the transfer function after approve is successful
-      print('Executing transfer function...');
-      if(isSuccessful){
-      final transferResult = await _w3mService.requestWriteContract(
-        topic: _w3mService.session?.topic.toString() ?? '',
-        chainId: "eip155:137", // Ensure you are connected to the correct chain
-        deployedContract: _contract,
-        functionName: 'transfer',
-        transaction: Transaction(
-          from: EthereumAddress.fromHex(
-              _w3mService.session?.address ?? ''), // Use the wallet address
-        ),
-        parameters: [
-          _mainAddress, // Ensure _mainAddress is a valid Ethereum address
-          transferValue, // Token amount in wei
-        ],
-      );
-      print('Transfer successful: $transferResult');
-      }
-
-      
-    } catch (e) {
-      if (e.toString().contains('User denied transaction signature')) {
-        print('Transaction signature denied by the user.');
-      } else {
-        print('Error during transfer: $e');
-      }
+  } catch (e) {
+    if (e.toString().contains('User denied transaction signature')) {
+      print('Transaction signature denied by the user.');
+    } else {
+      print('Error during transfer: $e');
     }
   }
+}
+
 
   Future<bool> _waitForTransactionReceipt(String txHash) async {
     print('fetching tx hash');

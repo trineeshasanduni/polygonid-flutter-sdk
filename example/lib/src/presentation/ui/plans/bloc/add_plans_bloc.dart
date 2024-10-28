@@ -31,7 +31,7 @@ class AddPlansBloc extends Bloc<AddPlansEvent, AddPlansState> {
 
   Future<void> _handleGenerateSecrets(
       GenerateSecretsEvent event, Emitter<AddPlansState> emit) async {
-    emit(AddPlansLoading());
+    emit(AddPlansLoading('Free Plan Activating Srarted'));
 
     final failureOrGenerateSecrets = await generateSecretsUsecase();
     failureOrGenerateSecrets.fold(
@@ -42,7 +42,7 @@ class AddPlansBloc extends Bloc<AddPlansEvent, AddPlansState> {
 
   Future<void> _handleAddUser(
       addUserEvent event, Emitter<AddPlansState> emit) async {
-    emit(AddPlansLoading());
+    emit(AddPlansLoading('user adding'));
 
     final failureOrAddUser = await addUserUsecase(UseCaseParams(
           did: event.did,
@@ -58,7 +58,7 @@ class AddPlansBloc extends Bloc<AddPlansEvent, AddPlansState> {
 
   Future<void> _handleProof(
       createProofEvent event, Emitter<AddPlansState> emit) async {
-    emit(AddPlansLoading());
+    emit(AddPlansLoading('Proof Creating'));
 
     final failureOrproof = await createProofUsecase(CreatProofParams(
           account: event.owner,
@@ -77,7 +77,7 @@ class AddPlansBloc extends Bloc<AddPlansEvent, AddPlansState> {
 
   Future<void> _handleVerifyUser(
       verifyuserEvent event, Emitter<AddPlansState> emit) async {
-    emit(AddPlansLoading());
+    emit(AddPlansLoading('Proof Verifying'));
     final failureOrVerifyUser = await verifyUsecase(VerifyParams(
           a: event.A,
           b: event.B,
@@ -95,7 +95,7 @@ class AddPlansBloc extends Bloc<AddPlansEvent, AddPlansState> {
 
   Future<void> _handleFreeSpace(
       freeSpaceEvent event, Emitter<AddPlansState> emit) async {
-    emit(AddPlansLoading());
+    emit(AddPlansLoading('Free Space Allocating'));
     final failureOrFreeSpace = await freeSpaceUsecase(FreeSpaceParams(
 
           did: event.did,

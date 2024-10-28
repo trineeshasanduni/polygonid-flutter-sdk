@@ -208,6 +208,7 @@ class BethelBottomBarState extends State<BethelBottomBar> {
               gradient: LinearGradient(
                 colors: [
                   Color.fromARGB(255, 68, 91, 0),
+                  
                   Theme.of(context).primaryColor,
                 ],
                 begin: Alignment.topCenter,
@@ -225,7 +226,7 @@ class BethelBottomBarState extends State<BethelBottomBar> {
             child: Column(
               children: [
                 Container(
-                  width: MediaQuery.of(context).size.width / 4,
+                  width: MediaQuery.of(context).size.width / 6,
                   height: 4,
                   decoration: BoxDecoration(
                     color:
@@ -243,6 +244,7 @@ class BethelBottomBarState extends State<BethelBottomBar> {
                   ),
                   textAlign: TextAlign.center,
                 ),
+                const SizedBox(height: 20),
                 Column(
                   children: 
                   !isConnect
@@ -394,7 +396,7 @@ class BethelBottomBarState extends State<BethelBottomBar> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  width: MediaQuery.of(context).size.width / 4,
+                  width: MediaQuery.of(context).size.width / 6,
                   height: 4,
                   decoration: BoxDecoration(
                     color:
@@ -486,7 +488,7 @@ class BethelBottomBarState extends State<BethelBottomBar> {
                   children: [
                     Center(
                       child: Container(
-                        width: MediaQuery.of(context).size.width / 4,
+                        width: MediaQuery.of(context).size.width / 6,
                         height: 4,
                         decoration: BoxDecoration(
                           color: Theme.of(context)
@@ -632,7 +634,7 @@ class BethelBottomBarState extends State<BethelBottomBar> {
 
           final isConnected = storage.read('isConnected');
 
-          if (!isFreePlanActivated) {
+          if (isFreePlanActivated==null || !isFreePlanActivated) {
             _showaAddPlanAlert();
           }
 

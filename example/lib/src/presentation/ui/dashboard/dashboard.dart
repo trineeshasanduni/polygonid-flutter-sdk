@@ -47,7 +47,7 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   late W3MService _w3mService;
   bool isConnected = false;
-  var name = '';
+  var name;
   var httpClient = http.Client();
 
   Web3Client? _web3Client;
@@ -276,7 +276,7 @@ class _DashboardState extends State<Dashboard> {
               children: [
                 Center(
                   child: Container(
-                    width: MediaQuery.of(context).size.width / 4,
+                    width: MediaQuery.of(context).size.width / 6,
                     height: 4,
                     decoration: BoxDecoration(
                       color: Theme.of(context)
@@ -414,7 +414,7 @@ class _DashboardState extends State<Dashboard> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                width: MediaQuery.of(context).size.width / 4,
+                width: MediaQuery.of(context).size.width / 6,
                 height: 4,
                 decoration: BoxDecoration(
                   color:
@@ -680,7 +680,7 @@ class _DashboardState extends State<Dashboard> {
                         // _showWelcomeBottomSheet();
                         _showMetamaskBottomSheet();
                       },
-                      child: name == "MetaMask Wallet"
+                      child: name != null && name == "MetaMask Wallet"
                           ? Image.asset('assets/images/metamaskImg.png')
                           : Icon(Icons.wallet),
                     ),
@@ -768,7 +768,6 @@ class _DashboardState extends State<Dashboard> {
                     if (isFreePlan == null || !isFreePlan)
                       Column(
                         children: [
-                          
                           Positioned(
                             // top: MediaQuery.of(context).size.height / 1.5,
                             child: ListTile(
@@ -779,8 +778,9 @@ class _DashboardState extends State<Dashboard> {
                                   // color: Theme.of(context).colorScheme.primary,
                                   borderRadius: BorderRadius.circular(50),
                                   border: Border.all(
-                                      color:
-                                          Theme.of(context).colorScheme.secondary,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .secondary,
                                       width: 1),
                                 ),
                                 child: GestureDetector(
@@ -790,11 +790,15 @@ class _DashboardState extends State<Dashboard> {
                                     // _showWelcomeBottomSheet();
                                     _showMetamaskBottomSheet();
                                   },
-                                  child: name == "MetaMask Wallet"
-                                      ? Icon(Icons.wallet,
-                                          color: Theme.of(context).secondaryHeaderColor)
-                                      : Image.asset('assets/images/metamaskImg.png',
-                                          width: 30, height: 30),
+                                  child: name != null &&
+                                          name == "MetaMask Wallet"
+                                      ? Image.asset(
+                                          'assets/images/metamaskImg.png',
+                                          width: 30,
+                                          height: 30)
+                                      : Icon(Icons.wallet,
+                                          color: Theme.of(context)
+                                              .secondaryHeaderColor),
                                 ),
                               ),
                             ),

@@ -9,7 +9,11 @@ sealed class AddPlansState extends Equatable {
 
 final class AddPlansInitial extends AddPlansState {}
 
-final class AddPlansLoading extends AddPlansState {}
+final class AddPlansLoading extends AddPlansState {
+  final String message;
+
+  AddPlansLoading(this.message);
+}
 final class PriceLoading extends AddPlansState {
   final String message;
 

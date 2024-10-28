@@ -255,7 +255,9 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
           );
         }
         if (state is LoginFailure) {
-          return Text(state.error, style: const TextStyle(color: Colors.red));
+           _showSnackbar(state.error, Colors.red,
+              Icons.error_outline);
+          // return Text(state.error, style: const TextStyle(color: Colors.red,),textAlign: TextAlign.center,);
         }
         if (state is LoginSuccess) {
           _handleLoginSuccess(state);
@@ -266,6 +268,27 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
         return _buildLoginButton();
       },
     );
+  }
+
+  void _showSnackbar(
+    String message,
+    Color? backgroundColor,
+    IconData? ic,
+  ) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Row(
+          children: [
+            Icon(ic, color: Colors.white),
+            const SizedBox(width: 10),
+            Text(message, style: const TextStyle(color: Colors.white)),
+          ],
+        ),
+        duration: const Duration(seconds: 5),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: backgroundColor,
+      ));
+    });
   }
 
   void _handleLoginSuccess(LoginSuccess state) {
