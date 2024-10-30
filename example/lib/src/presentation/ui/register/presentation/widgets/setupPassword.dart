@@ -113,18 +113,18 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
 
             Column(
               children: [
-                // IconButton(
-                //   icon: const Icon(Icons.close, color: Colors.white),
-                //   onPressed: () {
-                //     Navigator.of(context).pushReplacementNamed(Routes.homePath);
-                //     // Navigator.push(
-                //     //   context,
-                //     //   MaterialPageRoute(
-                //     //     builder: (context) => const SetUpScreen(),
-                //     //   ),
-                //     // );
-                //   },
-                // ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () {
+                    Navigator.of(context).pushReplacementNamed(Routes.homePath);
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (context) => const SetUpScreen(),
+                    //   ),
+                    // );
+                  },
+                ),
                 _buildBlocContent(context),
                 const SizedBox(height: 20),
                 _buildRegisterButton(),
