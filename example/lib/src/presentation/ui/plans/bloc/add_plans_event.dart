@@ -75,6 +75,17 @@ final class planPriceEvent extends AddPlansEvent {
   });
 }
 
+final class activePaidPlanEvent extends AddPlansEvent {
+  final String DID;
+  final int PackageType;
+  final int Duration;
+
+  const activePaidPlanEvent( {
+    required this.DID,
+    required this.PackageType,
+    required this.Duration,
+  });
+}
 
 
 

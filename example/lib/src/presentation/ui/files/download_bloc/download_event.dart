@@ -61,3 +61,4 @@ class GetCidsEvent extends DownloadEvent {
 
   const GetCidsEvent( {required this.index,required this.did, required this.owner, required this.batch_hash});
 }
+

@@ -49,7 +49,7 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
 
   Future<void> _handleDownloadVerify(
       onClickDownload event, Emitter<DownloadState> emit) async {
-    emit(Downloading(event.batch_hash));
+    emit(Downloading(event.batch_hash,0.1));
     final failureOrdownload = await downloadVerify(DownloadParams(
         batch_hash: event.batch_hash,
         file_hash: event.file_hash,
@@ -102,7 +102,7 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     required String batchHash,
     required Emitter<DownloadState> emit,
   }) async {
-    emit(Downloading(batchHash));
+    emit(Downloading(batchHash,0.5));
 
     final ChainConfigEntity currentChain =
         await _polygonIdSdk.getSelectedChain();
@@ -166,7 +166,7 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
 
   Future<void> _handleDownloadStatus(
       onGetDownloadStatusEvent event, Emitter<DownloadState> emit) async {
-    emit(Downloading(event.batch_hash));
+    emit(Downloading(event.batch_hash,0.8));
 
     final status =
         await statusUsecase(DownloadStatusParams(sessionId: event.sessionId));
@@ -205,7 +205,7 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
 
   Future<void> _handleDownloadUrl(
       onClickDownloadUrl event, Emitter<DownloadState> emit) async {
-    emit(Downloading(event.BatchHash));
+    emit(LoadingUrl(event.BatchHash));
     final failureOrdownloadurl = await downloadUsecase(DownloadUrlParams(
         BatchHash: event.BatchHash,
         FileHash: event.FileHash,
@@ -217,4 +217,7 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
         (downloadurl) =>
             emit(DownloadUrlSuccess(downloadurl, event.BatchHash)));
   }
+
+
+
 }

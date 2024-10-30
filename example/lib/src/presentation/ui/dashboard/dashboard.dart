@@ -368,8 +368,12 @@ class _DashboardState extends State<Dashboard> {
     return Column(
       children: !iSConnect
           ? [
-              W3MNetworkSelectButton(service: _w3mService),
-              W3MConnectWalletButton(service: _w3mService),
+              W3MNetworkSelectButton(
+                service: _w3mService,
+              ),
+              W3MConnectWalletButton(
+                service: _w3mService,
+              ),
             ]
           : [
               W3MAccountButton(service: _w3mService),

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:ui';
+import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,6 +18,8 @@ import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
 import 'package:polygonid_flutter_sdk/iden3comm/domain/entities/common/iden3_message_entity.dart';
@@ -92,6 +95,8 @@ class _FilesState extends State<Files> {
   String _fileUsage = '0MiB';
   bool isLoading = false;
   var _isBlureffect = false;
+
+  var progress = 0.0;
 
   @override
   void initState() {
@@ -688,6 +693,7 @@ class _FilesState extends State<Files> {
                       // _buildFileList(),
                       const SizedBox(height: 20),
                       _fileUpoading(),
+                      _progress(),
                       const SizedBox(height: 20),
                     ],
                   ),
@@ -1373,7 +1379,362 @@ class _FilesState extends State<Files> {
     );
   }
 
+  Widget _progress() {
+    return BlocBuilder<DownloadBloc, DownloadState>(
+      bloc: _downloadBloc,
+      builder: (BuildContext context, DownloadState downloadState) {
+        if (downloadState is Downloading) {
+          // Return CircularProgressIndicator when downloading
+          // return Center(
+          //     child: Loading(
+          //         Loadingcolor: Theme.of(context).primaryColor,
+          //         color: Theme.of(context).colorScheme.secondary));
+
+          return Column(
+            children: [
+              Text(
+                'Downloading...',
+                style: TextStyle(
+                  color: Theme.of(context).secondaryHeaderColor,
+                  fontSize: 14,
+                ),
+              ),
+              SizedBox(height: 10),
+              LinearPercentIndicator(
+                animation: true,
+                percent: downloadState.progress,
+                animationDuration: 1000,
+                center: new Text(
+                    '${(downloadState.progress * 100).toStringAsFixed(0)}%'),
+                progressColor: Theme.of(context).colorScheme.secondary,
+                backgroundColor: Theme.of(context).secondaryHeaderColor,
+              ),
+            ],
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
   Widget _buildDownloadIcon(
+      String batchHash, String fileHash, String fileName) {
+    return BlocBuilder<DownloadBloc, DownloadState>(
+      bloc: _downloadBloc,
+      builder: (BuildContext context, DownloadState downloadState) {
+        if (downloadState is Downloading &&
+            downloadState.batchhash == batchHash) {
+          // Return CircularProgressIndicator when downloading
+          return Center(
+              child: Loading(
+                  Loadingcolor: Theme.of(context).primaryColor,
+                  color: Theme.of(context).colorScheme.secondary));
+        }
+
+        if (downloadState is LoadingUrl &&
+            downloadState.batchhash == batchHash) {
+          // Return CircularProgressIndicator when downloading
+          return Center(
+              child: Loading(
+                  Loadingcolor: Theme.of(context).primaryColor,
+                  color: Theme.of(context).colorScheme.secondary));
+        }
+
+        if (downloadState is DownloadSuccess &&
+            downloadState.batchhash == batchHash) {
+          print('downloadState batch:${downloadState.batchhash}');
+          _handleDownloadVerifyButton(downloadState, downloadState.batchhash);
+        }
+        if (downloadState is DownloadFailed) {
+          _showSnackbar('Download failed', Colors.red, Icons.error);
+          Future.delayed(const Duration(seconds: 10), () {
+            _downloadBloc.add(ResetDownloadStateEvent());
+          });
+        }
+
+        if (downloadState is StatusLoaded &&
+            downloadState.batchhash == batchHash) {
+          print('status loaded in download');
+          print('downloadState batch1:${downloadState.batchhash}');
+          // _showSnackbar(
+          //     'status loaded', Theme.of(context).colorScheme.secondary);
+          _deployBatchFileContract(batchHash, fileHash);
+        }
+
+        if (downloadState is CidsGot && downloadState.batchhash == batchHash) {
+          print('cids got');
+          final cidString = downloadState.cids.cids;
+          final cidList = jsonEncode(cidString);
+          final cidGot = jsonEncode(cidList);
+
+          print('responsse cids got1: $cidGot');
+          print('responsse cids got: $cidList');
+
+          print('download1 : $batchHash');
+          print('download2 : $batchHash');
+          print('download3 : $fileName');
+          print('download4 : $cidList');
+          print('download5 : ${jsonDecode(widget.did.toString())}');
+
+          _downloadBloc.add(onClickDownloadUrl(
+              BatchHash: batchHash,
+              FileHash: batchHash,
+              Odid: jsonDecode(widget.did.toString()),
+              FileName: fileName.toString(),
+              Cids: cidList));
+
+          // _showSnackbar(
+          //     'cids got', Theme.of(context).colorScheme.secondary);
+        }
+
+        if (downloadState is DownloadUrlSuccess &&
+            downloadState.batchhash == batchHash) {
+          // Timer(Duration(seconds: 30), () {
+          //   _downloadBloc.add(ResetDownloadStateEvent());
+          //   _fileBloc.add(ResetFileStateEvent());
+          //   _showSnackbar('Time out', Colors.red);
+          // });
+
+          final url = downloadState.response.uRL;
+          final downloadLink = Uri.parse(url as String);
+          // _showSnackbar('${downloadState.response.uRL}',
+          //     Theme.of(context).colorScheme.secondary);
+          print('download url success: ${downloadState.response.uRL}');
+
+          Future.delayed(const Duration(seconds: 10), () {
+            _downloadBloc.add(ResetDownloadStateEvent());
+            // _fileBloc.add(ResetFileStateEvent());
+          });
+
+          // Show download URL after URL is ready
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            print('file download link: $downloadLink');
+            // await _showDownloadUrl(context, downloadLink);
+            _downloadFile(
+                context, downloadLink.toString(), fileName.toString());
+          });
+        }
+
+        // Default return for other states
+        return GestureDetector(
+          onTap: () {
+            _downloadBloc.add(onClickDownload(
+                batch_hash: batchHash,
+                file_hash: batchHash,
+                didU: jsonDecode(widget.did.toString())));
+          },
+          child: _buildIcon(
+            Icons.download,
+            Theme.of(context).colorScheme.secondary,
+            Theme.of(context).colorScheme.secondary,
+            Colors.white,
+          ),
+        );
+      },
+    );
+  }
+
+// Function to download the file
+
+  void _downloadFile(
+      BuildContext context, String downloadUrl, String fileName) async {
+    // Request storage permission
+    var status = await Permission.storage.request();
+    if (status.isGranted) {
+      try {
+        // Get the app-specific external storage directory
+        Directory? externalDir = await getExternalStorageDirectory();
+
+        // Ensure the directory exists
+        String directoryPath = '${externalDir!.path}/Download';
+        Directory downloadDir = Directory(directoryPath);
+
+        if (!await downloadDir.exists()) {
+          await downloadDir.create(recursive: true);
+        }
+
+        // Get the MIME type of the file
+        // String mimeType = await getFileMimeType(downloadUrl);
+        // String fileExtension = _getFileExtension(mimeType);
+
+        // Create the file name with a timestamp
+        var time = DateTime.now().millisecondsSinceEpoch;
+        String newFileName = '$fileName';
+        String path = '$directoryPath/$newFileName';
+
+        // Dio dio = Dio();
+
+        // Download the file from the IPFS link
+        var response = await http.get(Uri.parse(downloadUrl));
+
+        // Check if the response is successful
+        if (response.statusCode == 200) {
+          // Write the file to storage
+          File file = File(path);
+          await file.writeAsBytes(response.bodyBytes);
+
+          print('File saved at: $path');
+          // dio.download(downloadUrl, path,
+          //     onReceiveProgress: (received, total) {
+          //   print('received: $received, total: $total');
+          //   var _progress = ((received / total) * 100).toStringAsFixed(0) + '%';
+          //   setState(() {
+          //     progress = double.parse(_progress) / 100;
+          //   });
+          // });
+          // LinearProgressIndicator(value: progress);
+
+          // Show success message with option to view the file
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: GestureDetector(
+                onTap: () {
+                  OpenFile.open(
+                      path); // Open the file when the user taps the SnackBar
+                },
+                child: Text('File saved. Tap to view'),
+              ),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        } else {
+          print('Failed to download file. Status Code: ${response.statusCode}');
+        }
+      } catch (e) {
+        print('Error: $e');
+      }
+    } else {
+      print('Storage permission not granted');
+    }
+  }
+
+// Function to get the MIME type from the URL
+  Future<String> getFileMimeType(String url) async {
+    try {
+      final response = await http.head(Uri.parse(url));
+      if (response.statusCode == 200) {
+        return response.headers['content-type'] ?? 'Unknown';
+      } else {
+        return 'Unknown';
+      }
+    } catch (e) {
+      print('Error fetching MIME type: $e');
+      return 'Unknown';
+    }
+  }
+
+// Function to map MIME type to file extension
+  String _getFileExtension(String mimeType) {
+    switch (mimeType) {
+      case 'application/pdf':
+        return '.pdf';
+      case 'image/jpeg':
+        return '.jpg';
+      case 'image/png':
+        return '.png';
+      case 'video/mp4':
+        return '.mp4';
+      case 'application/zip':
+        return '.zip';
+      // Add more cases as needed
+      default:
+        return '.bin'; // Default binary extension if MIME type is unknown
+    }
+  }
+
+  // Widget _buildShareDownloadIcon(
+  //     String batchHash, String fileHash, String fileName) {
+  //   return BlocBuilder<DownloadBloc, DownloadState>(
+  //     bloc: _downloadBloc,
+  //     builder: (BuildContext context, DownloadState downloadState) {
+  //       if (downloadState is Downloading &&
+  //           downloadState.batchhash == batchHash) {
+  //         // Return CircularProgressIndicator when downloading
+  //         return Center(
+  //             child: Loading(
+  //                 Loadingcolor: Theme.of(context).primaryColor,
+  //                 color: Theme.of(context).colorScheme.secondary));
+  //       }
+
+  //       if (downloadState is DownloadSuccess &&
+  //           downloadState.batchhash == batchHash) {
+  //         print('downloadState batch:${downloadState.batchhash}');
+  //         _handleDownloadVerifyButton(downloadState, downloadState.batchhash);
+  //       }
+  //       if (downloadState is DownloadFailed) {
+  //         _showSnackbar('Download failed', Colors.red, Icons.error);
+  //         Future.delayed(const Duration(seconds: 10), () {
+  //           _downloadBloc.add(ResetDownloadStateEvent());
+  //         });
+  //       }
+
+  //       if (downloadState is StatusLoaded &&
+  //           downloadState.batchhash == batchHash) {
+  //         print('status loaded in download');
+  //         print('downloadState batch1:${downloadState.batchhash}');
+
+  //         _deploysharefileContract(batchHash, fileHash);
+  //       }
+
+  //       if (downloadState is CidsGot && downloadState.batchhash == batchHash) {
+  //         print('cids got');
+  //         final cidString = downloadState.cids.cids;
+  //         final cidList = jsonEncode(cidString);
+  //         final cidGot = jsonEncode(cidList);
+
+  //         print('responsse share cids got1: $cidGot');
+  //         print('responsse share cids got: $cidList');
+
+  //         print('download1 share: $batchHash');
+  //         print('download2 share: $batchHash');
+  //         print('download3 share: $fileName');
+  //         print('download4 share: $cidList');
+  //         print('download5 share: ${jsonDecode(widget.did.toString())}');
+
+  //         _downloadBloc.add(onClickDownloadUrl(
+  //             BatchHash: batchHash,
+  //             FileHash: batchHash,
+  //             Odid: jsonDecode(widget.did.toString()),
+  //             FileName: fileName.toString(),
+  //             Cids: cidList));
+  //       }
+
+  //       if (downloadState is DownloadUrlSuccess &&
+  //           downloadState.batchhash == batchHash) {
+  //         final url = downloadState.response.uRL;
+  //         final downloadLink = Uri.parse(url as String);
+
+  //         print('download url success: ${downloadState.response.uRL}');
+
+  //         Future.delayed(const Duration(seconds: 10), () {
+  //           _downloadBloc.add(ResetDownloadStateEvent());
+  //         });
+
+  //         WidgetsBinding.instance.addPostFrameCallback((_) async {
+  //           await _showDownloadUrl(context, downloadLink);
+  //         });
+  //       }
+
+  //       // Default return for other states
+  //       return GestureDetector(
+  //         onTap: () {
+  //           _downloadBloc.add(onClickDownload(
+  //               batch_hash: batchHash,
+  //               file_hash: batchHash,
+  //               didU: jsonDecode(widget.did.toString())));
+  //         },
+  //         child: _buildIcon(
+  //           Icons.download,
+  //           Theme.of(context).colorScheme.secondary,
+  //           Theme.of(context).colorScheme.secondary,
+  //           Colors.white,
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
+  Widget _buildShareDownloadIcon(
       String batchHash, String fileHash, String fileName) {
     return BlocBuilder<DownloadBloc, DownloadState>(
       bloc: _downloadBloc,
@@ -1457,196 +1818,8 @@ class _FilesState extends State<Files> {
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             print('file download link: $downloadLink');
             // await _showDownloadUrl(context, downloadLink);
-            _downloadFile(context,downloadLink.toString());
-          });
-        }
-
-        // Default return for other states
-        return GestureDetector(
-          onTap: () {
-            _downloadBloc.add(onClickDownload(
-                batch_hash: batchHash,
-                file_hash: batchHash,
-                didU: jsonDecode(widget.did.toString())));
-          },
-          child: _buildIcon(
-            Icons.download,
-            Theme.of(context).colorScheme.secondary,
-            Theme.of(context).colorScheme.secondary,
-            Colors.white,
-          ),
-        );
-      },
-    );
-  }
-
-// Function to download the file
-
-  void _downloadFile(BuildContext context, String downloadUrl) async {
-  // Request storage permission
-  var status = await Permission.storage.request();
-  if (status.isGranted) {
-    try {
-      // Get the app-specific external storage directory
-      Directory? externalDir = await getExternalStorageDirectory();
-      
-      // Ensure the directory exists
-      String directoryPath = '${externalDir!.path}/Download';
-      Directory downloadDir = Directory(directoryPath);
-
-      if (!await downloadDir.exists()) {
-        await downloadDir.create(recursive: true);
-      }
-
-      // Get the MIME type of the file
-      String mimeType = await getFileMimeType(downloadUrl);
-      String fileExtension = _getFileExtension(mimeType);
-
-      // Create the file name with a timestamp
-      var time = DateTime.now().millisecondsSinceEpoch;
-      String fileName = 'file-$time$fileExtension';
-      String path = '$directoryPath/$fileName';
-
-      // Download the file from the IPFS link
-      var response = await http.get(Uri.parse(downloadUrl));
-
-      // Check if the response is successful
-      if (response.statusCode == 200) {
-        // Write the file to storage
-        File file = File(path);
-        await file.writeAsBytes(response.bodyBytes);
-
-        print('File saved at: $path');
-
-        // Show success message with option to view the file
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: GestureDetector(
-              onTap: () {
-                OpenFile.open(path); // Open the file when the user taps the SnackBar
-              },
-              child: Text('File saved. Tap to view'),
-            ),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      } else {
-        print('Failed to download file. Status Code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error: $e');
-    }
-  } else {
-    print('Storage permission not granted');
-  }
-}
-
-
-// Function to get the MIME type from the URL
-  Future<String> getFileMimeType(String url) async {
-    try {
-      final response = await http.head(Uri.parse(url));
-      if (response.statusCode == 200) {
-        return response.headers['content-type'] ?? 'Unknown';
-      } else {
-        return 'Unknown';
-      }
-    } catch (e) {
-      print('Error fetching MIME type: $e');
-      return 'Unknown';
-    }
-  }
-
-// Function to map MIME type to file extension
-  String _getFileExtension(String mimeType) {
-    switch (mimeType) {
-      case 'application/pdf':
-        return '.pdf';
-      case 'image/jpeg':
-        return '.jpg';
-      case 'image/png':
-        return '.png';
-      case 'video/mp4':
-        return '.mp4';
-      case 'application/zip':
-        return '.zip';
-      // Add more cases as needed
-      default:
-        return '.bin'; // Default binary extension if MIME type is unknown
-    }
-  }
-
-  Widget _buildShareDownloadIcon(
-      String batchHash, String fileHash, String fileName) {
-    return BlocBuilder<DownloadBloc, DownloadState>(
-      bloc: _downloadBloc,
-      builder: (BuildContext context, DownloadState downloadState) {
-        if (downloadState is Downloading &&
-            downloadState.batchhash == batchHash) {
-          // Return CircularProgressIndicator when downloading
-          return Center(
-              child: Loading(
-                  Loadingcolor: Theme.of(context).primaryColor,
-                  color: Theme.of(context).colorScheme.secondary));
-        }
-
-        if (downloadState is DownloadSuccess &&
-            downloadState.batchhash == batchHash) {
-          print('downloadState batch:${downloadState.batchhash}');
-          _handleDownloadVerifyButton(downloadState, downloadState.batchhash);
-        }
-        if (downloadState is DownloadFailed) {
-          _showSnackbar('Download failed', Colors.red, Icons.error);
-          Future.delayed(const Duration(seconds: 10), () {
-            _downloadBloc.add(ResetDownloadStateEvent());
-          });
-        }
-
-        if (downloadState is StatusLoaded &&
-            downloadState.batchhash == batchHash) {
-          print('status loaded in download');
-          print('downloadState batch1:${downloadState.batchhash}');
-
-          _deploysharefileContract(batchHash, fileHash);
-        }
-
-        if (downloadState is CidsGot && downloadState.batchhash == batchHash) {
-          print('cids got');
-          final cidString = downloadState.cids.cids;
-          final cidList = jsonEncode(cidString);
-          final cidGot = jsonEncode(cidList);
-
-          print('responsse share cids got1: $cidGot');
-          print('responsse share cids got: $cidList');
-
-          print('download1 share: $batchHash');
-          print('download2 share: $batchHash');
-          print('download3 share: $fileName');
-          print('download4 share: $cidList');
-          print('download5 share: ${jsonDecode(widget.did.toString())}');
-
-          _downloadBloc.add(onClickDownloadUrl(
-              BatchHash: batchHash,
-              FileHash: batchHash,
-              Odid: jsonDecode(widget.did.toString()),
-              FileName: fileName.toString(),
-              Cids: cidList));
-        }
-
-        if (downloadState is DownloadUrlSuccess &&
-            downloadState.batchhash == batchHash) {
-          final url = downloadState.response.uRL;
-          final downloadLink = Uri.parse(url as String);
-
-          print('download url success: ${downloadState.response.uRL}');
-
-          Future.delayed(const Duration(seconds: 10), () {
-            _downloadBloc.add(ResetDownloadStateEvent());
-          });
-
-          WidgetsBinding.instance.addPostFrameCallback((_) async {
-            await _showDownloadUrl(context, downloadLink);
+            _downloadFile(
+                context, downloadLink.toString(), fileName.toString());
           });
         }
 

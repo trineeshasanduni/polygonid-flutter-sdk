@@ -1,14 +1,19 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:polygonid_flutter_sdk/common/errors/server_failure.dart';
 import 'package:polygonid_flutter_sdk/profile/data/dataSources/profile_dataSource.dart';
 import 'package:polygonid_flutter_sdk/profile/data/models/activityModel.dart';
 import 'package:polygonid_flutter_sdk/profile/data/models/getEmailModel.dart';
+import 'package:polygonid_flutter_sdk/profile/data/models/profilePicModel.dart';
 import 'package:polygonid_flutter_sdk/profile/data/models/updateProfileModel.dart';
 import 'package:polygonid_flutter_sdk/profile/data/models/validateOTPModel.dart';
 import 'package:polygonid_flutter_sdk/profile/data/models/verifyEmailModel.dart';
 import 'package:polygonid_flutter_sdk/profile/data/models/verifyTelModel.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/activityEntity.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/getEmailEntity.dart';
+import 'package:polygonid_flutter_sdk/profile/domain/entities/profilePicEntity.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/updateProfileEntity.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/validateOTPEntity.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/verifyEmailEntity.dart';
@@ -273,4 +278,28 @@ class ProfileRepoImpl implements ProfileRepository {
       return left(Failure('Failed to retrieve logs: $error'));
     }
   }
+
+
+  @override
+  Future<Either<Failure, ProfilePicEntity>>uploadProfilePic({
+    required File profile_image,
+    required String ownerDid,
+  }) async {
+    try {
+      // Fetching the activity logs from remote datasource
+      ProfilePicModel updateProfileModel = await profileRemoteDatasource
+          .uploadProfilePic(
+         profile_image: profile_image, ownerDid: ownerDid
+          );
+      print('verify email response: ${updateProfileModel.ownerDid}');
+
+      // Check if groupedLogs is not null
+      return right(ProfilePicEntity(
+        ));
+    } catch (error) {
+      // Return failure if there's an exception
+      return left(Failure('Failed to retrieve logs: $error'));
+    }
+  }
 }
+

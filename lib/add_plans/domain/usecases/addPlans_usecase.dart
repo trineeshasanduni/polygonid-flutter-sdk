@@ -88,6 +88,18 @@ class PlanPriceUsecase implements UseCase<PriceEntity, PlanPriceParams> {
   }
 }
 
+class PaidPlanUsecase implements UseCase<FreeSpaceEntity, PaidPlanParams> {
+  final AddPlansRepository addSpaceRepository;
+  const PaidPlanUsecase(this.addSpaceRepository);
+  @override
+  Future<Either<Failure, FreeSpaceEntity>> call(PaidPlanParams params) async {
+    return await addSpaceRepository.activePaidPlan(
+        DID: params.DID,
+        PackageType: params.PackageType,
+        Duration: params.Duration);
+  }
+}
+
 class PlanPriceParams {
   final String plan;
   final int month;
@@ -95,6 +107,18 @@ class PlanPriceParams {
   PlanPriceParams({
     required this.plan,
     required this.month,
+  });
+}
+
+class PaidPlanParams {
+  final String DID;
+  final int PackageType;
+  final int Duration;
+
+  PaidPlanParams({
+    required this.DID,
+    required this.PackageType,
+    required this.Duration,
   });
 }
 

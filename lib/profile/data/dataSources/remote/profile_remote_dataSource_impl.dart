@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:polygonid_flutter_sdk/profile/data/dataSources/profile_dataSource.dart';
 import 'package:polygonid_flutter_sdk/profile/data/models/activityModel.dart';
 import 'package:polygonid_flutter_sdk/profile/data/models/getEmailModel.dart';
+import 'package:polygonid_flutter_sdk/profile/data/models/profilePicModel.dart';
 import 'package:polygonid_flutter_sdk/profile/data/models/updateProfileModel.dart';
 import 'package:polygonid_flutter_sdk/profile/data/models/validateOTPModel.dart';
 import 'package:polygonid_flutter_sdk/profile/data/models/verifyEmailModel.dart';
@@ -315,15 +318,14 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
     }
   }
 
-
   @override
   Future<UpdateProfileModel> getUpdateProfile({
     required String did,
     required String OwnerAddress,
   }) async {
     try {
-      final response = await client
-          .get(Uri.parse('$BASE_URL/get-user-profile?OwnerDid=$did&OwnerAddress=$OwnerAddress'));
+      final response = await client.get(Uri.parse(
+          '$BASE_URL/get-user-profile?OwnerDid=$did&OwnerAddress=$OwnerAddress'));
 
       print('get profile status1: ${response.statusCode}');
 
@@ -342,6 +344,51 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
     } catch (e) {
       print('Error fetching verified: $e');
       throw Exception('Failed to fetch verified');
+    }
+  }
+
+  @override
+  Future<ProfilePicModel> uploadProfilePic({
+    required File profile_image,
+    required String ownerDid,
+  }) async {
+    try {
+      final uri = Uri.parse('$BASE_URL/update-user-profile-image');
+
+      // Prepare multipart request
+      var request = http.MultipartRequest('PUT', uri)
+        ..fields['ownerDid'] = ownerDid
+        ..files.add(await http.MultipartFile.fromPath(
+            'profile_image', profile_image.path));
+
+      print('Request: $request');
+
+      // Send the request and wait for response
+      final streamedResponse = await request.send();
+      print('streamedResponse: $streamedResponse');
+      final responseBody = await streamedResponse.stream.bytesToString().timeout(Duration(minutes: 2));
+
+
+      print('Upload file status code: ${streamedResponse.statusCode}');
+      print('Upload file response body: $responseBody');
+
+      // Check response status
+      if (streamedResponse.statusCode == 200) {
+        print('Fetch profile image status code: ${streamedResponse.statusCode}');
+        final getProfile = jsonDecode(responseBody);
+        print('Profile response: $getProfile');
+
+        // Parse response to model
+        final profileModel = ProfilePicModel.fromJson(getProfile);
+        print("Profile response JSON: ${profileModel.toJson()}");
+        
+        return profileModel; // Return the model
+      } else {
+        throw Exception('Failed to upload image: ${streamedResponse.statusCode}');
+      }
+    } catch (e) {
+      print('Error uploading image: $e');
+      throw Exception('Failed to upload image');
     }
   }
 }

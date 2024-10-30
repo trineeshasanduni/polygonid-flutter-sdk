@@ -13,8 +13,6 @@ class ActivityLogsEvent extends ProfileEvent {
   const ActivityLogsEvent({
     required this.did,
   });
-
-
 }
 
 class VerifyEmailEvent extends ProfileEvent {
@@ -51,26 +49,21 @@ class UpdateVerifyEmailEvent extends ProfileEvent {
 
 class GetVerifyEmailEvent extends ProfileEvent {
   final String Did;
-  
+
   const GetVerifyEmailEvent({
     required this.Did,
-   
   });
 }
 
 class ValidateOTPEvent extends ProfileEvent {
   final String Did;
   final String OTP;
-  
-  const ValidateOTPEvent({
-    required this.Did,
-    required this.OTP
-   
-  });
+
+  const ValidateOTPEvent({required this.Did, required this.OTP});
 }
 
 class UpdateProfileEvent extends ProfileEvent {
-   final String OwnerDid;
+  final String OwnerDid;
   final String OwnerEmail;
   final String FirstName;
   final String LastName;
@@ -87,9 +80,9 @@ class UpdateProfileEvent extends ProfileEvent {
   final String AccountType;
   final String CompanyName;
   final String CompanyRegno;
-  
+
   final String OwnerAddress;
-  
+
   const UpdateProfileEvent({
     required this.OwnerDid,
     required this.OwnerEmail,
@@ -110,18 +103,30 @@ class UpdateProfileEvent extends ProfileEvent {
     required this.CompanyRegno,
     // required this.ProfileImage,
     required this.OwnerAddress,
-   
   });
 }
 
-  class GetUpdateProfileEvent extends ProfileEvent {
+class GetUpdateProfileEvent extends ProfileEvent {
   final String Did;
   final String OwnerAddress;
-  
+
   const GetUpdateProfileEvent({
     required this.Did,
     required this.OwnerAddress,
-   
   });
 }
 
+class UploadProfilePicEvent extends ProfileEvent {
+  final String Did;
+  final File ProfileImage;
+
+  const UploadProfilePicEvent({
+    required this.Did,
+    required this.ProfileImage,
+  });
+}
+
+class ResetProfileEvent extends ProfileEvent {
+  @override
+  List<Object> get props => [];
+}

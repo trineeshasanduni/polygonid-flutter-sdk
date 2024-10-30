@@ -216,6 +216,7 @@ void addPlansDependencies() {
         getIt(),
         getIt(),
         getIt(),
+        getIt(),
       ));
 
   // Use cases
@@ -225,6 +226,7 @@ void addPlansDependencies() {
   getIt.registerLazySingleton(() => VerifyUsecase(getIt()));
   getIt.registerLazySingleton(() => FreeSpaceUsecase(getIt()));
   getIt.registerLazySingleton(() => PlanPriceUsecase(getIt()));
+  getIt.registerLazySingleton(() => PaidPlanUsecase(getIt()));
 
   // // Repositories
   getIt.registerLazySingleton<AddPlansRepository>(
@@ -237,7 +239,7 @@ void addPlansDependencies() {
 
 void profileDependencies() {
   getIt.registerFactory(() => ProfileBloc(
-        getIt(),getIt(),getIt(),getIt(),getIt(),getIt(),getIt(),getIt()
+        getIt(),getIt(),getIt(),getIt(),getIt(),getIt(),getIt(),getIt(),getIt()
 
       ));
 
@@ -250,6 +252,7 @@ void profileDependencies() {
   getIt.registerLazySingleton(() =>ValidateOTPUsecase(getIt()));
   getIt.registerLazySingleton(() =>UpdateProfileUsecase(getIt()));
   getIt.registerLazySingleton(() =>GetUpdateProfileUsecase(getIt()));
+  getIt.registerLazySingleton(() =>UploadProfilePicUsecase(getIt()));
 
 
 

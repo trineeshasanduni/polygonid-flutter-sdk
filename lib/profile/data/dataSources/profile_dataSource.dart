@@ -1,5 +1,9 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:polygonid_flutter_sdk/profile/data/models/activityModel.dart';
 import 'package:polygonid_flutter_sdk/profile/data/models/getEmailModel.dart';
+import 'package:polygonid_flutter_sdk/profile/data/models/profilePicModel.dart';
 import 'package:polygonid_flutter_sdk/profile/data/models/updateProfileModel.dart';
 import 'package:polygonid_flutter_sdk/profile/data/models/validateOTPModel.dart';
 import 'package:polygonid_flutter_sdk/profile/data/models/verifyEmailModel.dart';
@@ -63,6 +67,10 @@ abstract class ProfileRemoteDatasource {
     required String OwnerAddress,
   });
   
+ Future<ProfilePicModel> uploadProfilePic({
+    required File profile_image,
+    required String ownerDid,
+  }) ;
   
   }
 

@@ -11,8 +11,17 @@ final class DownloadInitial extends DownloadState {}
 
 final class Downloading extends DownloadState {
     final String batchhash;
+    final double progress; 
     
-    const Downloading(this.batchhash);
+    const Downloading(this.batchhash,this.progress);
+
+}
+
+final class LoadingUrl extends DownloadState {
+    final String batchhash;
+     
+    
+    const LoadingUrl(this.batchhash);
 
 }
 
@@ -61,4 +70,5 @@ final class CidsGot extends DownloadState {
 
  const CidsGot(this.cids,this.batchhash);
 }
+
 

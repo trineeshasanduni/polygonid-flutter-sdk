@@ -146,5 +146,24 @@ class AddplansRepositoryImpl implements AddPlansRepository {
     }
   }
 
+  @override
+   Future<Either<Failure, FreeSpaceEntity>> activePaidPlan(
+      {required String DID, required int PackageType,required int Duration}) async {
+    try {
+      final FreeSpaceModel paidPlanModel =
+          await addPlansRemoteDatasource.activePaidPlan(
+        DID: DID,
+        PackageType: PackageType,
+        Duration: Duration,
+      );
+
+      return right(FreeSpaceEntity(
+        TXHash : paidPlanModel.TXHash,
+      ));
+    } catch (e) {
+      return Left(Failure());
+    }
+  }
+
  
 }

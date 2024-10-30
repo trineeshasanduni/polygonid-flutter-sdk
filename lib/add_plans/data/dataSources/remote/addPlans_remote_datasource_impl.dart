@@ -29,6 +29,9 @@ abstract interface class AddPlansRemoteDatasource {
       {required String did, required String owner});
   Future<PriceModel> getPlanPrice(
       {required String Plan, required int Month});
+
+  Future<FreeSpaceModel> activePaidPlan(
+      {required String DID, required int PackageType,required int Duration});
 }
 
 class AddPlansRemoteDatasourceImpl implements AddPlansRemoteDatasource {
@@ -309,6 +312,44 @@ class AddPlansRemoteDatasourceImpl implements AddPlansRemoteDatasource {
     } catch (error) {
       print('Error during plan: $error');
       throw Exception('Failed to plan');
+    }
+  }
+
+  @override
+  Future<FreeSpaceModel> activePaidPlan(
+      {required String DID, required int PackageType,required int Duration}) async {
+    try {
+      Map<String, dynamic> data = {
+        "DID": DID,
+        "PackageType": PackageType, // Using the TXHash from addUser here
+        "Duration": Duration,
+      };
+      print('plan-active data: $data');
+
+      final uri = Uri.parse('$BASE_URL/paid-package');
+      final response = await http.post(
+        uri,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(data),
+      );
+      print('plan-active status code: ${response.statusCode}');
+
+      Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+      final responsePlanactive = FreeSpaceModel.fromJson(jsonResponse);
+      final planactiveResponse = FreeSpaceModel(
+        TXHash: responsePlanactive.TXHash,
+      );
+
+      if (response.statusCode == 200) {
+        print('plan-active response: ${planactiveResponse.TXHash}');
+        return planactiveResponse;
+      } else {
+        throw Exception('Failed to plan-active');
+      }
+    } catch (error) {
+      print('Error during plan-active: $error');
+      throw Exception('Failed to plan-active');
     }
   }
 }

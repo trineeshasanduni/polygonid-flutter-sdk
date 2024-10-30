@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:fpdart/fpdart.dart';
 import 'package:polygonid_flutter_sdk/common/errors/server_failure.dart';
 import 'package:polygonid_flutter_sdk/common/usecase/usecase.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/activityEntity.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/getEmailEntity.dart';
+import 'package:polygonid_flutter_sdk/profile/domain/entities/profilePicEntity.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/updateProfileEntity.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/validateOTPEntity.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/verifyEmailEntity.dart';
@@ -230,6 +233,24 @@ class GetUpdateProfileUsecase
   }
 }
 
+class UploadProfilePicUsecase
+    implements UseCase<ProfilePicEntity, ProfilePicParams> {
+  final ProfileRepository profileRepository;
+  const UploadProfilePicUsecase(this.profileRepository);
+
+  @override
+  Future<Either<Failure, ProfilePicEntity>> call(
+      ProfilePicParams params) async {
+    print('registering12: ${params.Did}');
+    return await profileRepository.uploadProfilePic(
+      profile_image: params.profile_image,
+      ownerDid: params.Did,
+      
+
+    );
+  }
+}
+
 class GetUpdateProfileParams {
   final String Did;
   final String OwnerAddress;
@@ -238,6 +259,18 @@ class GetUpdateProfileParams {
   GetUpdateProfileParams({
     required this.Did,
     required this.OwnerAddress,
+  
+  });
+}
+
+class ProfilePicParams {
+  final String Did;
+  final File profile_image;
+
+
+  ProfilePicParams({
+    required this.Did,
+    required this.profile_image,
   
   });
 }

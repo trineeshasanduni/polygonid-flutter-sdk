@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:ui';
@@ -17,10 +18,12 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/common/widgets
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/bloc/add_plans_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/widget/basicPlanButton.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/profile/bloc/profile_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/utils/deploayContract.dart';
 import 'package:polygonid_flutter_sdk_example/utils/image_resource.dart';
 import 'package:polygonid_flutter_sdk_example/utils/secure_storage_keys.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
+import 'package:http/http.dart' as http;
 
 class AddPlans extends StatefulWidget {
   final String? did;
@@ -33,6 +36,8 @@ class AddPlans extends StatefulWidget {
 
 class _AddPlansState extends State<AddPlans> {
   late final AddPlansBloc _addPlansBloc;
+
+  late final ProfileBloc _profileBloc;
   bool isExpanded1 = false;
   bool isExpanded2 = false;
   bool isExpanded3 = false;
@@ -51,8 +56,8 @@ class _AddPlansState extends State<AddPlans> {
   final _contractAddress1 =
       EthereumAddress.fromHex('0x6B7Cd2b0863e9e80b425566fEbBe15309Bb1803d');
 
-  final _senderAddress =
-      EthereumAddress.fromHex('0x4534f51a912faf5dc3b799b1230ff33e8ea4f0ba');
+  // final _senderAddress =
+  //     EthereumAddress.fromHex('0x4534f51a912faf5dc3b799b1230ff33e8ea4f0ba');
 
   final _mainAddress =
       EthereumAddress.fromHex('0xe107bFe5623c95fA97Aa45bd259Da6e0cB590350');
@@ -65,6 +70,8 @@ class _AddPlansState extends State<AddPlans> {
   bool _isFreePlanActivated = false;
   late W3MService _w3mService;
 
+  final apiKey = "I6EHT7UCWZ61UD2USQUH3WXRFD5RN29RTH";
+
   final storage = GetStorage();
 
   final _becx = W3MChainInfo(
@@ -74,6 +81,8 @@ class _AddPlansState extends State<AddPlans> {
     tokenName: 'BECX',
     rpcUrl:
         'https://polygon-mainnet.g.alchemy.com/v2/pHKWzuctaLCPxAKYc0c8bKQA8d85oPlk',
+
+    //  " https://polygon-mainnet.g.alchemy.com/v2/tIKAf8oI0PuTLGas13adKmO_X8r-FUXg",
     blockExplorer: W3MBlockExplorer(
       name: 'polygonscan',
       url: 'https://polygonscan.com/',
@@ -86,6 +95,7 @@ class _AddPlansState extends State<AddPlans> {
     _deployPlans();
     _initWalletService();
     _addPlansBloc = getIt<AddPlansBloc>();
+    _profileBloc = getIt<ProfileBloc>();
     GetStorage.init();
 
     // Retrieve saved verification status from storage
@@ -119,9 +129,6 @@ class _AddPlansState extends State<AddPlans> {
   }
 
 // For making API calls
-
-  Future<void> sendBecxToken(String privateKey, String tokenAddress,
-      String mainWalletAddress, String becxAmount) async {}
 
   Future<void> _deployPlans() async {
     final fileStorageService =
@@ -217,7 +224,10 @@ class _AddPlansState extends State<AddPlans> {
   Future<void> _onRefresh() async {
     print("Refreshing data...");
     await _deployPlans(); // Call the initialization logic again
+
     await Future.delayed(Duration(seconds: 2)); // Simulate a network call
+
+    _profileBloc.add(ResetProfileEvent());
   }
 
   Widget _buildTabView(bool isFreePlanActive) {
@@ -274,7 +284,8 @@ class _AddPlansState extends State<AddPlans> {
                 ],
                 'ADD 0\$ PER MONTH',
                 'assets/images/paperPlane.png',
-                isFreePlanActive),
+                isFreePlanActive,
+                1),
             SizedBox(height: 20),
 
             _buildAnimatedContainer(isExpanded2, "Starter Plan", "10\$", () {
@@ -293,7 +304,8 @@ class _AddPlansState extends State<AddPlans> {
                 ],
                 'ADD 10\$ Per Month',
                 'assets/images/rocket2.png',
-                isFreePlanActive),
+                isFreePlanActive,
+                1),
             // Basicplanbutton(
             //   month: 1,
             //   isExpanded: isExpanded2,
@@ -336,7 +348,8 @@ class _AddPlansState extends State<AddPlans> {
                 ],
                 'ADD 30\$ PER MONTH',
                 'assets/images/plane.png',
-                isFreePlanActive),
+                isFreePlanActive,
+                1),
           ],
         ),
       ),
@@ -368,7 +381,8 @@ class _AddPlansState extends State<AddPlans> {
                 ],
                 'ADD 30\$',
                 'assets/images/rocket2.png',
-                isFreePlanActive),
+                isFreePlanActive,
+                3),
             SizedBox(height: 20),
             _buildAnimatedContainer(isExpanded3, "Advance Plan", "90\$", () {
               setState(() {
@@ -386,7 +400,8 @@ class _AddPlansState extends State<AddPlans> {
                 ],
                 'ADD 90\$ PER MONTH',
                 'assets/images/plane.png',
-                isFreePlanActive),
+                isFreePlanActive,
+                3),
           ],
         ),
       ),
@@ -418,7 +433,8 @@ class _AddPlansState extends State<AddPlans> {
                 ],
                 'ADD 60\$',
                 'assets/images/rocket2.png',
-                isFreePlanActive),
+                isFreePlanActive,
+                6),
             SizedBox(height: 20),
             _buildAnimatedContainer(isExpanded3, "Advance Plan", "180\$", () {
               setState(() {
@@ -436,7 +452,8 @@ class _AddPlansState extends State<AddPlans> {
                 ],
                 'ADD 180\$ PER MONTH',
                 'assets/images/plane.png',
-                isFreePlanActive),
+                isFreePlanActive,
+                6),
           ],
         ),
       ),
@@ -468,7 +485,8 @@ class _AddPlansState extends State<AddPlans> {
                 ],
                 'ADD 120\$',
                 'assets/images/rocket2.png',
-                isFreePlanActive),
+                isFreePlanActive,
+                12),
             SizedBox(height: 20),
             _buildAnimatedContainer(isExpanded3, "Advance Plan", "360\$", () {
               setState(() {
@@ -486,7 +504,8 @@ class _AddPlansState extends State<AddPlans> {
                 ],
                 'ADD 360\$ PER MONTH',
                 'assets/images/plane.png',
-                isFreePlanActive),
+                isFreePlanActive,
+                12),
           ],
         ),
       ),
@@ -502,7 +521,7 @@ class _AddPlansState extends State<AddPlans> {
         final owner1 = storage.read('walletAddress');
 
         if (state is AddPlansLoading) {
-         return Row(
+          return Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
@@ -567,51 +586,7 @@ class _AddPlansState extends State<AddPlans> {
             Owner: owner1,
             Did: widget.did!, // change here
           ));
-          // return Center(
-          //   child: Column(
-          //     mainAxisAlignment: MainAxisAlignment.center,
-          //     children: [
-          //       Text('User added. Now Ready for Verification',style: TextStyle(
-          //         color: Colors.red,
-          //       ),),
-          //       SizedBox(height: 20),
-          //       TextButton(
-          //         onPressed: () {
-          //           // _checkProofTxHashStatus(
-          //           //     state.ProofResponse.TXHash.toString(),
-          //           //     state.ProofResponse.a as List<String>,
-          //           //     state.ProofResponse.b as List<List<String>>,
-          //           //     state.ProofResponse.c as List<String>,
-          //           //     state.ProofResponse.input as List<String>,
-          //           //     owner1,
-          //           //     widget.did!);
-          //           _addPlansBloc.add(verifyuserEvent(
-          //             A: state.ProofResponse.a as List<String>,
-          //             B: state.ProofResponse.b as List<List<String>>,
-          //             C: state.ProofResponse.c as List<String>,
-          //             Inputs: state.ProofResponse.input as List<String>,
-          //             Owner: owner1,
-          //             Did: widget.did!, // change here
-          //           ));
-          //         },
-          //         child: _buildButton(
-          //           name,
-          //           Theme.of(context).colorScheme.secondary,
-          //           Theme.of(context).primaryColor,
-          //           Theme.of(context).primaryColor,
-          //         ),
-          //       ),
-          //     ],
-          //   ),
-          // );
         }
-
-        // if (state is VerifyProof) {
-        //   print('verifyUser: ${state.VerifyResponse.TXHash}');
-        //   return const Center(
-        //     child: Text('User Verified Successfully',),
-        //   );
-        // }
 
         if (state is VerifyProof) {
           print('verifyUser: ${state.VerifyResponse.TXHash}');
@@ -629,14 +604,7 @@ class _AddPlansState extends State<AddPlans> {
               owner: owner1,
             ));
           });
-          // _checkVeridfyTxHashStatus(
-          //     state.VerifyResponse.TXHash.toString(), owner1, widget.did!);
-
-          // Update the verification state and save it after the build phase
         }
-
-        // Declare this variable in your class
-// New flag for logging
 
         if (state is FreeSpaceAdded) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -727,182 +695,262 @@ class _AddPlansState extends State<AddPlans> {
     );
   }
 
-  Widget _buildPlan(String name, int month, String plan) {
+  Widget _buildPlan(
+    String name,
+    int month,
+    String plan,
+    int PackageType,
+  ) {
     // print('tap tap');
-    return BlocBuilder<AddPlansBloc, AddPlansState>(
-      bloc: _addPlansBloc,
+    return BlocBuilder<ProfileBloc, ProfileState>(
+      bloc: _profileBloc,
       builder: (context, state) {
-        final storage = GetStorage();
-        final owner1 = storage.read('walletAddress');
+        if (state is EmailUpdated) {
+          print('isVerified12: ${state.email.isVerified}');
+          if (state.email.isVerified == true) {
+            _addPlansBloc.add(planPriceEvent(plan: plan, month: month));
+          } else {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please Verify Your Email and Password'),
+                  backgroundColor: Colors.red,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            });
+          }
+        }
 
-        if (state is PriceLoading) {
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                state.message,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.secondary,
-                  fontSize: 14,
+        Future.delayed(const Duration(seconds: 10), () {
+          _profileBloc.add(ResetProfileEvent());
+        });
+
+        return BlocBuilder<AddPlansBloc, AddPlansState>(
+          bloc: _addPlansBloc,
+          builder: (context, state) {
+            final storage = GetStorage();
+            final owner1 = storage.read('walletAddress');
+
+            if (state is PriceLoading &&
+                state.month == month &&
+                state.plan == plan) {
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    state.message,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.secondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  LoadingAnimationWidget.progressiveDots(
+                    color: Theme.of(context).colorScheme.secondary,
+                    size: 30.0,
+                  )
+                ],
+              );
+            }
+
+            if (state is PlanPriceFailure &&
+                state.month == month &&
+                state.plan == plan) {
+              return const Center(
+                child: Text('Failed to Fetch Price',
+                    style: TextStyle(color: Colors.red)),
+              );
+            }
+
+            if (state is PriceUpdated &&
+                state.month == month &&
+                state.plan == plan) {
+              final price = {jsonDecode(state.priceResponse.price.toString())};
+
+              print(
+                  'price11: ${jsonDecode(state.priceResponse.price.toString())}');
+
+              transferToken(jsonDecode(state.priceResponse.price.toString()),
+                  PackageType, month);
+              // print('tx: ${tx.toString()}');
+              // if (tx != '') {
+
+              // } else {
+              //    return const Center(
+              //   child: Text('Failed to Active Plan',
+              //       style: TextStyle(color: Colors.red)),
+              // );
+              // }
+            }
+
+            if (state is PaidPlanActivated) {
+              print('PaidPlanActivated: ${state.paidPlanResponse.TXHash}');
+              // Call the asynchronous function to check the TXHash status
+              _checkTxHashStatus(
+                  state.paidPlanResponse.TXHash.toString(), owner1);
+            }
+
+            return Center(
+              child: TextButton(
+                onPressed:
+                    // _isFreePlanActivated
+                    //     ? null // Disable the button when the plan is already activated
+                    //     :
+                    () {
+                  // _initW3MService();
+                  // Add the event when the button is pressed
+                  // _addPlansBloc.add(planPriceEvent(plan: plan, month: month));
+                  final did = jsonDecode(widget.did.toString());
+                  _profileBloc.add(GetVerifyEmailEvent(Did: did));
+                },
+                child: _buildButton(
+                  name,
+                  Theme.of(context).colorScheme.secondary,
+                  Theme.of(context).primaryColor,
+                  Theme.of(context).primaryColor,
                 ),
               ),
-              const SizedBox(width: 10),
-              LoadingAnimationWidget.progressiveDots(
-                color: Theme.of(context).colorScheme.secondary,
-                size: 30.0,
-              )
-            ],
-          );
-        }
-
-        if (state is PlanPriceFailure) {
-          return const Center(
-            child: Text('Failed to Fetch Price',
-                style: TextStyle(color: Colors.red)),
-          );
-        }
-
-        if (state is PriceUpdated) {
-          final price = {jsonDecode(state.priceResponse.price.toString())};
-
-          print('price11: ${jsonDecode(state.priceResponse.price.toString())}');
-
-          transferToken(jsonDecode(state.priceResponse.price.toString()));
-        }
-
-        return Center(
-          child: TextButton(
-            onPressed:
-                // _isFreePlanActivated
-                //     ? null // Disable the button when the plan is already activated
-                //     :
-                () {
-              // _initW3MService();
-              // Add the event when the button is pressed
-              _addPlansBloc.add(planPriceEvent(plan: plan, month: month));
-            },
-            child: _buildButton(
-              name,
-              Theme.of(context).colorScheme.secondary,
-              Theme.of(context).primaryColor,
-              Theme.of(context).primaryColor,
-            ),
-          ),
+            );
+          },
         );
       },
     );
   }
 
-  Future<void> transferToken(double price) async {
-  // Format the value to wei
-  BigInt _formatValue(double amount, {int decimals = 18}) {
-    return BigInt.from(amount * BigInt.from(10).pow(decimals).toDouble());
+  Future<void> transferToken(double price, int PackageType, int month) async {
+    // Format the value to wei
+    BigInt _formatValue(double amount, {int decimals = 18}) {
+      return BigInt.from(amount * BigInt.from(10).pow(decimals).toDouble());
+    }
+
+    final transferValue = _formatValue(price, decimals: 18);
+    print('Transferring amount: $transferValue wei');
+
+    try {
+      print('Fetching Web3Modal service...');
+      _w3mService.launchConnectedWallet();
+
+      // Load ABI from the asset file
+      final abiFile = await rootBundle.loadString('assets/abi/BethToken.json');
+      if (abiFile.isEmpty) throw FormatException('ABI file is empty');
+
+      final jsonAbi = jsonDecode(abiFile);
+      final _abiCode =
+          ContractAbi.fromJson(jsonEncode(jsonAbi['abi']), 'BethToken');
+      final _contract = DeployedContract(_abiCode, _contractAddress1);
+      print('Contract loaded: $_contract');
+
+      final walletAddress = _w3mService.session?.address;
+
+      // Execute the approve function and wait for the result
+      print('Executing approve function...');
+      final approveResult = _w3mService.requestWriteContract(
+        topic: _w3mService.session?.topic.toString() ?? '',
+        chainId: "eip155:137",
+        deployedContract: _contract,
+        functionName: 'approve',
+        transaction: Transaction(
+          from: EthereumAddress.fromHex(_w3mService.session?.address ?? ''),
+        ),
+        parameters: [
+          _mainAddress, // Ensure _mainAddress is a valid Ethereum address
+          transferValue, // Token amount in wei
+        ],
+      );
+      await Future.delayed(Duration(minutes: 2));
+      Text('Waiting for transaction confirmation...');
+      final latestTxHash =
+          await getLatestTransactionHash(walletAddress!, apiKey);
+
+      if (latestTxHash != null) {
+        print('Latest transaction hash: $latestTxHash');
+      } else {
+        print('No transactions found');
+      }
+
+      print('Approve successful with result: $latestTxHash');
+
+      bool isApprovalConfirmed = await _checkTxHash(latestTxHash!);
+      if (!isApprovalConfirmed) {
+        print('Approval transaction failed or timed out.');
+      }
+
+      print('Approval transaction confirmed.');
+
+      // Now execute the transfer function after approve is successful
+      print('Executing transfer function...');
+      _w3mService.launchConnectedWallet();
+      final transferResult = _w3mService.requestWriteContract(
+        topic: _w3mService.session?.topic.toString() ?? '',
+        chainId: "eip155:137",
+        deployedContract: _contract,
+        functionName: 'transfer',
+        transaction: Transaction(
+          from: EthereumAddress.fromHex(_w3mService.session?.address ?? ''),
+        ),
+        parameters: [
+          _mainAddress,
+          transferValue, // Token amount in wei
+        ],
+      );
+
+      await Future.delayed(Duration(minutes: 1));
+      Text('Waiting for transaction confirmation...');
+      final TransferlatestTxHash =
+          await getLatestTransactionHash(walletAddress, apiKey);
+
+      if (TransferlatestTxHash != null) {
+        print('Latest transaction hash transfer: $TransferlatestTxHash');
+        _addPlansBloc.add(activePaidPlanEvent(
+          // change here
+          DID: widget.did!,
+          PackageType: PackageType,
+          Duration: month,
+        ));
+      } else {
+        print('No transactions found');
+      }
+    } catch (e) {
+      if (e.toString().contains('User denied transaction signature')) {
+        print('Transaction signature denied by the user.');
+      } else {
+        print('Error during transfer: $e');
+      }
+    }
   }
 
-  final transferValue = _formatValue(10, decimals: 18);
-  print('Transferring amount: $transferValue wei');
-
-  try {
-    print('Fetching Web3Modal service...');
-
-    // Launch the connected wallet
-    _w3mService.launchConnectedWallet();
-
-    // Load ABI from the asset file
-    final abiFile = await rootBundle.loadString('assets/abi/BethToken.json');
-    if (abiFile.isEmpty) throw FormatException('ABI file is empty');
-
-    final jsonAbi = jsonDecode(abiFile);
-    final _abiCode = ContractAbi.fromJson(jsonEncode(jsonAbi['abi']), 'BethToken');
-
-    final _contract = DeployedContract(_abiCode, _contractAddress1);
-    print('Contract loaded: $_contract');
-
-    // Execute the approve function and wait for the result
-    print('Executing approve function...');
-    final approveResult = await _w3mService.requestWriteContract(
-      topic: _w3mService.session?.topic.toString() ?? '',
-      chainId: "eip155:137",
-      deployedContract: _contract,
-      functionName: 'approve',
-      transaction: Transaction(
-        from: EthereumAddress.fromHex(_w3mService.session?.address ?? ''),
-      ),
-      parameters: [
-        _mainAddress, // Ensure _mainAddress is a valid Ethereum address
-        transferValue, // Token amount in wei
-      ],
-    );
-
-    print('Approve successful with result: $approveResult');
-
-    // Wait for the transaction receipt to confirm the approval
-    bool isApprovalConfirmed = await _waitForTransactionReceipt(approveResult);
-    if (!isApprovalConfirmed) {
-      print('Approval transaction failed or timed out.');
-      return;
-    }
-
-    print('Approval transaction confirmed.');
-
-    // Now execute the transfer function after approve is successful
-    print('Executing transfer function...');
-    final transferResult = await _w3mService.requestWriteContract(
-      topic: _w3mService.session?.topic.toString() ?? '',
-      chainId: "eip155:137", // Ensure you are connected to the correct chain
-      deployedContract: _contract,
-      functionName: 'transfer',
-      transaction: Transaction(
-        from: EthereumAddress.fromHex(_w3mService.session?.address ?? ''),
-      ),
-      parameters: [
-        _mainAddress, // Ensure _mainAddress is a valid Ethereum address
-        transferValue, // Token amount in wei
-      ],
-    );
-    
-    print('Transfer successful with result: $transferResult');
-
-    // Wait for the transaction receipt to confirm the transfer
-    bool isTransferConfirmed = await _waitForTransactionReceipt(transferResult);
-    if (isTransferConfirmed) {
-      print('Transfer transaction confirmed successfully.');
-    } else {
-      print('Transfer transaction failed or took too long to confirm.');
-    }
-
-  } catch (e) {
-    if (e.toString().contains('User denied transaction signature')) {
-      print('Transaction signature denied by the user.');
-    } else {
-      print('Error during transfer: $e');
-    }
-  }
-}
-
-
-  Future<bool> _waitForTransactionReceipt(String txHash) async {
+  Future<String?> getLatestTransactionHash(
+      String walletAddress, String apiKey) async {
     print('fetching tx hash');
-    
-  const int maxAttempts = 50;
-  const Duration waitDuration = Duration(seconds: 5);
+    final url = Uri.parse(
+      'https://api.polygonscan.com/api?module=account&action=txlist&address=$walletAddress&startblock=0&endblock=99999999&page=1&offset=1&sort=desc&apikey=I6EHT7UCWZ61UD2USQUH3WXRFD5RN29RTH',
+    );
 
-  final client = Web3Client(
-        "https://polygon-mainnet.g.alchemy.com/v2/SOxCgJzw6PLvC02g238nlDqJRq83_j3k",
-        Client());
+    try {
+      final response = await http.get(url);
+      print('response: ${response.body}');
 
-  for (int attempt = 0; attempt < maxAttempts; attempt++) {
-    final receipt = await client.getTransactionReceipt(txHash);
-    if (receipt != null) {
-      print('Transaction confirmed with status: ${receipt.status}');
-      return receipt.status ?? false; // true if successful, false if failed
+      if (response.statusCode == 200) {
+        print('status code: ${response.statusCode}');
+        final data = json.decode(response.body);
+        print('data: $data');
+        if (data['status'] == '1' && data['message'] == 'OK') {
+          final transactions = data['result'];
+          if (transactions.isNotEmpty) {
+            final latestTxHash = transactions[0]['hash'];
+            print('latestTxHash: $latestTxHash');
+            return latestTxHash;
+          }
+        }
+      } else {
+        print('Failed to fetch transaction data');
+      }
+    } catch (e) {
+      print('Error: $e');
     }
-    print('Waiting for transaction confirmation... (Attempt ${attempt + 1})');
-    await Future.delayed(waitDuration);
+    return null;
   }
-
-  return false; // Return false if max attempts reached and no confirmation
-}
 
   Future<bool> _checkTxHash(String txHash) async {
     bool isSuccess = false;
@@ -1066,11 +1114,10 @@ class _AddPlansState extends State<AddPlans> {
       ),
       trailing: GestureDetector(
         // onTap: _deployPlans,
-        onTap: () => sendBecxToken(
-            '',
-            '0x6B7Cd2b0863e9e80b425566fEbBe15309Bb1803d',
-            '0x6515703199f08aF2595D034eaE3749D37E124550',
-            '1'),
+        onTap: () {
+          final walletaddress = storage.read('walletAddress');
+          getLatestTransactionHash(walletaddress, apiKey);
+        },
         child: Container(
           width: 30,
           height: 30,
@@ -1100,14 +1147,14 @@ class _AddPlansState extends State<AddPlans> {
       List<String> features,
       String name1,
       String icon,
-      bool? isFreePlanActive) {
+      bool? isFreePlanActive,
+      int month) {
     return BlocBuilder<AddPlansBloc, AddPlansState>(
       bloc: _addPlansBloc,
       builder: (context, state) {
-       
         final storage = GetStorage();
         final owner1 = storage.read('walletAddress');
-         final freePlan = storage.read('isFreePlanActivated') ?? false;
+        final freePlan = storage.read('isFreePlanActivated') ?? false;
         return GestureDetector(
           onTap: onTap, // Expands or collapses the container when tapped
           child: AnimatedContainer(
@@ -1193,7 +1240,9 @@ class _AddPlansState extends State<AddPlans> {
                               width: 50, height: 50, fit: BoxFit.fill),
                           SizedBox(width: 30),
                           Text(
-                           freePlan && title =="Basic Plan" && !isExpanded ? title + " Activated": title , // Display title text
+                            freePlan && title == "Basic Plan" && !isExpanded
+                                ? title + " Activated"
+                                : title, // Display title text
                             style: isExpanded
                                 ? TextStyle(
                                     color: Colors.white,
@@ -1201,9 +1250,12 @@ class _AddPlansState extends State<AddPlans> {
                                     fontWeight: FontWeight.bold,
                                     fontFamily:
                                         GoogleFonts.robotoMono().fontFamily)
-                                :  TextStyle(
-                                    color: freePlan && title =="Basic Plan" ? Colors.redAccent[700] :
-                                        Theme.of(context).colorScheme.secondary,
+                                : TextStyle(
+                                    color: freePlan && title == "Basic Plan"
+                                        ? Colors.redAccent[700]
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .secondary,
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     fontFamily:
@@ -1313,8 +1365,29 @@ class _AddPlansState extends State<AddPlans> {
                       if (title == "Basic Plan") ...[
                         _buildAddPlan(name1, isFreePlanActive!),
                       ],
-                      if (title == "Starter Plan") ...[
-                        _buildPlan(name1, 1, "MONTH_1_STARTER"),
+                      if (title == "Starter Plan" && month == 1) ...[
+                        _buildPlan(name1, 1, "MONTH_1_STARTER", 1),
+                      ],
+                      if (title == "Advance Plan" && month == 1) ...[
+                        _buildPlan(name1, 1, "MONTH_1_ADVANCE", 2),
+                      ],
+                      if (title == "Starter Plan" && month == 3) ...[
+                        _buildPlan(name1, 3, "MONTH_1_STARTER", 1),
+                      ],
+                      if (title == "Advance Plan" && month == 3) ...[
+                        _buildPlan(name1, 3, "MONTH_1_ADVANCE", 2),
+                      ],
+                      if (title == "Starter Plan" && month == 6) ...[
+                        _buildPlan(name1, 6, "MONTH_1_STARTER", 1),
+                      ],
+                      if (title == "Advance Plan" && month == 6) ...[
+                        _buildPlan(name1, 6, "MONTH_1_ADVANCE", 2),
+                      ],
+                      if (title == "Starter Plan" && month == 12) ...[
+                        _buildPlan(name1, 12, "MONTH_1_STARTER", 1),
+                      ],
+                      if (title == "Advance Plan" && month == 12) ...[
+                        _buildPlan(name1, 12, "MONTH_1_ADVANCE", 2),
                       ],
                     ],
                   ],
@@ -1354,5 +1427,41 @@ class _AddPlansState extends State<AddPlans> {
         ),
       ),
     );
+  }
+}
+
+class EthereumService {
+  final Web3Client _client;
+
+  final String _etherscanApiKey = 'YOUR_ETHERSCAN_API_KEY';
+
+  EthereumService(String infuraUrl)
+      : _client = Web3Client(infuraUrl, http.Client());
+
+  Future<void> getLatestTransaction(String address) async {
+    final String url =
+        'https://api.etherscan.io/api?module=account&action=txlist&address=$address&startblock=0&endblock=99999999&sort=desc&apikey=$_etherscanApiKey';
+
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == '1' && data['result'].isNotEmpty) {
+          final latestTransaction = data['result'][0];
+          print('Latest Transaction Hash: ${latestTransaction['hash']}');
+          print('From: ${latestTransaction['from']}');
+          print('To: ${latestTransaction['to']}');
+          print('Value: ${latestTransaction['value']} ETH');
+          print(
+              'Timestamp: ${DateTime.fromMillisecondsSinceEpoch(int.parse(latestTransaction['timeStamp']) * 1000)}');
+        } else {
+          print('No transactions found for this address.');
+        }
+      } else {
+        print('Error fetching transactions: ${response.body}');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
   }
 }

@@ -1,7 +1,11 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:fpdart/fpdart.dart';
 import 'package:polygonid_flutter_sdk/common/errors/server_failure.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/activityEntity.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/getEmailEntity.dart';
+import 'package:polygonid_flutter_sdk/profile/domain/entities/profilePicEntity.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/updateProfileEntity.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/validateOTPEntity.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/verifyEmailEntity.dart';
@@ -70,6 +74,12 @@ abstract class ProfileRepository {
     required String Did,
     required String OwnerAddress,
   
+    
+  });
+
+  Future<Either<Failure, ProfilePicEntity>> uploadProfilePic({
+    required File profile_image,
+    required String ownerDid,
     
   });
   }

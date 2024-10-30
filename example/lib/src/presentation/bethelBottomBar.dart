@@ -54,6 +54,19 @@ class BethelBottomBarState extends State<BethelBottomBar> {
   late W3MService _w3mService;
   bool isConnected = false;
   bool _isFreePlanActivated = false;
+  
+  final _becx = W3MChainInfo(
+    chainName: 'Polygon Mainnet',
+    chainId: '137',
+    namespace: 'eip155:137',
+    tokenName: 'BECX',
+    rpcUrl:
+        'https://polygon-mainnet.g.alchemy.com/v2/pHKWzuctaLCPxAKYc0c8bKQA8d85oPlk',
+    blockExplorer: W3MBlockExplorer(
+      name: 'polygonscan',
+      url: 'https://polygonscan.com/',
+    ),
+  );
 
   final storage = GetStorage();
 
@@ -127,6 +140,7 @@ class BethelBottomBarState extends State<BethelBottomBar> {
   }
 
   void _initW3MService() async {
+    
     _w3mService = W3MService(
       projectId: 'fe65e1d4350f3699c3aa913768035e39',
       metadata: const PairingMetadata(
@@ -195,7 +209,7 @@ class BethelBottomBarState extends State<BethelBottomBar> {
 
   Future<void> _showMetamaskAlert(BuildContext context) async {
     final isConnect = storage.read('isConnected');
-    print('fetching metamask alert');
+    print('fetching metamask alert : $isConnect');
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -300,6 +314,7 @@ class BethelBottomBarState extends State<BethelBottomBar> {
 
   Future<void> _deployContract() async {
     try {
+
       _web3Client = Web3Client(rpcUrl, httpClient);
 
       final abiFile =

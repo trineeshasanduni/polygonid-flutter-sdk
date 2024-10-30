@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:polygonid_flutter_sdk/profile/data/models/activityModel.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/activityEntity.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/getEmailEntity.dart';
+import 'package:polygonid_flutter_sdk/profile/domain/entities/profilePicEntity.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/updateProfileEntity.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/updateProfileEntity.dart';
 import 'package:polygonid_flutter_sdk/profile/domain/entities/validateOTPEntity.dart';
@@ -22,9 +25,10 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final ValidateOTPUsecase validateOTPUsecase;
   final UpdateProfileUsecase updateProfileUsecase;
   final GetUpdateProfileUsecase getUpdateProfileUsecase;
+  final UploadProfilePicUsecase uploadProfilePicUsecase;
 
   ProfileBloc(this.profileUsecase, this.verifyEmailUsecase,
-      this.updateVerifyEmailUsecase, this.getVerifyEmailUsecase,this.verifyTelUsecase,this.validateOTPUsecase,this.updateProfileUsecase,this.getUpdateProfileUsecase)
+      this.updateVerifyEmailUsecase, this.getVerifyEmailUsecase,this.verifyTelUsecase,this.validateOTPUsecase,this.updateProfileUsecase,this.getUpdateProfileUsecase,this.uploadProfilePicUsecase)
       : super(ProfileInitial()) {
     on<ActivityLogsEvent>(_handleActivityLogs);
     on<VerifyEmailEvent>(_handleVerifyEmail);
@@ -34,6 +38,10 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     on<ValidateOTPEvent>(_handleValidateOTP);
     on<UpdateProfileEvent>(_handleUpdateProfile);
     on<GetUpdateProfileEvent>(_handleGetProfile);
+    on<UploadProfilePicEvent>(_handleUploadProfilePic);
+    on<ResetProfileEvent>((event, emit) {
+      emit(ProfileInitial()); // Reset state to initial
+    });
   }
 
   void _handleActivityLogs(
@@ -211,5 +219,26 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       },
     );
   }
+
+  void _handleUploadProfilePic(
+      UploadProfilePicEvent event, Emitter<ProfileState> emit) async {
+    emit(Updating());
+    final uploadResponse = await uploadProfilePicUsecase(ProfilePicParams(
+      Did: event.Did,
+      profile_image: event.ProfileImage,
+    ));
+    uploadResponse.fold(
+      (failure) {
+        print('failure get: $failure');
+        emit(UpdateFailed(failure.toString()));
+      },
+      (upload) {
+        print('Emitting StatusLoaded with DID: $upload');
+        emit(ProfilePicUploaded(upload));
+      },
+    );
+  }
   
 }
+
+

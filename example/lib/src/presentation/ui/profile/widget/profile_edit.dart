@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/common/widgets/circularProgress.dart';
@@ -24,6 +26,39 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
+
+  File? _imageFile;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+      _profileBloc.add(UploadProfilePicEvent(
+          Did: jsonDecode(widget.did!), ProfileImage: _imageFile!));
+
+    }
+     BlocBuilder<ProfileBloc, ProfileState>(
+      bloc: _profileBloc,
+      builder: (context, state) {
+        if (state is ProfilePicUploaded) {
+          _showSnackbar('Profile Image Uploaded Successfully', Colors.green);
+          final Uint8List bytes = jsonDecode(state.profile.profileImage!);
+          File profileImageFile = File.fromRawPath(bytes);
+            _imageFile = profileImageFile;
+        }
+        if (state is UpdateFailed) {
+          _showSnackbar('Profile Image Upload Failed: ${state.message}',
+              Colors.red);
+        }
+        return const SizedBox();
+      },
+    );
+  }
+
   final TextEditingController fnameController = TextEditingController();
   var lname = TextEditingController();
   var aLine1 = TextEditingController();
@@ -152,25 +187,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       children: [
                         CircleAvatar(
                           radius: 50,
-                          // backgroundImage: AssetImage('assets/images/avatar.jpg'), // Replace with your image
+                          backgroundColor: Theme.of(context).secondaryHeaderColor,
+                          backgroundImage: _imageFile != null
+                              ? FileImage(_imageFile!)
+                              : AssetImage('assets/images/user1.png') as ImageProvider,
                         ),
                         Positioned(
                           bottom: 0,
                           right: 0,
                           child: InkWell(
-                            onTap: () {
-                              // Implement your image edit functionality here
-                            },
+                            onTap: _pickImage,
                             child: Container(
                               height: 35,
                               width: 35,
                               decoration: BoxDecoration(
-                                color: Colors.yellow,
+                                color: Theme.of(context).colorScheme.secondary,
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
                                 Icons.camera_alt,
                                 color: Colors.black,
+                                size: 20,
                               ),
                             ),
                           ),
@@ -386,16 +423,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
         print('did: ${jsonDecode(widget.did!)}');
         _profileBloc.add(UpdateProfileEvent(
           OwnerDid: jsonDecode(widget.did!),
-          OwnerEmail: email.text,
-          FirstName: fnameController.text,
-          LastName: lname.text,
-          City: city.text,
-          Country: country.text,
-          AddressLine1: aLine1.text,
-          AddressLine2: aLine2.text,
-          PostalCode: zipcode.text,
-          PhoneNumber: tel.text,
-          CountryCode: countrycode,
+          OwnerEmail: email!.text,
+          FirstName: fnameController!.text,
+          LastName: lname!.text,
+          City: city!.text,
+          Country: country!.text,
+          AddressLine1: aLine1!.text,
+          AddressLine2: aLine2!.text,
+          PostalCode: zipcode!.text,
+          PhoneNumber: tel!.text,
+          CountryCode: countrycode!,
           Description: 'description',
           Street: 'street',
           State: states.text,

@@ -102,6 +102,13 @@ final class DataUpdated extends ProfileState {
   const DataUpdated(this.profile);
 }
 
+final class ProfilePicUploaded extends ProfileState {
+  final ProfilePicEntity profile;
+
+  const ProfilePicUploaded(this.profile);
+}
+
+
 
 
 

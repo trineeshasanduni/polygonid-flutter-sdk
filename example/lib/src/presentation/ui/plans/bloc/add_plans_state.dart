@@ -15,9 +15,11 @@ final class AddPlansLoading extends AddPlansState {
   AddPlansLoading(this.message);
 }
 final class PriceLoading extends AddPlansState {
+  final int month;
+  final String plan;
   final String message;
 
-  PriceLoading(this.message);
+  PriceLoading(this.message,this.month,this.plan);
 }
 
 final class GenerateSecretsSuccess extends AddPlansState {
@@ -53,8 +55,10 @@ final class AddPlansFailure extends AddPlansState {
 
 final class PlanPriceFailure extends AddPlansState {
   final String error;
+   final int month;
+  final String plan;
 
-  PlanPriceFailure(this.error);
+  PlanPriceFailure(this.error,this.month,this.plan);
 }
 
 final class FreeSpaceAdded extends AddPlansState {
@@ -65,8 +69,16 @@ final class FreeSpaceAdded extends AddPlansState {
 
 final class PriceUpdated extends AddPlansState {
   final PriceEntity priceResponse;
+   final int month;
+  final String plan;
 
-  PriceUpdated(this.priceResponse);
+  PriceUpdated(this.priceResponse,this.month,this.plan);
+}
+
+final class PaidPlanActivated extends AddPlansState {
+  final FreeSpaceEntity paidPlanResponse;
+
+  PaidPlanActivated(this.paidPlanResponse);
 }
 
 

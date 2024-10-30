@@ -18,14 +18,16 @@ class AddPlansBloc extends Bloc<AddPlansEvent, AddPlansState> {
   final VerifyUsecase verifyUsecase;
    final FreeSpaceUsecase freeSpaceUsecase;
    final PlanPriceUsecase planPriceUsecase;
+    final PaidPlanUsecase paidPlanUsecase;
 
-  AddPlansBloc(this.generateSecretsUsecase,this.addUserUsecase, this.createProofUsecase,this.verifyUsecase,this.freeSpaceUsecase,this.planPriceUsecase) : super(AddPlansInitial()) {
+  AddPlansBloc(this.generateSecretsUsecase,this.addUserUsecase, this.createProofUsecase,this.verifyUsecase,this.freeSpaceUsecase,this.planPriceUsecase,this.paidPlanUsecase) : super(AddPlansInitial()) {
     on<GenerateSecretsEvent>(_handleGenerateSecrets); 
     on<addUserEvent>(_handleAddUser);
     on<createProofEvent>(_handleProof);
     on<verifyuserEvent>(_handleVerifyUser);
     on<freeSpaceEvent>(_handleFreeSpace);
     on<planPriceEvent>(_handlePlanPrice);
+    on<activePaidPlanEvent>(_handlePaidPlan);
 
   }
 
@@ -110,7 +112,7 @@ class AddPlansBloc extends Bloc<AddPlansEvent, AddPlansState> {
 
   Future<void> _handlePlanPrice(
       planPriceEvent event, Emitter<AddPlansState> emit) async {
-    emit(PriceLoading( "Price Allocating"));
+    emit(PriceLoading( "Price Allocating",event.month,event.plan));
     final failureOrPlanPrice = await planPriceUsecase(PlanPriceParams(
 
           plan: event.plan,
@@ -118,8 +120,24 @@ class AddPlansBloc extends Bloc<AddPlansEvent, AddPlansState> {
           
           ));
          failureOrPlanPrice.fold(
-      (failure) => emit(PlanPriceFailure(failure.toString())),
-      (planPrice) => emit(PriceUpdated(planPrice)),
+      (failure) => emit(PlanPriceFailure(failure.toString(),event.month,event.plan)),
+      (planPrice) => emit(PriceUpdated(planPrice,event.month,event.plan)),
+    );  
+  }
+
+  Future<void> _handlePaidPlan(
+      activePaidPlanEvent event, Emitter<AddPlansState> emit) async {
+    emit(AddPlansLoading('Paid Plan Activating'));
+    final failureOrPaidPlan = await paidPlanUsecase(PaidPlanParams(
+
+          DID: event.DID,
+          PackageType: event.PackageType,
+          Duration: event.Duration
+          
+          ));
+         failureOrPaidPlan.fold(
+      (failure) => emit(AddPlansFailure(failure.toString())),
+      (paidPlan) => emit(PaidPlanActivated(paidPlan)),
     );  
   }
 
