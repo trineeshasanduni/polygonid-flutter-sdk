@@ -1,4 +1,4 @@
-import 'package:logger/logger.dart';
+import 'package:logger/logger.dart' ;
 import 'package:polygonid_flutter_sdk/common/domain/domain_logger.dart';
 
 class DefaultLogger implements PolygonIdSdkLogger {

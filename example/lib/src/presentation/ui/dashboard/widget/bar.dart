@@ -39,7 +39,6 @@ class _LineChartSample2State extends State<LineChartSample2> {
       _dashboardBloc
           .add(networkUsageEvent(did: widget.did!)); // Trigger the event
     } else {
-      print('DID is null');
     }
   }
 
@@ -56,7 +55,6 @@ class _LineChartSample2State extends State<LineChartSample2> {
             );
           } else if (state is DashboardLoaded) {
             final usageData = state.usage;
-            print('state usage: ${state.usage}');
 
             String getDateOnly(String timestamp) {
               // Parse the timestamp to a DateTime object
@@ -85,9 +83,8 @@ class _LineChartSample2State extends State<LineChartSample2> {
 
             dailyUsageMiB = dailyUsageMiBs.reversed.toList();
 
-            // You can print or use these lists as needed
-            print('Days: $formattedDay');
-            print('Daily Usage: $dailyUsageMiB');
+            
+           
 
             return Stack(
               children: <Widget>[
@@ -95,7 +92,7 @@ class _LineChartSample2State extends State<LineChartSample2> {
                   right: 8,
                   child: GestureDetector(
                     onTap: () {
-                      print('tap 1');
+                     
                       _initActivityLogs();
                     },
                     child: Container(
@@ -217,14 +214,13 @@ class _LineChartSample2State extends State<LineChartSample2> {
         .map((entry) => FlSpot(entry.key.toDouble(), entry.value ?? 0.0))
         .toList();
 
-    print('spots: $spots');
+   
 
     double? maxUsage = dailyUsageMiB
         .where((usage) => usage != null)
         .cast<double>()
         .reduce((a, b) => a > b ? a : b);
 
-    print('maxUsage: $maxUsage');
 
     return LineChartData(
       gridData: const FlGridData(

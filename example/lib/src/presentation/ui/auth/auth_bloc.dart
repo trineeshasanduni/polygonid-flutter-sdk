@@ -52,7 +52,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _handleScanQrCodeResponse(
       ScanQrCodeResponse event, Emitter<AuthState> emit) async {
     String? qrCodeResponse = event.response;
-    print('processing qr code response: $qrCodeResponse');
     if (qrCodeResponse == null || qrCodeResponse.isEmpty) {
       emit(const AuthState.error("no qr code scanned"));
       return;

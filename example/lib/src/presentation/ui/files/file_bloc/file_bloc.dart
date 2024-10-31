@@ -70,28 +70,25 @@ class FileBloc extends Bloc<FileEvent, FileState> {
         did: event.did, ownerDid: event.ownerDid, fileData: event.fileData));
     uploadResponse.fold(
       (failure) {
-        print('failure get: $failure');
         emit(FileUploadFailed(failure.toString()));
       },
       (upload) {
-        print('Emitting StatusLoaded with DID: $upload');
         emit(FileUploaded(upload));
       },
     );
   }
 
   void _handleUseSpace(UseSpaceEvent event, Emitter<FileState> emit) async {
-    print('fetching use space12');
     emit(FileUploading('allocating space'));
     final useSpaceResponse = await useSpaceUsecase(UseSpaceParam(
         did: event.did, ownerDid: event.ownerDid, batchSize: event.batchSize));
     useSpaceResponse.fold(
       (failure) {
-        print('failure get: $failure');
+        ('failure get: $failure');
         emit(FileUploadFailed(failure.toString()));
       },
       (useSpace) {
-        print('Emitting StatusLoaded with DID1: $useSpace');
+        ('Emitting StatusLoaded with DID1: $useSpace');
         emit(FileUsingSpaced(useSpace));
       },
     );
@@ -104,11 +101,11 @@ class FileBloc extends Bloc<FileEvent, FileState> {
         await getFileNameUsecase(FileNameParam(BatchHash: event.BatchHash,Verify: event.Verify));
     fileNameResponse.fold(
       (failure) {
-        print('failure get: $failure');
+        ('failure get: $failure');
         emit(FileNameFetchedFailed(failure.toString()));
       },
       (fileName) {
-        print('Emitting StatusLoaded with DID12: $fileName');
+        ('Emitting StatusLoaded with DID12: $fileName');
         emit(FileNameLoaded(fileName));
       },
     );
@@ -134,7 +131,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
       onVerifyResponse event, Emitter<FileState> emit) async {
     String? qrCodeResponse = event.verifyResponse;
     String? batchHash = event.batchHash;
-    print('qrCodeResponse1: $qrCodeResponse');
+    ('qrCodeResponse1: $qrCodeResponse');
     if (qrCodeResponse == null || qrCodeResponse.isEmpty) {
       emit(FileVerifyFailed("Scanned code is not valid"));
     }
@@ -142,10 +139,10 @@ class FileBloc extends Bloc<FileEvent, FileState> {
     try {
       final Iden3MessageEntity iden3message =
           await _qrcodeParserUtils.getIden3MessageFromQrCode(qrCodeResponse!);
-      print('iden3message res1: $iden3message');
+      ('iden3message res1: $iden3message');
       emit(VerifyResponseloaded(iden3message,event.batchHash! ));
-      print('state23: ${state}');
-      print('get fetch1 ');
+      ('state23: ${state}');
+      ('get fetch1 ');
     } catch (error) {
       emit(FileVerifyFailed("Scanned code is not valid"));
     }
@@ -157,12 +154,12 @@ class FileBloc extends Bloc<FileEvent, FileState> {
         await SecureStorage.read(key: SecureStorageKeys.privateKey);
 
         String batchHash = event.batchHash!;
-    print('privateKey1: $privateKey');
+    ('privateKey1: $privateKey');
     if (privateKey == null) {
       emit(FileVerifyFailed("Private key not found"));
       return;
     }
-    print('print failure');
+    ('print failure');
 
     ChainConfigEntity chainConfig = await _polygonIdSdk.getSelectedChain();
 
@@ -171,12 +168,10 @@ class FileBloc extends Bloc<FileEvent, FileState> {
         blockchain: chainConfig.blockchain,
         network: chainConfig.network);
 
-    print('didIdentifier: $didIdentifier');
 
     emit(Fileverifying(batchHash,'Fetching claim'));
 
     Iden3MessageEntity iden3message = event.iden3message;
-    print('iden3message fetch: $iden3message');
     if (event.iden3message.messageType != Iden3MessageType.credentialOffer) {
       emit(FileVerifyFailed("Read message is not of type offer"));
       return;
@@ -197,7 +192,6 @@ class FileBloc extends Bloc<FileEvent, FileState> {
         privateKey: privateKey,
       );
 
-      print('claimList: ${claimList}.');
 
       if (claimList.isNotEmpty) {
         add(getUploadVerifyClaims(batchHash));

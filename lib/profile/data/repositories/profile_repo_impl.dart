@@ -125,7 +125,6 @@ class ProfileRepoImpl implements ProfileRepository {
           await profileRemoteDatasource.getEmailVerify(
         did: Did,
       );
-      print('verify email response: ${verifyEmailModel.isVerified}');
 
       // Check if groupedLogs is not null
       return right(GetEmailEntity(

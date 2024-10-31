@@ -147,7 +147,6 @@ class _AuthScreenState extends State<AuthScreen> {
     String? qrCodeScanningResult =
         await Navigator.pushNamed(context, Routes.qrCodeScannerPath) as String?;
     widget._bloc.add(AuthEvent.onScanQrCodeResponse(qrCodeScanningResult));
-    print('qrCodeScanningResult4: $qrCodeScanningResult');
   }
 
   ///

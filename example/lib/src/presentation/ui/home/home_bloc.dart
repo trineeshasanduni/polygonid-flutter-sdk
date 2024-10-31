@@ -42,7 +42,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       network: chain.network,
       method: chain.method,
     );
-    print('loaded did: $identifier');
     emit(HomeState.loaded(identifier: identifier));
   }
 
@@ -55,11 +54,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       PrivateIdentityEntity identity =
           await _polygonIdSdk.identity.addIdentity();
       logger().i("identity: ${identity.privateKey}");
-      print('identity: ${identity.privateKey}');
       await SecureStorage.write(
           key: SecureStorageKeys.privateKey, value: identity.privateKey);
       emit(HomeState.loaded(identifier: identity.did));
-      print('did created: ${identity.did}');
     } on IdentityException catch (identityException) {
       emit(HomeState.error(message: identityException.error));
     } catch (_) {
@@ -89,7 +86,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       network: chain.network,
       method: chain.method,
     );
-    print('did: $did');
 
     
 

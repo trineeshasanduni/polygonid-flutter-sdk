@@ -63,7 +63,6 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
       onDownloadResponse event, Emitter<DownloadState> emit) async {
     String? DownloadResponse = event.response;
 
-    print('download response get: $DownloadResponse');
     if (DownloadResponse == null || DownloadResponse.isEmpty) {
       emit(const DownloadFailed("Download Response failed"));
       return;
@@ -72,13 +71,11 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     try {
       final Iden3MessageEntity iden3message =
           await _qrcodeParserUtils.getIden3MessageFromQrCode(DownloadResponse);
-      print('iden3message download get: $iden3message');
       emit(loaded(iden3message));
 
       String? privateKey =
           await SecureStorage.read(key: SecureStorageKeys.privateKey);
 
-      print('privateKey get: $privateKey');
 
       if (privateKey == null) {
         emit(DownloadFailed("no private key found"));
@@ -90,7 +87,6 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
           privateKey: privateKey,
           emit: emit,
           batchHash: event.batchHash!);
-      print('authdownload done');
     } catch (error) {
       emit(DownloadFailed("Download response is not valid"));
     }
@@ -106,7 +102,6 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
 
     final ChainConfigEntity currentChain =
         await _polygonIdSdk.getSelectedChain();
-    print('curr: $currentChain');
     final EnvEntity envEntity = await _polygonIdSdk.getEnv();
 
     String? did = await _polygonIdSdk.identity.getDidIdentifier(
@@ -115,28 +110,19 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
       network: currentChain.network,
       method: currentChain.method,
     );
-    print('did get: $did');
 
     IdentityEntity identityEntity = await _polygonIdSdk.identity.getIdentity(
       genesisDid: did,
       privateKey: privateKey,
     );
-    print('identityEntity get: $identityEntity');
 
     try {
-      print("try fetch");
-      print('profile: ${selectedProfile.toString()}');
+      
       final BigInt nonce = selectedProfile == SelectedProfile.public
           ? GENESIS_PROFILE_NONCE
           : await NonceUtils(getIt()).getPrivateProfileNonce(
               did: did, privateKey: privateKey, from: iden3message.from);
-      print('nonce get: $nonce');
-      print('did get1: $did');
-      print('iden3message get1: $iden3message');
-      print('privateKey get1: $privateKey');
-
-      print('identityEntity fetch: $identityEntity');
-      print('env fetch download: $envEntity');
+     
 
       await _polygonIdSdk.iden3comm.authenticateV2(
         message: iden3message,
@@ -147,18 +133,14 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
         env: envEntity,
       );
 
-      print('before download emit');
 
       emit(const downlodVerified());
     } on OperatorException catch (error) {
-      print('error1: $error');
       emit(DownloadFailed(error.errorMessage));
     } on PolygonIdSDKException catch (error) {
-      print('error2: $error');
 
       emit(DownloadFailed(error.errorMessage));
     } catch (error) {
-      print('error3: $error');
 
       emit(DownloadFailed(error.toString()));
     }
@@ -170,15 +152,12 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
 
     final status =
         await statusUsecase(DownloadStatusParams(sessionId: event.sessionId));
-    print('status downloaddd get: $status');
 
     status.fold(
       (failure) {
-        print('failure get: $failure');
         emit(DownloadFailed(failure.toString()));
       },
       (did) {
-        print('Emitting StatusLoaded downloaddd with DID: $did');
         emit(StatusLoaded(did, event.batch_hash));
       },
     );
@@ -193,11 +172,9 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
         BatchHash: event.batch_hash));
     fileNameResponse.fold(
       (failure) {
-        print('failure get: $failure');
         emit(DownloadFailed(failure.toString()));
       },
       (cids) {
-        print('Emitting StatusLoaded with DID15: $cids');
         emit(CidsGot(cids, event.batch_hash));
       },
     );

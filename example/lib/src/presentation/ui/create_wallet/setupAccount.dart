@@ -136,12 +136,7 @@ class _SetUpScreenState extends State<SetUpScreen>
       absorbing: !enabled,
       child: GestureDetector(
         onTap: () async {
-          // Show the confirmation dialog
-          // bool shouldProceed = await _showConfirmationDialog(context);
-
-          // If user confirms, proceed with the action
-          // if (shouldProceed) {
-          //   print('Creating identity...');
+          
             _bloc.add(const HomeEvent.createIdentity());
 
             Navigator.push(
@@ -188,7 +183,6 @@ class _SetUpScreenState extends State<SetUpScreen>
 
           // If user confirms, proceed with the action
           if (shouldProceed) {
-            print('Creating identity...');
             _bloc.add(const HomeEvent.createIdentity());
 
             Navigator.push(
@@ -331,7 +325,6 @@ class _SetUpScreenState extends State<SetUpScreen>
       child: GestureDetector(
         onTap: () async {
           isCreatingIdentity = false;
-          print('Removing identity...');
           _bloc.add(const HomeEvent.removeIdentity());
         },
         key: CustomWidgetsKeys.homeScreenButtonRemoveIdentity, // Unique Key

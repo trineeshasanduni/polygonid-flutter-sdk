@@ -18,7 +18,6 @@ class ProfileUsecase implements UseCase<ActivityEntity, ProfileParams> {
 
   @override
   Future<Either<Failure, ActivityEntity>> call(ProfileParams params) async {
-    print('registering12: ${params.did}');
     return await profileRepository.activityLogs(
       did: params.did,
     );
@@ -33,7 +32,6 @@ class VerifyEmailUsecase
   @override
   Future<Either<Failure, verifyEmailEntity>> call(
       VerifyEmailParams params) async {
-    print('registering12: ${params.Did}');
     return await profileRepository.VerifyEmail(
       Did: params.Did,
       UserEmail: params.UserEmail,
@@ -49,7 +47,6 @@ class UpdateVerifyEmailUsecase
   @override
   Future<Either<Failure, verifyEmailEntity>> call(
       UpdateVerifyEmailParams params) async {
-    print('registering12: ${params.Did}');
     return await profileRepository.updateVerifyEmail(
       Did: params.Did,
       UserEmail: params.UserEmail,
@@ -67,7 +64,6 @@ class GetVerifyEmailUsecase
   @override
   Future<Either<Failure, GetEmailEntity>> call(
       GetVerifyEmailParams params) async {
-    print('registering12: ${params.Did}');
     return await profileRepository.getEmailVerify(
       Did: params.Did,
       
@@ -84,7 +80,6 @@ class ValidateOTPUsecase
   @override
   Future<Either<Failure, ValidateOTPEntity>> call(
       ValidateOTPParams params) async {
-    print('registering12: ${params.Did}');
     return await profileRepository.validateOTP(
       DID: params.Did,
       OTP: params.OTP
@@ -155,7 +150,6 @@ class ProfileParams {
   @override
   Future<Either<Failure, VerifyTelEntity>> call(
       VerifyTelParams params) async {
-    print('registering12: ${params.DID}');
     return await profileRepository.VerifyTel(
       DID: params.DID,
       Mobile: params.Mobile,
@@ -188,7 +182,6 @@ class UpdateProfileUsecase
   @override
   Future<Either<Failure, UpdateProfileEntity>> call(
       UpdateProfileParam params) async {
-    print('registering12: ${params.OwnerEmail}');
     return await profileRepository.updateUserProfile(
       OwnerDid: params.OwnerDid,
       OwnerEmail: params.OwnerEmail,
@@ -223,7 +216,6 @@ class GetUpdateProfileUsecase
   @override
   Future<Either<Failure, UpdateProfileEntity>> call(
       GetUpdateProfileParams params) async {
-    print('registering12: ${params.Did}');
     return await profileRepository.getUpdateProfile(
       Did: params.Did,
       OwnerAddress: params.OwnerAddress,
@@ -241,7 +233,6 @@ class UploadProfilePicUsecase
   @override
   Future<Either<Failure, ProfilePicEntity>> call(
       ProfilePicParams params) async {
-    print('registering12: ${params.Did}');
     return await profileRepository.uploadProfilePic(
       profile_image: params.profile_image,
       ownerDid: params.Did,

@@ -124,8 +124,7 @@ class _AddPlansState extends State<AddPlans> {
 
     final WalletAddress14 = _w3mService.session?.address;
 
-    print('walletAddress123: $WalletAddress14');
-    print('walletAddress plan: ${_w3mService.session?.address}');
+   
   }
 
 // For making API calls
@@ -140,19 +139,15 @@ class _AddPlansState extends State<AddPlans> {
       final contract = await fileStorageService.loadContract('BethelInvoice');
       final freePlanActivate = await fileStorageService
           .callContractFunction(contract, 'isActivatedFreePlan', [did]);
-      print('result11:${freePlanActivate}');
 
       if (freePlanActivate![0] == true) {
         setState(() {
           storage.write('isFreePlanActivated', true);
         });
-        print('free plan activated12');
       } else {
         storage.write('isFreePlanActivated', false);
-        print('free plan not activated');
       }
     } catch (e) {
-      print('An error occurred: $e');
     }
   }
 
@@ -165,13 +160,10 @@ class _AddPlansState extends State<AddPlans> {
     try {
       // Fetch the transaction receipt
       final receipt = await client.getTransactionReceipt(txHash);
-      print('receipt: $receipt');
 
       if (receipt != null && receipt.status == true) {
-        print("Transaction successful!");
         return true;
       } else {
-        print("Transaction failed or still pending.");
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Transaction failed or still pending.'),
@@ -182,7 +174,6 @@ class _AddPlansState extends State<AddPlans> {
         return false;
       }
     } catch (e) {
-      print("Error fetching transaction status: $e");
       return false;
     } finally {
       client.dispose();
@@ -192,7 +183,6 @@ class _AddPlansState extends State<AddPlans> {
   @override
   Widget build(BuildContext context) {
     final _isFreePlanActive = storage.read('isFreePlanActivated') ?? false;
-    print('isfreePlan build: $_isFreePlanActive');
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
       body: SafeArea(
@@ -559,7 +549,6 @@ class _AddPlansState extends State<AddPlans> {
               owner: owner1,
             ));
           } else {
-            print('Error: Wallet address is null or empty');
             return const Center(
               child: Text('Error: Wallet address not found'),
             );
@@ -567,16 +556,12 @@ class _AddPlansState extends State<AddPlans> {
         }
 
         if (state is AddUserSuccess) {
-          print('addUser: ${state.addUserResponse.TXHash}');
           // Call the asynchronous function to check the TXHash status
           _checkTxHashStatus(state.addUserResponse.TXHash.toString(), owner1);
         }
 
         if (state is CreateProof) {
-          print('createProof a: ${state.ProofResponse.a}');
-          print('createProof b: ${state.ProofResponse.b}');
-          print('createProof c: ${state.ProofResponse.c}');
-          print('createProof input: ${state.ProofResponse.input}');
+       
 
           _addPlansBloc.add(verifyuserEvent(
             A: state.ProofResponse.a as List<String>,
@@ -589,7 +574,6 @@ class _AddPlansState extends State<AddPlans> {
         }
 
         if (state is VerifyProof) {
-          print('verifyUser: ${state.VerifyResponse.TXHash}');
           WidgetsBinding.instance.addPostFrameCallback((_) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -620,27 +604,23 @@ class _AddPlansState extends State<AddPlans> {
               storage.write('isVerified', true);
             } catch (e) {
               // Handle storage write error (optional logging)
-              print('Error saving to local storage: $e');
             }
 
             final txHash = state.freeSpaceResponse.TXHash;
             if (txHash != null && !_hasCheckedTxHash) {
-              print('fetching tx hash');
               _checkFreeSpaceTxHashStatus(txHash.toString());
               _hasCheckedTxHash = true; // Mark as checked
               _hasLoggedNullTxHash = false; // Reset the logging flag
               _deployPlans();
             } else if (txHash == null && !_hasLoggedNullTxHash) {
               // Log the case where TXHash is null only once
-              print('Transaction hash is null');
               _hasLoggedNullTxHash = true; // Mark that null was logged
             }
           });
         }
 
         if (!_isVerified) {
-          print('isVerified: $_isVerified');
-          print('isfreePlanActivated butn: $_isFreePlanActivated');
+         
           return Center(
             child: TextButton(
               onPressed:
@@ -670,7 +650,7 @@ class _AddPlansState extends State<AddPlans> {
           // _deployPlans();
           // });
           final isfreePlan = storage.read('isFreePlanActivated');
-          print('isfreePlan new: $isfreePlan');
+          // print('isfreePlan new: $isfreePlan');
 
           return Center(
             // child: Text(
@@ -706,7 +686,6 @@ class _AddPlansState extends State<AddPlans> {
       bloc: _profileBloc,
       builder: (context, state) {
         if (state is EmailUpdated) {
-          print('isVerified12: ${state.email.isVerified}');
           if (state.email.isVerified == true) {
             _addPlansBloc.add(planPriceEvent(plan: plan, month: month));
           } else {
@@ -768,20 +747,11 @@ class _AddPlansState extends State<AddPlans> {
                 state.plan == plan) {
               final price = {jsonDecode(state.priceResponse.price.toString())};
 
-              print(
-                  'price11: ${jsonDecode(state.priceResponse.price.toString())}');
+    
 
               transferToken(jsonDecode(state.priceResponse.price.toString()),
                   PackageType, month);
-              // print('tx: ${tx.toString()}');
-              // if (tx != '') {
-
-              // } else {
-              //    return const Center(
-              //   child: Text('Failed to Active Plan',
-              //       style: TextStyle(color: Colors.red)),
-              // );
-              // }
+           
             }
 
             if (state is PaidPlanActivated) {
@@ -825,10 +795,8 @@ class _AddPlansState extends State<AddPlans> {
     }
 
     final transferValue = _formatValue(price, decimals: 18);
-    print('Transferring amount: $transferValue wei');
 
     try {
-      print('Fetching Web3Modal service...');
       _w3mService.launchConnectedWallet();
 
       // Load ABI from the asset file
@@ -839,12 +807,10 @@ class _AddPlansState extends State<AddPlans> {
       final _abiCode =
           ContractAbi.fromJson(jsonEncode(jsonAbi['abi']), 'BethToken');
       final _contract = DeployedContract(_abiCode, _contractAddress1);
-      print('Contract loaded: $_contract');
 
       final walletAddress = _w3mService.session?.address;
 
       // Execute the approve function and wait for the result
-      print('Executing approve function...');
       final approveResult = _w3mService.requestWriteContract(
         topic: _w3mService.session?.topic.toString() ?? '',
         chainId: "eip155:137",
@@ -864,22 +830,16 @@ class _AddPlansState extends State<AddPlans> {
           await getLatestTransactionHash(walletAddress!, apiKey);
 
       if (latestTxHash != null) {
-        print('Latest transaction hash: $latestTxHash');
       } else {
-        print('No transactions found');
       }
 
-      print('Approve successful with result: $latestTxHash');
 
       bool isApprovalConfirmed = await _checkTxHash(latestTxHash!);
       if (!isApprovalConfirmed) {
-        print('Approval transaction failed or timed out.');
       }
 
-      print('Approval transaction confirmed.');
 
       // Now execute the transfer function after approve is successful
-      print('Executing transfer function...');
       _w3mService.launchConnectedWallet();
       final transferResult = _w3mService.requestWriteContract(
         topic: _w3mService.session?.topic.toString() ?? '',
@@ -909,45 +869,35 @@ class _AddPlansState extends State<AddPlans> {
           Duration: month,
         ));
       } else {
-        print('No transactions found');
       }
     } catch (e) {
       if (e.toString().contains('User denied transaction signature')) {
-        print('Transaction signature denied by the user.');
       } else {
-        print('Error during transfer: $e');
       }
     }
   }
 
   Future<String?> getLatestTransactionHash(
       String walletAddress, String apiKey) async {
-    print('fetching tx hash');
     final url = Uri.parse(
       'https://api.polygonscan.com/api?module=account&action=txlist&address=$walletAddress&startblock=0&endblock=99999999&page=1&offset=1&sort=desc&apikey=I6EHT7UCWZ61UD2USQUH3WXRFD5RN29RTH',
     );
 
     try {
       final response = await http.get(url);
-      print('response: ${response.body}');
 
       if (response.statusCode == 200) {
-        print('status code: ${response.statusCode}');
         final data = json.decode(response.body);
-        print('data: $data');
         if (data['status'] == '1' && data['message'] == 'OK') {
           final transactions = data['result'];
           if (transactions.isNotEmpty) {
             final latestTxHash = transactions[0]['hash'];
-            print('latestTxHash: $latestTxHash');
             return latestTxHash;
           }
         }
       } else {
-        print('Failed to fetch transaction data');
       }
     } catch (e) {
-      print('Error: $e');
     }
     return null;
   }
@@ -1066,7 +1016,7 @@ class _AddPlansState extends State<AddPlans> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Free Space Added Successfully',
+            'Basic Plan Successfully Activated',
             style: TextStyle(color: Colors.green),
           ),
         ),

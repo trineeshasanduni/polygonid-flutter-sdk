@@ -74,7 +74,6 @@ class ShareBloc extends Bloc<ShareEvent, ShareState> {
       onShareVerifyResponse event, Emitter<ShareState> emit) async {
     String? qrCodeResponse = event.verifyResponse;
     String? batchHash = event.batchHash;
-    print('qrCodeResponse3: $qrCodeResponse');
     if (qrCodeResponse == null || qrCodeResponse.isEmpty) {
       emit(ShareVerifyFailed("Scanned code is not valid"));
     }
@@ -82,10 +81,8 @@ class ShareBloc extends Bloc<ShareEvent, ShareState> {
     try {
       final Iden3MessageEntity iden3message =
           await _qrcodeParserUtils.getIden3MessageFromQrCode(qrCodeResponse!);
-      print('iden3message res3: $iden3message');
       emit(ShareVerifyResponseloaded(iden3message, event.batchHash!));
-      print('state234: ${state}');
-      print('get fetch3 ');
+     
     } catch (error) {
       emit(ShareVerifyFailed("Scanned code is not valid"));
     }
@@ -97,12 +94,12 @@ class ShareBloc extends Bloc<ShareEvent, ShareState> {
         await SecureStorage.read(key: SecureStorageKeys.privateKey);
 
         String batchHash = event.batchHash!;
-    print('privateKey1: $privateKey');
+    
     if (privateKey == null) {
       emit(ShareVerifyFailed("Private key not found"));
       return;
     }
-    print('print failure');
+    
 
     ChainConfigEntity chainConfig = await _polygonIdSdk.getSelectedChain();
 
@@ -111,12 +108,12 @@ class ShareBloc extends Bloc<ShareEvent, ShareState> {
         blockchain: chainConfig.blockchain,
         network: chainConfig.network);
 
-    print('didIdentifier: $didIdentifier');
+    
 
     emit(ShareVerifying(batchHash));
 
     Iden3MessageEntity iden3message = event.iden3message;
-    print('iden3message fetch: $iden3message');
+   
     if (event.iden3message.messageType != Iden3MessageType.credentialOffer) {
       emit(ShareVerifyFailed("Read message is not of type offer"));
       return;
@@ -137,7 +134,7 @@ class ShareBloc extends Bloc<ShareEvent, ShareState> {
         privateKey: privateKey,
       );
 
-      print('claimList: ${claimList}.');
+     
 
       if (claimList.isNotEmpty) {
         add(getShareVerifyClaims(batchHash));
@@ -187,7 +184,7 @@ String batchHash = event.batchHash!;
       List<ClaimModel> claimModelList =
           claimList.map((claimEntity) => _mapper.mapFrom(claimEntity)).toList();
       emit(ShareVerifiedClaims(claimModelList,batchHash));
-      print('loadedClaims: ${claimModelList}');
+     
     } on GetClaimsException catch (_) {
       emit(ShareVerifyFailed("error while retrieving claims"));
     } catch (_) {

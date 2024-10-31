@@ -48,7 +48,6 @@ class ClaimsBloc extends Bloc<ClaimsEvent, ClaimsState> {
       FetchAndSaveClaimsEvent event, Emitter<ClaimsState> emit) async {
     String? privateKey =
         await SecureStorage.read(key: SecureStorageKeys.privateKey);
-print('privateKey: $privateKey');
     if (privateKey == null) {
       emit(const ClaimsState.error("Private key not found"));
       return;
@@ -61,12 +60,10 @@ print('privateKey: $privateKey');
         blockchain: chainConfig.blockchain,
         network: chainConfig.network);
 
-        print('didIdentifier: $didIdentifier');
 
     emit(const ClaimsState.loading());
 
     Iden3MessageEntity iden3message = event.iden3message;
-    print('iden3message fetch: $iden3message');
     if (event.iden3message.messageType != Iden3MessageType.credentialOffer) {
       emit(const ClaimsState.error("Read message is not of type offer"));
       return;
@@ -87,7 +84,6 @@ print('privateKey: $privateKey');
         privateKey: privateKey,
       );
 
-      print('claimList: ${claimList}.');
 
       if (claimList.isNotEmpty) {
         add(const GetClaimsEvent());
@@ -332,7 +328,6 @@ print('privateKey: $privateKey');
   Future<void> _handleScanQrCodeResponse(
       ScanQrCodeResponse event, Emitter<ClaimsState> emit) async {
     String? qrCodeResponse = event.response;
-    print('qrCodeResponse: $qrCodeResponse');
     if (qrCodeResponse == null || qrCodeResponse.isEmpty) {
       emit(const ClaimsState.error("no qr code scanned"));
     }
@@ -340,9 +335,7 @@ print('privateKey: $privateKey');
     try {
       final Iden3MessageEntity iden3message =
           await _qrcodeParserUtils.getIden3MessageFromQrCode(qrCodeResponse!);
-          print('iden3message res: $iden3message');
       emit(ClaimsState.qrCodeScanned(iden3message));
-      print('get fetch ');
     } catch (error) {
       emit(const ClaimsState.error("Scanned code is not valid"));
     }

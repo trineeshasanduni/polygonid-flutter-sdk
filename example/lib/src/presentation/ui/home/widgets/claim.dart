@@ -23,7 +23,6 @@ class _ClaimState extends State<Claim> {
       builder: (BuildContext context, RegisterState state) {
         if (state is loadedClaims) {
           List<ClaimModel> claimList = state.claimList;
-          print('claimList11: $claimList');
           List<Widget> claimWidgetList = _buildClaimCardWidgetList(claimList);
           return claimList.isNotEmpty
               ? Column(

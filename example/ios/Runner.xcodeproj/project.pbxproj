@@ -8,13 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
+		25182BDDD9AEE48F701F47C3 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DCFE36F93673F09BF1CB9EC /* Pods_Runner.framework */; };
+		36896C2BF407A9A6D5EA72A0 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 88715F51F56FE4CE3220A9C5 /* Pods_RunnerTests.framework */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
+		45DDE7312CD3305C00D5078B /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 45DDE7302CD3305C00D5078B /* CoreGraphics.framework */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
-		B61797723BEAC98D9D7EEE4C /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7F44EFDBACFDEB3AEBB4E25 /* Pods_Runner.framework */; };
-		CF9437DCAB3D649B47B925E2 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0400EB3326B5F70C5A63308 /* Pods_RunnerTests.framework */; };
 		D1C9DADC29D2DD3B007FDAAF /* RunnerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D1C9DADB29D2DD3B007FDAAF /* RunnerTests.m */; };
 /* End PBXBuildFile section */
 
@@ -44,13 +45,16 @@
 /* Begin PBXFileReference section */
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
-		26AD3E77278E601F93A534B6 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
-		5A0A876529498AD040C0CB3E /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
+		45DDE7302CD3305C00D5078B /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk/System/Library/Frameworks/CoreGraphics.framework; sourceTree = DEVELOPER_DIR; };
+		56F15D0D97DAEA81A297C2DE /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
+		7091FC609D0EED536DBE905E /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
-		9318DA6AE7DCA308AAEEA56F /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
+		802ECAC329CA0668032E1A14 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
+		88715F51F56FE4CE3220A9C5 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8DCFE36F93673F09BF1CB9EC /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
 		97C146EE1CF9000F007C117D /* Runner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runner.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -58,13 +62,11 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A7F44EFDBACFDEB3AEBB4E25 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		BCAB88A1A0EB8954E53BE740 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
-		D0400EB3326B5F70C5A63308 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		D16BE0DFD687C5B586664E1C /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
+		A6CC06D6149727DE6BE56B6E /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
+		CABF9714516965733307928F /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		D1C9DAD929D2DD3B007FDAAF /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1C9DADB29D2DD3B007FDAAF /* RunnerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RunnerTests.m; sourceTree = "<group>"; };
-		EC1FCDF3E4E2C5BD64103D1D /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
+		EB471C6A63C9883870C24A76 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,7 +74,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B61797723BEAC98D9D7EEE4C /* Pods_Runner.framework in Frameworks */,
+				25182BDDD9AEE48F701F47C3 /* Pods_Runner.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,33 +82,35 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CF9437DCAB3D649B47B925E2 /* Pods_RunnerTests.framework in Frameworks */,
+				45DDE7312CD3305C00D5078B /* CoreGraphics.framework in Frameworks */,
+				36896C2BF407A9A6D5EA72A0 /* Pods_RunnerTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		01327B99127128D5A1154303 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				A7F44EFDBACFDEB3AEBB4E25 /* Pods_Runner.framework */,
-				D0400EB3326B5F70C5A63308 /* Pods_RunnerTests.framework */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		27AD81D474401F3D028852AD /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				26AD3E77278E601F93A534B6 /* Pods-Runner.debug.xcconfig */,
-				EC1FCDF3E4E2C5BD64103D1D /* Pods-Runner.release.xcconfig */,
-				D16BE0DFD687C5B586664E1C /* Pods-Runner.profile.xcconfig */,
-				9318DA6AE7DCA308AAEEA56F /* Pods-RunnerTests.debug.xcconfig */,
-				BCAB88A1A0EB8954E53BE740 /* Pods-RunnerTests.release.xcconfig */,
-				5A0A876529498AD040C0CB3E /* Pods-RunnerTests.profile.xcconfig */,
+				56F15D0D97DAEA81A297C2DE /* Pods-Runner.debug.xcconfig */,
+				7091FC609D0EED536DBE905E /* Pods-Runner.release.xcconfig */,
+				802ECAC329CA0668032E1A14 /* Pods-Runner.profile.xcconfig */,
+				EB471C6A63C9883870C24A76 /* Pods-RunnerTests.debug.xcconfig */,
+				CABF9714516965733307928F /* Pods-RunnerTests.release.xcconfig */,
+				A6CC06D6149727DE6BE56B6E /* Pods-RunnerTests.profile.xcconfig */,
 			);
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		3587E9664B1E65435B0B5C56 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				45DDE7302CD3305C00D5078B /* CoreGraphics.framework */,
+				8DCFE36F93673F09BF1CB9EC /* Pods_Runner.framework */,
+				88715F51F56FE4CE3220A9C5 /* Pods_RunnerTests.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		9740EEB11CF90186004384FC /* Flutter */ = {
@@ -128,7 +132,7 @@
 				D1C9DADA29D2DD3B007FDAAF /* RunnerTests */,
 				97C146EF1CF9000F007C117D /* Products */,
 				27AD81D474401F3D028852AD /* Pods */,
-				01327B99127128D5A1154303 /* Frameworks */,
+				3587E9664B1E65435B0B5C56 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -171,15 +175,15 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */;
 			buildPhases = (
-				4D8303101E927F4205038317 /* [CP] Check Pods Manifest.lock */,
+				0B567A9CF84080343F4AC529 /* [CP] Check Pods Manifest.lock */,
 				9740EEB61CF901F6004384FC /* Run Script */,
 				97C146EA1CF9000F007C117D /* Sources */,
 				97C146EB1CF9000F007C117D /* Frameworks */,
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
-				011207667E22FD3F1A073E95 /* [CP] Embed Pods Frameworks */,
-				D55AAE7DB498878AEAD06C7B /* [CP] Copy Pods Resources */,
+				02B30651953CDB398AB24FBC /* [CP] Embed Pods Frameworks */,
+				D2858007203D3EE3BD29FDA7 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -194,7 +198,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = D1C9DAE229D2DD3B007FDAAF /* Build configuration list for PBXNativeTarget "RunnerTests" */;
 			buildPhases = (
-				9D3C2AF763CC65E41C81DADF /* [CP] Check Pods Manifest.lock */,
+				BF8A9036F8578C069C3DD376 /* [CP] Check Pods Manifest.lock */,
 				D1C9DAD529D2DD3B007FDAAF /* Sources */,
 				D1C9DAD629D2DD3B007FDAAF /* Frameworks */,
 				D1C9DAD729D2DD3B007FDAAF /* Resources */,
@@ -270,7 +274,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		011207667E22FD3F1A073E95 /* [CP] Embed Pods Frameworks */ = {
+		02B30651953CDB398AB24FBC /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -287,23 +291,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		3B06AD1E1E4923F5004D2608 /* Thin Binary */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}",
-			);
-			name = "Thin Binary";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" embed_and_thin";
-		};
-		4D8303101E927F4205038317 /* [CP] Check Pods Manifest.lock */ = {
+		0B567A9CF84080343F4AC529 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -325,6 +313,22 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		3B06AD1E1E4923F5004D2608 /* Thin Binary */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}",
+			);
+			name = "Thin Binary";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" embed_and_thin";
+		};
 		9740EEB61CF901F6004384FC /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -340,7 +344,7 @@
 			shellPath = /bin/sh;
 			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build\n";
 		};
-		9D3C2AF763CC65E41C81DADF /* [CP] Check Pods Manifest.lock */ = {
+		BF8A9036F8578C069C3DD376 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -362,7 +366,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		D55AAE7DB498878AEAD06C7B /* [CP] Copy Pods Resources */ = {
+		D2858007203D3EE3BD29FDA7 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -433,6 +437,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -498,7 +503,163 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.polygonid.example;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/librapidsnark.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_authV2.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_credentialAtomicQueryMTPV2.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_credentialAtomicQuerySigV2.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_credentialAtomicQueryV3.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_linkedMultiQuery10.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_credentialAtomicQueryV3OnChain.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_credentialAtomicQueryMTPV2OnChain.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_credentialAtomicQuerySigV2OnChain.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libfr.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libgmp.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libpolygonid.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libbabyjubjub.a\"",
+					"-lc++",
+					"-lz",
+					"-ObjC",
+					"-l\"babyjubjub\"",
+					"-l\"c++\"",
+					"-l\"fq\"",
+					"-l\"fr\"",
+					"-l\"gmp\"",
+					"-l\"polygonid\"",
+					"-l\"polygonid-ios\"",
+					"-l\"polygonid-ios-simulator\"",
+					"-l\"witnesscalc_credentialAtomicQueryMTPV2\"",
+					"-l\"witnesscalc_credentialAtomicQueryMTPV2OnChain\"",
+					"-l\"witnesscalc_credentialAtomicQuerySigV2\"",
+					"-l\"witnesscalc_credentialAtomicQuerySigV2OnChain\"",
+					"-l\"witnesscalc_credentialAtomicQueryV3\"",
+					"-l\"witnesscalc_credentialAtomicQueryV3OnChain\"",
+					"-l\"witnesscalc_linkedMultiQuery10\"",
+					"-l\"z\"",
+					"-framework",
+					"\"AVFoundation\"",
+					"-framework",
+					"\"AVKit\"",
+					"-framework",
+					"\"Accelerate\"",
+					"-framework",
+					"\"CoinbaseWalletSDK\"",
+					"-framework",
+					"\"CoreGraphics\"",
+					"-framework",
+					"\"CoreImage\"",
+					"-framework",
+					"\"CoreMedia\"",
+					"-framework",
+					"\"CoreTelephony\"",
+					"-framework",
+					"\"CoreVideo\"",
+					"-framework",
+					"\"CryptoSwift\"",
+					"-framework",
+					"\"DKImagePickerController\"",
+					"-framework",
+					"\"DKPhotoGallery\"",
+					"-framework",
+					"\"FBLPromises\"",
+					"-framework",
+					"\"Foundation\"",
+					"-framework",
+					"\"GTMSessionFetcher\"",
+					"-framework",
+					"\"GoogleDataTransport\"",
+					"-framework",
+					"\"GoogleToolboxForMac\"",
+					"-framework",
+					"\"GoogleUtilities\"",
+					"-framework",
+					"\"ImageIO\"",
+					"-framework",
+					"\"LocalAuthentication\"",
+					"-framework",
+					"\"MLImage\"",
+					"-framework",
+					"\"MLKitBarcodeScanning\"",
+					"-framework",
+					"\"MLKitCommon\"",
+					"-framework",
+					"\"MLKitVision\"",
+					"-framework",
+					"\"Photos\"",
+					"-framework",
+					"\"SDWebImage\"",
+					"-framework",
+					"\"Security\"",
+					"-framework",
+					"\"SwiftyGif\"",
+					"-framework",
+					"\"SystemConfiguration\"",
+					"-framework",
+					"\"UIKit\"",
+					"-framework",
+					"\"appcheck\"",
+					"-framework",
+					"\"camera_avfoundation\"",
+					"-framework",
+					"\"coinbase_wallet_sdk\"",
+					"-framework",
+					"\"connectivity_plus\"",
+					"-framework",
+					"\"file_picker\"",
+					"-framework",
+					"\"flutter_secure_storage\"",
+					"-framework",
+					"\"google_mlkit_barcode_scanning\"",
+					"-framework",
+					"\"google_mlkit_commons\"",
+					"-framework",
+					"\"image_picker_ios\"",
+					"-framework",
+					"\"integration_test\"",
+					"-framework",
+					"\"nanopb\"",
+					"-framework",
+					"\"open_file_ios\"",
+					"-framework",
+					"\"package_info_plus\"",
+					"-framework",
+					"\"path_provider_foundation\"",
+					"-framework",
+					"\"permission_handler_apple\"",
+					"-framework",
+					"\"polygonid_flutter_sdk\"",
+					"-framework",
+					"\"rive_common\"",
+					"-framework",
+					"\"scan\"",
+					"-framework",
+					"\"shared_preferences_foundation\"",
+					"-framework",
+					"\"sqflite_darwin\"",
+					"-framework",
+					"\"url_launcher_ios\"",
+					"-framework",
+					"\"video_player_avfoundation\"",
+					"-framework",
+					"\"webview_flutter_wkwebview\"",
+					"-Wl",
+					"-undefined,dynamic_lookup",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bethel.example;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -510,6 +671,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -567,6 +729,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -628,13 +791,170 @@
 				DEVELOPMENT_TEAM = 5W69RJ8QHZ;
 				ENABLE_BITCODE = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
 				INFOPLIST_FILE = Runner/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.polygonid.example;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/librapidsnark.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_authV2.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_credentialAtomicQueryMTPV2.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_credentialAtomicQuerySigV2.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_credentialAtomicQueryV3.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_linkedMultiQuery10.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_credentialAtomicQueryV3OnChain.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_credentialAtomicQueryMTPV2OnChain.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_credentialAtomicQuerySigV2OnChain.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libfr.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libgmp.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libpolygonid.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libbabyjubjub.a\"",
+					"-lc++",
+					"-lz",
+					"-ObjC",
+					"-l\"babyjubjub\"",
+					"-l\"c++\"",
+					"-l\"fq\"",
+					"-l\"fr\"",
+					"-l\"gmp\"",
+					"-l\"polygonid\"",
+					"-l\"polygonid-ios\"",
+					"-l\"polygonid-ios-simulator\"",
+					"-l\"witnesscalc_credentialAtomicQueryMTPV2\"",
+					"-l\"witnesscalc_credentialAtomicQueryMTPV2OnChain\"",
+					"-l\"witnesscalc_credentialAtomicQuerySigV2\"",
+					"-l\"witnesscalc_credentialAtomicQuerySigV2OnChain\"",
+					"-l\"witnesscalc_credentialAtomicQueryV3\"",
+					"-l\"witnesscalc_credentialAtomicQueryV3OnChain\"",
+					"-l\"witnesscalc_linkedMultiQuery10\"",
+					"-l\"z\"",
+					"-framework",
+					"\"AVFoundation\"",
+					"-framework",
+					"\"AVKit\"",
+					"-framework",
+					"\"Accelerate\"",
+					"-framework",
+					"\"CoinbaseWalletSDK\"",
+					"-framework",
+					"\"CoreGraphics\"",
+					"-framework",
+					"\"CoreImage\"",
+					"-framework",
+					"\"CoreMedia\"",
+					"-framework",
+					"\"CoreTelephony\"",
+					"-framework",
+					"\"CoreVideo\"",
+					"-framework",
+					"\"CryptoSwift\"",
+					"-framework",
+					"\"DKImagePickerController\"",
+					"-framework",
+					"\"DKPhotoGallery\"",
+					"-framework",
+					"\"FBLPromises\"",
+					"-framework",
+					"\"Foundation\"",
+					"-framework",
+					"\"GTMSessionFetcher\"",
+					"-framework",
+					"\"GoogleDataTransport\"",
+					"-framework",
+					"\"GoogleToolboxForMac\"",
+					"-framework",
+					"\"GoogleUtilities\"",
+					"-framework",
+					"\"ImageIO\"",
+					"-framework",
+					"\"LocalAuthentication\"",
+					"-framework",
+					"\"MLImage\"",
+					"-framework",
+					"\"MLKitBarcodeScanning\"",
+					"-framework",
+					"\"MLKitCommon\"",
+					"-framework",
+					"\"MLKitVision\"",
+					"-framework",
+					"\"Photos\"",
+					"-framework",
+					"\"SDWebImage\"",
+					"-framework",
+					"\"Security\"",
+					"-framework",
+					"\"SwiftyGif\"",
+					"-framework",
+					"\"SystemConfiguration\"",
+					"-framework",
+					"\"UIKit\"",
+					"-framework",
+					"\"appcheck\"",
+					"-framework",
+					"\"camera_avfoundation\"",
+					"-framework",
+					"\"coinbase_wallet_sdk\"",
+					"-framework",
+					"\"connectivity_plus\"",
+					"-framework",
+					"\"file_picker\"",
+					"-framework",
+					"\"flutter_secure_storage\"",
+					"-framework",
+					"\"google_mlkit_barcode_scanning\"",
+					"-framework",
+					"\"google_mlkit_commons\"",
+					"-framework",
+					"\"image_picker_ios\"",
+					"-framework",
+					"\"integration_test\"",
+					"-framework",
+					"\"nanopb\"",
+					"-framework",
+					"\"open_file_ios\"",
+					"-framework",
+					"\"package_info_plus\"",
+					"-framework",
+					"\"path_provider_foundation\"",
+					"-framework",
+					"\"permission_handler_apple\"",
+					"-framework",
+					"\"polygonid_flutter_sdk\"",
+					"-framework",
+					"\"rive_common\"",
+					"-framework",
+					"\"scan\"",
+					"-framework",
+					"\"shared_preferences_foundation\"",
+					"-framework",
+					"\"sqflite_darwin\"",
+					"-framework",
+					"\"url_launcher_ios\"",
+					"-framework",
+					"\"video_player_avfoundation\"",
+					"-framework",
+					"\"webview_flutter_wkwebview\"",
+					"-Wl",
+					"-undefined,dynamic_lookup",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bethel.example;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -660,7 +980,163 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.polygonid.example;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/librapidsnark.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_authV2.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_credentialAtomicQueryMTPV2.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_credentialAtomicQuerySigV2.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_credentialAtomicQueryV3.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_linkedMultiQuery10.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_credentialAtomicQueryV3OnChain.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_credentialAtomicQueryMTPV2OnChain.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libwitnesscalc_credentialAtomicQuerySigV2OnChain.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libfr.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libgmp.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libpolygonid.a\"",
+					"-force_load",
+					"\"${PODS_ROOT}/../.symlinks/plugins/polygonid_flutter_sdk/ios/libbabyjubjub.a\"",
+					"-lc++",
+					"-lz",
+					"-ObjC",
+					"-l\"babyjubjub\"",
+					"-l\"c++\"",
+					"-l\"fq\"",
+					"-l\"fr\"",
+					"-l\"gmp\"",
+					"-l\"polygonid\"",
+					"-l\"polygonid-ios\"",
+					"-l\"polygonid-ios-simulator\"",
+					"-l\"witnesscalc_credentialAtomicQueryMTPV2\"",
+					"-l\"witnesscalc_credentialAtomicQueryMTPV2OnChain\"",
+					"-l\"witnesscalc_credentialAtomicQuerySigV2\"",
+					"-l\"witnesscalc_credentialAtomicQuerySigV2OnChain\"",
+					"-l\"witnesscalc_credentialAtomicQueryV3\"",
+					"-l\"witnesscalc_credentialAtomicQueryV3OnChain\"",
+					"-l\"witnesscalc_linkedMultiQuery10\"",
+					"-l\"z\"",
+					"-framework",
+					"\"AVFoundation\"",
+					"-framework",
+					"\"AVKit\"",
+					"-framework",
+					"\"Accelerate\"",
+					"-framework",
+					"\"CoinbaseWalletSDK\"",
+					"-framework",
+					"\"CoreGraphics\"",
+					"-framework",
+					"\"CoreImage\"",
+					"-framework",
+					"\"CoreMedia\"",
+					"-framework",
+					"\"CoreTelephony\"",
+					"-framework",
+					"\"CoreVideo\"",
+					"-framework",
+					"\"CryptoSwift\"",
+					"-framework",
+					"\"DKImagePickerController\"",
+					"-framework",
+					"\"DKPhotoGallery\"",
+					"-framework",
+					"\"FBLPromises\"",
+					"-framework",
+					"\"Foundation\"",
+					"-framework",
+					"\"GTMSessionFetcher\"",
+					"-framework",
+					"\"GoogleDataTransport\"",
+					"-framework",
+					"\"GoogleToolboxForMac\"",
+					"-framework",
+					"\"GoogleUtilities\"",
+					"-framework",
+					"\"ImageIO\"",
+					"-framework",
+					"\"LocalAuthentication\"",
+					"-framework",
+					"\"MLImage\"",
+					"-framework",
+					"\"MLKitBarcodeScanning\"",
+					"-framework",
+					"\"MLKitCommon\"",
+					"-framework",
+					"\"MLKitVision\"",
+					"-framework",
+					"\"Photos\"",
+					"-framework",
+					"\"SDWebImage\"",
+					"-framework",
+					"\"Security\"",
+					"-framework",
+					"\"SwiftyGif\"",
+					"-framework",
+					"\"SystemConfiguration\"",
+					"-framework",
+					"\"UIKit\"",
+					"-framework",
+					"\"appcheck\"",
+					"-framework",
+					"\"camera_avfoundation\"",
+					"-framework",
+					"\"coinbase_wallet_sdk\"",
+					"-framework",
+					"\"connectivity_plus\"",
+					"-framework",
+					"\"file_picker\"",
+					"-framework",
+					"\"flutter_secure_storage\"",
+					"-framework",
+					"\"google_mlkit_barcode_scanning\"",
+					"-framework",
+					"\"google_mlkit_commons\"",
+					"-framework",
+					"\"image_picker_ios\"",
+					"-framework",
+					"\"integration_test\"",
+					"-framework",
+					"\"nanopb\"",
+					"-framework",
+					"\"open_file_ios\"",
+					"-framework",
+					"\"package_info_plus\"",
+					"-framework",
+					"\"path_provider_foundation\"",
+					"-framework",
+					"\"permission_handler_apple\"",
+					"-framework",
+					"\"polygonid_flutter_sdk\"",
+					"-framework",
+					"\"rive_common\"",
+					"-framework",
+					"\"scan\"",
+					"-framework",
+					"\"shared_preferences_foundation\"",
+					"-framework",
+					"\"sqflite_darwin\"",
+					"-framework",
+					"\"url_launcher_ios\"",
+					"-framework",
+					"\"video_player_avfoundation\"",
+					"-framework",
+					"\"webview_flutter_wkwebview\"",
+					"-Wl",
+					"-undefined,dynamic_lookup",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bethel.example;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -670,7 +1146,7 @@
 		};
 		D1C9DADF29D2DD3B007FDAAF /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9318DA6AE7DCA308AAEEA56F /* Pods-RunnerTests.debug.xcconfig */;
+			baseConfigurationReference = EB471C6A63C9883870C24A76 /* Pods-RunnerTests.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -698,7 +1174,7 @@
 		};
 		D1C9DAE029D2DD3B007FDAAF /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BCAB88A1A0EB8954E53BE740 /* Pods-RunnerTests.release.xcconfig */;
+			baseConfigurationReference = CABF9714516965733307928F /* Pods-RunnerTests.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -725,7 +1201,7 @@
 		};
 		D1C9DAE129D2DD3B007FDAAF /* Profile */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5A0A876529498AD040C0CB3E /* Pods-RunnerTests.profile.xcconfig */;
+			baseConfigurationReference = A6CC06D6149727DE6BE56B6E /* Pods-RunnerTests.profile.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";

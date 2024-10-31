@@ -338,14 +338,11 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
     return BlocListener<ClaimsBloc, ClaimsState>(
       bloc: widget._bloc,
       listener: (context, state) {
-        print('state1: $state');
         
         if (state is NavigateToQrCodeScannerClaimsState) {
-          print('navigate to qr code scanner : $state');
           _handleNavigateToQrCodeScannerClaimsState();
         }
         if (state is QrCodeScannedClaimsState) {
-          print('state.iden3message: ${state.iden3message}');
           _handleQrCodeScanned(state.iden3message);
         }
         if (state is NavigateToClaimDetailClaimState) {
@@ -362,19 +359,12 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
         // await Navigator.pushNamed(context, Routes.qrCodeScannerPath) as String?;
         await Navigator.push(context, MaterialPageRoute(builder: (context) => const QRCodeScannerPage())) ;
     widget._bloc.add(ClaimsEvent.onScanQrCodeResponse(qrCodeScanningResult));
-    print('qrCodeScanningResult: $qrCodeScanningResult');
   }
 
-  // Future<void> _handleNavigateToQrCodeScannerClaimsState() async {
-  //   String? qrCodeScanningResult =
-  //       await Navigator.pushNamed(context, Routes.registerPath) as String?;
-  //   widget._bloc.add(ClaimsEvent.onScanQrCodeResponse(qrCodeScanningResult));
-  //   print('qrCodeScanningResult: $qrCodeScanningResult');
-  // }
+ 
 
   ///
   void _handleQrCodeScanned(Iden3MessageEntity iden3message) {
-    print('iden3message23: $iden3message');
     widget._bloc
         .add(ClaimsEvent.fetchAndSaveClaims(iden3message: iden3message));
   }

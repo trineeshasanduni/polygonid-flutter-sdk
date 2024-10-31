@@ -99,43 +99,34 @@ class _DashboardState extends State<Dashboard> {
     final WalletAddress = _w3mService.session?.address;
     final topic = _w3mService.session?.topic;
 
-    print('topic123: $topic');
 
-    print('walletAddress123: $WalletAddress');
     final storage = GetStorage();
     storage.write('walletAddress', WalletAddress);
 
     final WW = await storage.read('walletAddress');
-    print('ww: $WW');
 
     // Ensure service is properly initialized
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.delayed(Duration(seconds: 3));
       // Set your desired delay
-      print('timing');
       bool isConnect = await _w3mService.isConnected;
 
       final getName = await _w3mService.session?.connectedWalletName;
       storage.write('walletName', getName);
-      print('name123: $name');
 
       storage.write('isConnected', isConnect);
 
       // isConnected = storage.read('isConnected');
 
-      print("isMetaMaskConnected12: $isConnect");
       setState(() {
         isConnected = storage.read('isConnected');
         name = storage.read('walletName');
-        print('name124: $name');
       });
       if (isConnected == true) {
-        print('connected: $isConnected');
         // _showWelcomeDialog();
         _deployContract();
         // _isBlureffect = false;
       } else {
-        print('not connected: $isConnected');
         // _showMetamaskBottomSheet();
         // _isBlureffect = widget.isBlureffect;
         // _deployContract();
@@ -154,19 +145,15 @@ class _DashboardState extends State<Dashboard> {
       final contract = await fileStorageService.loadContract('FileStorage');
       final result = await fileStorageService
           .callContractFunction(contract, 'getTotalFilesCount', []);
-      print('result:${result![0]}');
 
-      final fileSizeInBytes = (result[1] as BigInt).toInt();
+      final fileSizeInBytes = (result![1] as BigInt).toInt();
       final fileSizeInMiB = fileSizeInBytes / (1024 * 1024);
-      print('${fileSizeInMiB.toStringAsFixed(2)} MiB');
 
       setState(() {
         _fileCount = result![0].toString();
         _fileUsage = '${fileSizeInMiB.toStringAsFixed(2)}' + 'MiB';
       });
-    } catch (e) {
-      print('An error occurred: $e');
-    }
+    } catch (e) {    }
   }
 
   Future<void> _deployContract() async {
@@ -181,13 +168,11 @@ class _DashboardState extends State<Dashboard> {
       final _abiCode =
           ContractAbi.fromJson(jsonEncode(jsonAbi['abi']), 'FileStorage');
       final did = jsonDecode(widget.did.toString());
-      print('did dashboard: $did');
       final _contract = DeployedContract(_abiCode, _contractAddress1);
       final _getAllBatchesFunction = _contract.function('getAdressList');
 
       final storage = GetStorage();
       final walletAddress1 = storage.read('walletAddress');
-      print('walletAddress1123: $walletAddress1');
 
       // Clear the current file list before fetching new data
       final result = await _web3Client?.call(
@@ -201,11 +186,9 @@ class _DashboardState extends State<Dashboard> {
 
         // Check if the inner list is empty
         if (innerList.isEmpty) {
-          print('The result contains an empty list');
           // _isBlureffect = widget.isBlureffect;
           // _showWelcomeBottomSheet();
         } else {
-          print('The result contains a non-empty list: $innerList');
           // _isBlureffect = !widget.isBlureffect;
 
           // Normalize the wallet address (trim, and convert to lowercase for comparison)
@@ -217,25 +200,20 @@ class _DashboardState extends State<Dashboard> {
               normalizedWalletAddress);
 
           if (addressFound) {
-            print('Wallet address is in the list, no need to show alert');
           } else {
-            print('innerList does not contain walletAddress1');
             // Show the alert since walletAddress1 is not in the inner list
             // _showAddressDialog(innerList); // Pass the list of addresses
           }
         }
       } else {
-        print('No data returned from contract or result format is unexpected');
       }
     } catch (e) {
-      print('An error occurred: $e');
     }
   }
 
   void _showAddressDialog(List<dynamic> addresses) {
     // Check if addresses are not empty
     if (addresses.isEmpty) {
-      print('No addresses to show in the bottom sheet');
       return;
     }
 
@@ -334,7 +312,6 @@ class _DashboardState extends State<Dashboard> {
         );
       },
     ).then((_) {
-      print('Bottom sheet closed'); // Confirm bottom sheet closure
     });
   }
 
@@ -614,7 +591,7 @@ class _DashboardState extends State<Dashboard> {
     }
 
     // final wA = storage.read(key: 'walletAddress');
-    // print('Wallet Address: ${wA.toString()}');
+    
     Map<String, double> dataMap = {
       "Files": 5,
       "Audio": 3,
@@ -984,41 +961,7 @@ class _DashboardState extends State<Dashboard> {
             ),
           ),
           LineChartSample2(did: widget.did),
-          // Positioned(
-          //   right: 8,
-          //   child: GestureDetector(
-          //     onTap: () {
-          //       print('tap 1');
-          //       _initActivityLogs();
-          //     },
-          //     child: Container(
-          //       height: 32,
-          //       width: 92,
-          //       decoration: BoxDecoration(
-          //         color: Theme.of(context).colorScheme.primary,
-          //         borderRadius: BorderRadius.circular(20),
-          //       ),
-          //       child: Center(
-          //         child: Row(
-          //           mainAxisAlignment: MainAxisAlignment.center,
-          //           children: [
-          //             // Text('Avg',
-          //             //     style: TextStyle(
-          //             //         color: Theme.of(context).colorScheme.background,
-          //             //         fontSize: 12,
-          //             //         fontFamily: GoogleFonts.robotoMono().fontFamily,
-          //             //         fontWeight: FontWeight.w300)),
-          //             Icon(
-          //               Icons.refresh,
-          //               color: Theme.of(context).colorScheme.background,
-          //               size: 20,
-          //             ),
-          //           ],
-          //         ),
-          //       ),
-          //     ),
-          //   ),
-          // ),
+          
         ],
       ),
     );

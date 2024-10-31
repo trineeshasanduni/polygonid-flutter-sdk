@@ -23,23 +23,17 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
   Future<ActivityModel> activityLogs({
     required String did,
   }) async {
-    print('fetching file name');
     try {
       final Did = jsonDecode(did);
-      print('did activity: $Did');
       final response = await client.get(Uri.parse('$BASE_URL/logs?did=$Did'));
 
-      print('file name status1: ${response.statusCode}');
 
       if (response.statusCode == 200) {
-        print('fetch file name status code: ${response.statusCode}');
         final activityLogsList = jsonDecode(response.body);
         final activityLogs = activityLogsList["grouped_logs"];
-        print('grouped_logs: $activityLogs');
 
         if (activityLogsList.isNotEmpty) {
           final activityLogsModel = ActivityModel.fromJson(activityLogs);
-          print("activityLogs response: ${activityLogsModel.toJson()}");
           return activityLogsModel;
         } else {
           throw Exception('No data found in the response');
@@ -48,7 +42,6 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
         throw Exception('Failed to load activity: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching activity: $e');
       throw Exception('Failed to fetch activity');
     }
   }
@@ -58,7 +51,6 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
     required String Did,
     required String UserEmail,
   }) async {
-    print('verify email');
     try {
       Map<String, dynamic> data = {"Did": Did, "UserEmail": UserEmail};
       // Define the URI for the use-space API endpoint
@@ -70,9 +62,7 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(data),
       );
-      print('data verify email: $data');
 
-      print('verify email status code: ${response.statusCode}');
       Map<String, dynamic> jsonResponse = jsonDecode(response.body);
       final responseProof = VerifyEmailModel.fromJson(jsonResponse);
       // final fileResponse = VerifyEmailModel(
@@ -82,11 +72,9 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
       if (response.statusCode == 200) {
         return responseProof;
       } else {
-        print('Failed to verify email');
         throw Exception('Failed to verify email');
       }
     } catch (error) {
-      print('Error during verify email: $error');
       throw Exception('Failed to verify email');
     }
   }
@@ -97,7 +85,6 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
     required String UserEmail,
     required String Token,
   }) async {
-    print('verify email');
     try {
       Map<String, dynamic> data = {
         "Did": Did,
@@ -113,9 +100,7 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(data),
       );
-      print('data verify email: $data');
 
-      print('verify email status code: ${response.statusCode}');
       Map<String, dynamic> jsonResponse = jsonDecode(response.body);
       final responseProof = VerifyEmailModel.fromJson(jsonResponse);
       // final fileResponse = VerifyEmailModel(
@@ -125,11 +110,9 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
       if (response.statusCode == 200) {
         return responseProof;
       } else {
-        print('Failed to verify email');
         throw Exception('Failed to verify email');
       }
     } catch (error) {
-      print('Error during verify email: $error');
       throw Exception('Failed to verify email');
     }
   }
@@ -142,22 +125,17 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
       final response = await client
           .get(Uri.parse('$BASE_URL/get-email-verify?OwnerDid=$did'));
 
-      print('get verify status1: ${response.statusCode}');
 
       if (response.statusCode == 200) {
-        print('fetch get verify status code: ${response.statusCode}');
         final isVerified = jsonDecode(response.body);
 
-        print('isVerified: $isVerified');
 
         final verifiedModel = GetEmailModel.fromJson(isVerified);
-        print("verified response: ${verifiedModel.toJson()}");
         return verifiedModel;
       } else {
         throw Exception('Failed to load verified: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching verified: $e');
       throw Exception('Failed to fetch verified');
     }
   }
@@ -169,7 +147,6 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
     required String DID,
     required String Mobile,
   }) async {
-    print('verify tel');
     try {
       Map<String, dynamic> data = {"DID": DID, "Mobile": Mobile};
       // Define the URI for the use-space API endpoint
@@ -181,9 +158,7 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(data),
       );
-      print('data verify tel: $data');
 
-      print('verify tel status code: ${response.statusCode}');
       Map<String, dynamic> jsonResponse = jsonDecode(response.body);
       final responseProof = VerifyTelModel.fromJson(jsonResponse);
       // final fileResponse = VerifyEmailModel(
@@ -193,11 +168,9 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
       if (response.statusCode == 200) {
         return responseProof;
       } else {
-        print('Failed to verify tel');
         throw Exception('Failed to verify tel');
       }
     } catch (error) {
-      print('Error during verify tel: $error');
       throw Exception('Failed to verify tel');
     }
   }
@@ -207,7 +180,6 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
     required String DID,
     required String OTP,
   }) async {
-    print('validate OTP');
     try {
       Map<String, dynamic> data = {"DID": DID, "OTP": OTP};
       // Define the URI for the use-space API endpoint
@@ -219,9 +191,7 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(data),
       );
-      print('data validate OTP: $data');
-
-      print('validate OTP status code: ${response.statusCode}');
+      
       Map<String, dynamic> jsonResponse = jsonDecode(response.body);
       final responseProof = ValidateOTPModel.fromJson(jsonResponse);
       // final fileResponse = VerifyEmailModel(
@@ -231,11 +201,9 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
       if (response.statusCode == 200) {
         return responseProof;
       } else {
-        print('Failed to validate OTP');
         throw Exception('Failed to validate OTP');
       }
     } catch (error) {
-      print('Error during validate OTP: $error');
       throw Exception('Failed to validate OTP');
     }
   }
@@ -264,7 +232,6 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
     // required int ProfileImage,
     required String OwnerAddress,
   }) async {
-    print('update profile');
     try {
       Map<String, dynamic> data = {
         "OwnerDid": OwnerDid,
@@ -296,12 +263,9 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(data),
       );
-      print('data update profile: ${response.body}');
 
-      print('update profile status code: ${response.statusCode}');
       Map<String, dynamic> jsonResponse = jsonDecode(response.body);
       final responseProof = UpdateProfileModel.fromJson(jsonResponse);
-      print('jsonResponse: $responseProof');
       // final fileResponse = VerifyEmailModel(
 
       // );
@@ -309,11 +273,9 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
       if (response.statusCode == 200) {
         return responseProof;
       } else {
-        print('Failed to update profile');
         throw Exception('Failed to update profile');
       }
     } catch (error) {
-      print('Error during update profile: $error');
       throw Exception('Failed to update profile');
     }
   }
@@ -327,22 +289,17 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
       final response = await client.get(Uri.parse(
           '$BASE_URL/get-user-profile?OwnerDid=$did&OwnerAddress=$OwnerAddress'));
 
-      print('get profile status1: ${response.statusCode}');
 
       if (response.statusCode == 200) {
-        print('fetch get profile status code: ${response.statusCode}');
         final getProfile = jsonDecode(response.body);
 
-        print('isVerified: $getProfile');
 
         final profileModel = UpdateProfileModel.fromJson(getProfile);
-        print("verified response: ${profileModel.toJson()}");
         return profileModel;
       } else {
         throw Exception('Failed to load verified: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching verified: $e');
       throw Exception('Failed to fetch verified');
     }
   }
@@ -361,33 +318,26 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
         ..files.add(await http.MultipartFile.fromPath(
             'profile_image', profile_image.path));
 
-      print('Request: $request');
+    
 
       // Send the request and wait for response
       final streamedResponse = await request.send();
-      print('streamedResponse: $streamedResponse');
       final responseBody = await streamedResponse.stream.bytesToString().timeout(Duration(minutes: 2));
 
 
-      print('Upload file status code: ${streamedResponse.statusCode}');
-      print('Upload file response body: $responseBody');
 
       // Check response status
       if (streamedResponse.statusCode == 200) {
-        print('Fetch profile image status code: ${streamedResponse.statusCode}');
         final getProfile = jsonDecode(responseBody);
-        print('Profile response: $getProfile');
 
         // Parse response to model
         final profileModel = ProfilePicModel.fromJson(getProfile);
-        print("Profile response JSON: ${profileModel.toJson()}");
         
         return profileModel; // Return the model
       } else {
         throw Exception('Failed to upload image: ${streamedResponse.statusCode}');
       }
     } catch (e) {
-      print('Error uploading image: $e');
       throw Exception('Failed to upload image');
     }
   }

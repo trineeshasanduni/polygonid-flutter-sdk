@@ -76,7 +76,6 @@ class BethelBottomBarState extends State<BethelBottomBar> {
     _initW3MService();
     _deployPlans();
     _deployContract();
-    print('fetching did: ${widget.did}');
 
     _startMetaMaskConnectionCheck();
   }
@@ -92,14 +91,12 @@ class BethelBottomBarState extends State<BethelBottomBar> {
         _handleMetaMaskConnection();
       } else if (!isMetaMaskConnected && isConnected) {
         // MetaMask disconnected, handle it
-        print('MetaMask disconnected. Reinitializing...');
         _handleMetaMaskDisconnection();
       }
     });
   }
 
   void _handleMetaMaskConnection() {
-    print('MetaMask connected. Refreshing app...');
 
     // Reinitialize services
     // _initW3MService();
@@ -158,12 +155,10 @@ class BethelBottomBarState extends State<BethelBottomBar> {
 
     final WalletAddress = _w3mService.session?.address;
 
-    print('walletAddress123: $WalletAddress');
     final storage = GetStorage();
     storage.write('walletAddress', WalletAddress);
 
     final WW = await storage.read('walletAddress');
-    print('ww: $WW');
 
     final getName = await _w3mService.session?.connectedWalletName;
       storage.write('walletName', getName);
@@ -172,33 +167,26 @@ class BethelBottomBarState extends State<BethelBottomBar> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.delayed(Duration(seconds: 3));
       // Set your desired delay
-      print('timing');
       final isConnect = await _w3mService.isConnected;
       storage.write('isConnected', isConnect);
 
        isConnected = await storage.read('isConnected');
 
-      print('iscoonected metamask: $isConnect');
 
-      print("isMetaMaskConnected11: $isConnected");
       setState(() {
         // isConnected = isConnect;
                isConnected = storage.read('isConnected');
                name = storage.read('walletName');
-               print('123: $isConnected');
 
       });
       if (isConnected == true) {
-        print('connected1: $isConnected');
         // _showWelcomeDialog();
         _deployContract();
         _deployPlans();
-        print('isfreeplanactivated: srotage: ${storage.read('isFreePlanActivated')}');
         //   storage.write('_isBlureffect', false);
         // _isBlureffect = false;
       } else {
         // _showMetamaskAlert(context);
-        print('not connected1: $isConnected');
         // _isBlureffect = true;
         // _deployContract();
       }
@@ -209,7 +197,6 @@ class BethelBottomBarState extends State<BethelBottomBar> {
 
   Future<void> _showMetamaskAlert(BuildContext context) async {
     final isConnect = storage.read('isConnected');
-    print('fetching metamask alert : $isConnect');
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -294,21 +281,17 @@ class BethelBottomBarState extends State<BethelBottomBar> {
       final contract = await fileStorageService.loadContract('BethelInvoice');
       final freePlanActivate = await fileStorageService
           .callContractFunction(contract, 'isActivatedFreePlan', [did]);
-      print('result11:${freePlanActivate}');
 
       if (freePlanActivate![0] == true) {
         setState(() {
           storage.write('isFreePlanActivated', true);
           _isBlureffect = false;
         });
-        print('free plan activated');
       } else {
         storage.write('isFreePlanActivated', false);
         _isBlureffect = true;
-        print('free plan not activated');
       }
     } catch (e) {
-      print('An error occurred: $e');
     }
   }
 
@@ -325,13 +308,11 @@ class BethelBottomBarState extends State<BethelBottomBar> {
       final _abiCode =
           ContractAbi.fromJson(jsonEncode(jsonAbi['abi']), 'FileStorage');
       final did = jsonDecode(widget.did.toString());
-      print('did dashboard: $did');
       final _contract = DeployedContract(_abiCode, _contractAddress1);
       final _getAllBatchesFunction = _contract.function('getAdressList');
 
       final storage = GetStorage();
       final walletAddress1 = storage.read('walletAddress');
-      print('walletAddress1123: $walletAddress1');
 
       // Clear the current file list before fetching new data
       final result = await _web3Client?.call(
@@ -345,11 +326,9 @@ class BethelBottomBarState extends State<BethelBottomBar> {
 
         // Check if the inner list is empty
         if (innerList.isEmpty) {
-          print('The result contains an empty list');
           _isBlureffect = true;
           _showaAddPlanAlert();
         } else {
-          print('The result contains a non-empty list: $innerList');
           _isBlureffect = false;
 
           // Normalize the wallet address (trim, and convert to lowercase for comparison)
@@ -361,23 +340,18 @@ class BethelBottomBarState extends State<BethelBottomBar> {
               normalizedWalletAddress);
 
           if (addressFound) {
-            print('Wallet address is in the list, no need to show alert');
           } else {
-            print('innerList does not contain walletAddress1');
             // Show the alert since walletAddress1 is not in the inner list
             _showAddressDialog(innerList); // Pass the list of addresses
           }
         }
       } else {
-        print('No data returned from contract or result format is unexpected');
       }
     } catch (e) {
-      print('An error occurred: $e');
     }
   }
 
   void _showaAddPlanAlert() {
-    print('fetching welcome alert');
     showDialog(
       context: context,
       // barrierDismissible: false,
@@ -464,7 +438,6 @@ class BethelBottomBarState extends State<BethelBottomBar> {
   void _showAddressDialog(List<dynamic> addresses) {
     // Check if addresses are not empty
     if (addresses.isEmpty) {
-      print('No addresses to show in the bottom sheet');
       return;
     }
     showDialog(

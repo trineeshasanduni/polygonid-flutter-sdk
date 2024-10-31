@@ -17,7 +17,6 @@ GlobalKey<NavigatorState> DashboardNavKey = GlobalKey<NavigatorState>();
 class _DashboardNavState extends State<DashboardNav> {
   @override
   Widget build(BuildContext context) {
-    // print('isBlureffect: ${widget.isBlureffect}');
     return Navigator(
       key: DashboardNavKey,
       onGenerateRoute: (RouteSettings settings) {

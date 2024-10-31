@@ -30,7 +30,6 @@ class RegisterRepoImpl implements RegisterRepository {
         last: last,
         email: email,
       );
-      print('object234: ${registerModel.body?.credentials![0].description}');
       return right(RegisterEntity(
         body: BodyEntity(
           credentials: [

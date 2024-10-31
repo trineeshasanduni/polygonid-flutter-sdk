@@ -11,7 +11,6 @@ class RegisterUsecase implements UseCase<RegisterEntity, UseCaseParams> {
   const RegisterUsecase(this.registerRepository);
   @override
   Future<Either<Failure, RegisterEntity>> call(UseCaseParams params) async {
-    print('registering12: ${params.did}');
     return await registerRepository.registerWithDID(
         did: params.did,
         first: params.first,
@@ -25,7 +24,6 @@ class CallbackUsecase implements UseCase<CallbackResponseEntity, CallbackParams>
   const CallbackUsecase(this.registerRepository);
  
   Future<Either<Failure, CallbackResponseEntity>> call(CallbackParams params) async {
-    // print('registering12: ${params.did}');
     return await registerRepository.FetchWithCallbackUrl(
         callbackUrl: params.callbackUrl,
         did: params.did
