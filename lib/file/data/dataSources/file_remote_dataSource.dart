@@ -13,7 +13,7 @@ abstract class FileRemoteDatasource {
   Future<FileModel> fileUpload({
     required String did,
     required String ownerDid,
-    required File fileData,
+   required List<File> files,
   });
 
   Future<FileModel> useSpace({
@@ -22,7 +22,7 @@ abstract class FileRemoteDatasource {
     required int batchSize,
   });
 
-  Future<FileNameModel> getFileName(String BatchHash, String Verify);
+ Future<List<FileNameModel>> getFileName(String BatchHash, String Verify);
 
   Future<VerifyUploadModel> verifyUpload({
     required String BatchHash,

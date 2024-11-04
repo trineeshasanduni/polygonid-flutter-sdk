@@ -49,6 +49,13 @@ class FileData {
   FileData(this.fileName, this.batchHash, this.fileHash, this.isVerified);
 }
 
+class FileBatchData {
+  final String batchHash;
+  final List<FileData> files;
+
+  FileBatchData(this.batchHash, this.files);
+}
+
 class Files extends StatefulWidget {
   final String? did;
   // final bool isBlureffect;
@@ -71,6 +78,7 @@ class _FilesState extends State<Files> {
   bool _isRequestInProgress = false;
   List<String> fileNames = [];
   List<FileData> fileDataList = [];
+  List<FileBatchData> fileBatchList = [];
   List<FileData> sharedFileNames = [];
   // List<String> sharedFileNames = [];
   List<FileData> fileSharedDataList = [];
@@ -96,7 +104,11 @@ class _FilesState extends State<Files> {
   bool isLoading = false;
   var _isBlureffect = false;
 
+  Map<String, bool> verificationStatus = {};
+
   var progress = 0.0;
+
+  Set<String> expandedBatches = {}; // To track which batches are expanded
 
   @override
   void initState() {
@@ -117,31 +129,51 @@ class _FilesState extends State<Files> {
     _homeBloc.add(const GetIdentifierHomeEvent());
   }
 
+  // Future<void> openFile() async {
+  //   final result = await FilePicker.platform.pickFiles(allowMultiple: true);
+  //   if (result != null) {
+  //     setState(() {
+  //       selectedFiles = result.files;
+  //       // size = result.files.single.size;
+  //       // print('size: $size');
+  //     });
+  //     _uploadFiles();
+  //   }
+  // }
   Future<void> openFile() async {
     final result = await FilePicker.platform.pickFiles(allowMultiple: true);
+
     if (result != null) {
+      // Calculate the total size of all selected files
+      // int totalSize = 0;
+      for (var file in result.files) {
+        size += file.size; // Add each file's size to totalSize
+        print(
+            'File: ${file.name}, Size: ${file.size} bytes'); // Print each file's name and size
+      }
+
+      print('Total size of selected files: $size bytes');
+
       setState(() {
         selectedFiles = result.files;
-        size = result.files.single.size;
-        print('size: $size');
+        print('selectedFiles: $selectedFiles');
       });
-      _uploadFiles();
+
+      _uploadFiles(); // Call upload function after setting selected files
     }
   }
 
   Future<void> _uploadFiles() async {
-    BlocBuilder<HomeBloc, HomeState>(
-        bloc: _homeBloc,
-        builder: (BuildContext context, HomeState state) {
-          identity = state.identifier as String;
-          print('identity checking: $identity');
-          return const SizedBox.shrink();
-        });
+    // Get the identity from the BLoC
+    String identity = '';
+    _homeBloc.stream.listen((state) {
+      identity = state.identifier as String;
+      print('identity checking: $identity');
+    });
 
     final storage = GetStorage();
-    // final getDID = storage.read('did');
     final walletAddress = storage.read('walletAddress');
-    print('walletAddress : $walletAddress');
+    print('walletAddress: $walletAddress');
 
     setState(() {
       _isLoading = true;
@@ -149,14 +181,27 @@ class _FilesState extends State<Files> {
 
     try {
       final did = jsonDecode(widget.did.toString());
-      print('did12344: $did');
+      print('did: $did');
+
+      // Collect all files to upload
+      List<File> filesToUpload = [];
+
       for (var file in selectedFiles) {
         final fileToSave = await saveFile(file);
+        filesToUpload.add(fileToSave); // Add each file to the list
+        print('fileToSave: $fileToSave');
+      }
+
+      // Perform a single upload with all files
+      if (filesToUpload.isNotEmpty) {
         _fileBloc.add(FileuploadEvent(
           did: did,
           ownerDid: walletAddress,
-          fileData: fileToSave,
+          fileData: filesToUpload, // Send all files in a single request
         ));
+        print('filesToUpload: $filesToUpload');
+      } else {
+        print('No files to upload.');
       }
     } catch (e) {
       print('Upload failed: $e');
@@ -198,6 +243,7 @@ class _FilesState extends State<Files> {
     return File(file.path!).copy(newFile.path);
   }
 
+/////////////////// smart contract function ///////////////////
   Future<void> _deployContract() async {
     try {
       _web3Client = Web3Client(rpcUrl, httpClient);
@@ -235,7 +281,7 @@ class _FilesState extends State<Files> {
           dataResult = List<dynamic>.from(result[0]);
           WidgetsBinding.instance.addPostFrameCallback((_) {
             // Store the result
-            _processContractResult(result[0]);
+            processContractResult(result[0]);
             // printLastValues(result[0]);
           });
         });
@@ -340,11 +386,11 @@ class _FilesState extends State<Files> {
 
           // Dispatch event with index and wallet address
           _downloadBloc.add(GetCidsEvent(
-            index: indexString,
-            did: did,
-            owner: walletAddress,
-            batch_hash: batch_hash,
-          ));
+              index: indexString,
+              did: did,
+              owner: walletAddress,
+              batch_hash: batch_hash,
+              fileHash: file_hash));
         } else {
           print('Unexpected result type: ${index.runtimeType}');
         }
@@ -397,11 +443,11 @@ class _FilesState extends State<Files> {
 
           // Dispatch event with index and wallet address
           _downloadBloc.add(GetCidsEvent(
-            index: indexString,
-            did: did,
-            owner: walletAddress,
-            batch_hash: batch_hash,
-          ));
+              index: indexString,
+              did: did,
+              owner: walletAddress,
+              batch_hash: batch_hash,
+              fileHash: file_hash));
         } else {
           print('Unexpected result type: ${index.runtimeType}');
         }
@@ -446,47 +492,129 @@ class _FilesState extends State<Files> {
   // }
 // }
 
-  Future<void> _processContractResult(List<dynamic> dataResult) async {
-    if (_isRequestInProgress) {
-      return;
-    }
+  // Future<void> processContractResult(List<dynamic> dataResult) async {
+  //   if (_isRequestInProgress) {
+  //     return;
+  //   }
+
+  //   setState(() {
+  //     _isRequestInProgress = true;
+  //     fileDataList.clear(); // Clear the list before adding new data
+  //   });
+
+  //   // Set to store unique batch hashes and avoid duplicate requests
+  //   Set<String> fetchedBatchHashes = {};
+
+  //   // Keep track of the number of files fetched
+  //   int filesFetched = 0;
+  //   final totalFiles = dataResult.length;
+
+  //   print('total files: $totalFiles');
+
+  //   // Cancel previous listeners and use StreamSubscription to properly manage the stream
+  //   StreamSubscription? fileBlocSubscription;
+
+  //   // Subscribe to the stream and process file names
+  //   fileBlocSubscription = _fileBloc.stream.listen((state) {
+  //     if (state is FileNameLoaded) {
+  //       final batchHash = state.fileName.batchHash.toString();
+
+  //       // Check if the file has already been added based on batch hash
+  //       if (!fetchedBatchHashes.contains(batchHash)) {
+  //         setState(() {
+  //           fileDataList.add(FileData(
+  //               state.fileName.fileName.toString(),
+  //               batchHash,
+  //               state.fileName.fileHash.toString(),
+  //               state.fileName.isVerified!));
+  //         });
+
+  //         // Mark this batch hash as fetched to prevent duplicates
+  //         fetchedBatchHashes.add(batchHash);
+  //         filesFetched++;
+  //         print('File data added: ${fileDataList.last}');
+  //       }
+
+  //       // Check if all files have been fetched
+  //       if (filesFetched >= totalFiles) {
+  //         print('All files fetched successfully.');
+  //         _isRequestInProgress = false;
+
+  //         // Cancel the stream subscription to avoid further unnecessary listening
+  //         fileBlocSubscription?.cancel();
+  //       }
+  //     }
+  //   });
+
+  //   try {
+  //     for (var batchDetails in dataResult) {
+  //       final batchHash = batchDetails[1].toString();
+  //       final verify = batchDetails[4].toString();
+  //       print('Requesting file for batchHash: $batchHash');
+  //       print('verify: $verify');
+
+  //       // Only fetch if this batchHash hasn't been fetched already
+  //       if (!fetchedBatchHashes.contains(batchHash) &&
+  //           filesFetched < totalFiles) {
+  //         await Future.delayed(const Duration(milliseconds: 500), () {
+  //           _fileBloc
+  //               .add(GetFileNameEvent(BatchHash: batchHash, Verify: verify));
+  //         });
+  //       }
+  //     }
+  //   } catch (e) {
+  //     print('Error processing contract result: $e');
+  //   } finally {
+  //     setState(() {
+  //       _isRequestInProgress = false;
+  //     });
+  //   }
+  // }
+
+  Future<void> processContractResult(List<dynamic> dataResult) async {
+    if (_isRequestInProgress) return;
 
     setState(() {
       _isRequestInProgress = true;
       fileDataList.clear(); // Clear the list before adding new data
     });
 
-    // Set to store unique batch hashes and avoid duplicate requests
-    Set<String> fetchedBatchHashes = {};
+    // Map to hold lists of files per batch hash
+    Map<String, List<FileData>> batchFileDataMap = {};
 
-    // Keep track of the number of files fetched
+    // Count files fetched to know when all files have been processed
     int filesFetched = 0;
     final totalFiles = dataResult.length;
 
     print('total files: $totalFiles');
 
-    // Cancel previous listeners and use StreamSubscription to properly manage the stream
+    // Cancel previous listeners and use StreamSubscription to manage the stream
     StreamSubscription? fileBlocSubscription;
-
-    // Subscribe to the stream and process file names
     fileBlocSubscription = _fileBloc.stream.listen((state) {
       if (state is FileNameLoaded) {
-        final batchHash = state.fileName.batchHash.toString();
+        // Process each file in the response (in case there are multiple files per batch hash)
+        for (var file in state.fileName) {
+          final batchHash = file.batchHash;
 
-        // Check if the file has already been added based on batch hash
-        if (!fetchedBatchHashes.contains(batchHash)) {
-          setState(() {
-            fileDataList.add(FileData(
-                state.fileName.fileName.toString(),
-                batchHash,
-                state.fileName.fileHash.toString(),
-                state.fileName.isVerified!));
-          });
+          // Initialize the list for this batch hash if it doesn't exist
+          if (!batchFileDataMap.containsKey(batchHash)) {
+            batchFileDataMap[batchHash!] = [];
+          }
 
-          // Mark this batch hash as fetched to prevent duplicates
-          fetchedBatchHashes.add(batchHash);
-          filesFetched++;
-          print('File data added: ${fileDataList.last}');
+          // Check for duplicate file entries within the same batch hash
+          if (!batchFileDataMap[batchHash]!
+              .any((existingFile) => existingFile.fileHash == file.fileHash)) {
+            // Add the file to the list for this batch hash
+            batchFileDataMap[batchHash]!.add(FileData(
+              file.fileName!,
+              batchHash!,
+              file.fileHash!,
+              file.isVerified!,
+            ));
+
+            filesFetched++;
+            print('File data added: ${batchFileDataMap[batchHash]!.last}');
+          }
         }
 
         // Check if all files have been fetched
@@ -494,7 +622,14 @@ class _FilesState extends State<Files> {
           print('All files fetched successfully.');
           _isRequestInProgress = false;
 
-          // Cancel the stream subscription to avoid further unnecessary listening
+          // Update fileDataList by combining all batches into a single list for display
+          setState(() {
+            fileBatchList = batchFileDataMap.entries
+                .map((entry) => FileBatchData(entry.key, entry.value))
+                .toList();
+          });
+
+          // Cancel the stream subscription
           fileBlocSubscription?.cancel();
         }
       }
@@ -504,11 +639,10 @@ class _FilesState extends State<Files> {
       for (var batchDetails in dataResult) {
         final batchHash = batchDetails[1].toString();
         final verify = batchDetails[4].toString();
-        print('Requesting file for batchHash: $batchHash');
-        print('verify: $verify');
+        print('Requesting file for batchHash: $batchHash, verify: $verify');
 
         // Only fetch if this batchHash hasn't been fetched already
-        if (!fetchedBatchHashes.contains(batchHash) &&
+        if (!batchFileDataMap.containsKey(batchHash) &&
             filesFetched < totalFiles) {
           await Future.delayed(const Duration(milliseconds: 500), () {
             _fileBloc
@@ -524,6 +658,8 @@ class _FilesState extends State<Files> {
       });
     }
   }
+
+  /////check transaction status //////////////////////////
 
   Future<bool> isTransactionSuccessful(String txHash) async {
     // Initialize the Web3Client using your Infura or Alchemy endpoint
@@ -541,13 +677,20 @@ class _FilesState extends State<Files> {
         return true;
       } else {
         print("Transaction failed or still pending.");
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Transaction failed or still pending.'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 2),
-          ),
+
+        // Show the snackbar for failed or pending transaction
+        final snackBar = SnackBar(
+          content: Text('Transaction failed or still pending.'),
+          backgroundColor: Colors.yellow,
+          duration: Duration(seconds: 10), // Display snackbar for 10 seconds
         );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+
+        // Wait for 10 seconds before dismissing
+        Future.delayed(Duration(seconds: 10), () {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        });
+
         return false;
       }
     } catch (e) {
@@ -647,13 +790,23 @@ class _FilesState extends State<Files> {
                 _showSnackbar("File Upload Failed", Colors.red, Icons.error);
               }
               if (state is FileUploaded) {
-                for (var file in dataResult) {
-                  print('object file: $file');
-                }
-                await _checkTxHashStatus(
-                    state.response.TXHash!, walletAddress, size);
+                print('count:${state.response.FileCount}');
+                print('txHash:${state.response.TXHash}');
+                if (state.response.FileCount == 1) {
+                  // for (var file in dataResult) {
+                  //   print('object file: $file');
+                  // }
+                  await _checkTxHashStatus(
+                      state.response.TXHash!, walletAddress, size);
 
-                print('dataResult: $dataResult');
+                  print('dataResult: $dataResult');
+                } else if (state.response.FileCount! > 1) {
+                  print('txHash muilti:${state.response.TXHash}');
+                  print('txHash wallet:${walletAddress}');
+                  print('txHash size:${size}');
+                  await _checkTxHashStatus(
+                      state.response.TXHash!, walletAddress, size);
+                }
               }
               if (state is FileUsingSpaced) {
                 print('fetching space state: ${state.txHash}');
@@ -731,7 +884,7 @@ class _FilesState extends State<Files> {
           Expanded(
             child: TabBarView(
               children: [
-                _buildFileList(),
+                buildFileList(),
                 _buildSharedFileList(),
               ],
             ),
@@ -781,86 +934,106 @@ class _FilesState extends State<Files> {
     await _deployShredFiles();
   }
 
-  Widget _buildFileList() {
+  Widget buildFileList() {
     return Stack(
       children: [
         LiquidPullToRefresh(
           backgroundColor: Theme.of(context).primaryColor,
-          // height: 50,
           color: Theme.of(context).colorScheme.primary,
           animSpeedFactor: 2.0,
           onRefresh: _refreshFileList,
-          child: fileDataList.isNotEmpty
+          child: fileBatchList.isNotEmpty
               ? ListView.builder(
-                  itemCount: fileDataList.length,
+                  itemCount: fileBatchList.length,
                   itemBuilder: (context, index) {
-                    final fileData = fileDataList[index];
+                    final batchData = fileBatchList.reversed.elementAt(index);
+                    final hasMultipleFiles = batchData.files.length > 1;
 
-                    print('batchHash: ${fileData.batchHash}');
-                    print('fileHash: ${fileData.fileHash}');
-                    print('fileName: ${fileData.fileName}');
-                    print('isVerified: ${fileData.isVerified}');
-                    return ListTile(
-                      title: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              fileData.fileName,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontFamily: GoogleFonts.robotoMono().fontFamily,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 10),
-                          Row(
-                            children: [
-                              SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.2,
-                                child: _buildVerifyButton(
-                                  fileData.batchHash,
-                                  fileData.isVerified,
-                                  fileData.fileHash,
-                                  fileData.fileName,
+                    return Column(
+                      children: [
+                        hasMultipleFiles
+                            ? GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    // Toggle the expanded state of this batch
+                                    if (expandedBatches
+                                        .contains(batchData.batchHash)) {
+                                      expandedBatches
+                                          .remove(batchData.batchHash);
+                                    } else {
+                                      expandedBatches.add(batchData.batchHash);
+                                    }
+                                  });
+                                },
+                                child: AnimatedContainer(
+                                  curve: Curves.bounceIn,
+                                  padding: const EdgeInsets.all(8.0),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withOpacity(0.5),
+                                    // borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  duration: Duration(milliseconds: 600),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Batch: ${batchData.batchHash}',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      Icon(
+                                        expandedBatches
+                                                .contains(batchData.batchHash)
+                                            ? Icons.expand_less
+                                            : Icons.expand_more,
+                                        color: Colors.white,
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              SizedBox(
-                                width: 20,
-                              ),
-                              SizedBox(
-                                child: _buildDownloadIcon(fileData.batchHash,
-                                    fileData.fileHash, fileData.fileName),
-                              ),
-                              SizedBox(width: 20),
-                              SizedBox(
-                                child: _buildShareIcon(
-                                  fileData.batchHash,
-                                  fileData.fileHash,
-                                  fileData.fileName,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                              )
+                            : _fileButtons(
+                                batchData, Theme.of(context).primaryColor),
+                        // Show filenames only if the batch has multiple files and is expanded
+                        if (hasMultipleFiles &&
+                            expandedBatches.contains(batchData.batchHash))
+                          _fileButtons(
+                              batchData,
+                              Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.1))
+                      ],
                     );
                   },
                 )
               : Center(
-                  child: Text(
-                    'No files Uploaded',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontFamily: GoogleFonts.robotoMono().fontFamily,
-                    ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset('assets/images/empty.png',
+                          width: 100, height: 100),
+                      const SizedBox(height: 20),
+                      Text(
+                        'No files Uploaded',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontFamily: GoogleFonts.robotoMono().fontFamily,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
         ),
-        // Blur effect overlay
+        // Optional Blur effect overlay
         // if (isLoading)
         //   BackdropFilter(
         //     filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
@@ -875,12 +1048,67 @@ class _FilesState extends State<Files> {
     );
   }
 
+  Widget _fileButtons(FileBatchData batchData, Color tileColor) {
+    return Column(
+      children: batchData.files.map((fileData) {
+        return ListTile(
+          tileColor: tileColor,
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Text(
+                  fileData.fileName,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontFamily: GoogleFonts.robotoMono().fontFamily,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              SizedBox(width: 10),
+              Row(
+                children: [
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.2,
+                    child: _buildVerifyButton(
+                      batchData.batchHash,
+                      fileData.isVerified,
+                      fileData.fileHash,
+                      fileData.fileName,
+                    ),
+                  ),
+                  SizedBox(width: 20),
+                  SizedBox(
+                    child: _buildDownloadIcon(
+                      batchData.batchHash,
+                      fileData.fileHash,
+                      fileData.fileName,
+                    ),
+                  ),
+                  SizedBox(width: 20),
+                  SizedBox(
+                    child: _buildShareIcon(
+                      batchData.batchHash,
+                      fileData.fileHash,
+                      fileData.fileName,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   Widget _buildSharedFileList() {
     return Stack(
       children: [
         LiquidPullToRefresh(
           backgroundColor: Theme.of(context).primaryColor,
-          // height: 50,
           color: Theme.of(context).colorScheme.primary,
           animSpeedFactor: 2.0,
           onRefresh: _refreshFileList,
@@ -888,7 +1116,8 @@ class _FilesState extends State<Files> {
               ? ListView.builder(
                   itemCount: fileSharedDataList.length,
                   itemBuilder: (context, index) {
-                    final fileData = fileSharedDataList[index];
+                    final fileData = fileSharedDataList.reversed
+                        .elementAt(index); // Accessing in reverse order
                     return ListTile(
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -910,21 +1139,20 @@ class _FilesState extends State<Files> {
                               SizedBox(
                                 width: MediaQuery.of(context).size.width * 0.2,
                                 child: _buildSharedVerifyButton(
-                                    fileData.batchHash,
-                                    fileData.isVerified,
-                                    fileData.fileHash,
-                                    fileData.fileName),
+                                  fileData.batchHash,
+                                  fileData.isVerified,
+                                  fileData.fileHash,
+                                  fileData.fileName,
+                                ),
                               ),
                               SizedBox(width: 20),
                               SizedBox(
-                                // width: 20,
                                 child: _buildShareDownloadIcon(
-                                    fileData.batchHash,
-                                    fileData.fileHash,
-                                    fileData.fileName),
+                                  fileData.batchHash,
+                                  fileData.fileHash,
+                                  fileData.fileName,
+                                ),
                               ),
-
-                              // SizedBox(width: 10),
                             ],
                           ),
                         ],
@@ -933,13 +1161,21 @@ class _FilesState extends State<Files> {
                   },
                 )
               : Center(
-                  child: Text(
-                    'No files shared',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontFamily: GoogleFonts.robotoMono().fontFamily,
-                    ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset('assets/images/empty.png',
+                          width: 100, height: 100),
+                      const SizedBox(height: 20),
+                      Text(
+                        'No files shared',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontFamily: GoogleFonts.robotoMono().fontFamily,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
         ),
@@ -948,16 +1184,17 @@ class _FilesState extends State<Files> {
   }
 
   void _handleDownloadVerifyButton(
-      DownloadSuccess state, String batchHash) async {
+      DownloadSuccess state, String batchHash, String fileHash) async {
     final response = jsonEncode(state.response.toJson());
     final sessionId = state.response.sessionId.toString();
     print('sessionId download : $sessionId');
     print('download response: $response');
 
-    _downloadBloc.add(onDownloadResponse(response, batchHash));
+    _downloadBloc.add(onDownloadResponse(response, batchHash, fileHash));
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _downloadBloc.add(onGetDownloadStatusEvent(sessionId, batchHash));
+      _downloadBloc
+          .add(onGetDownloadStatusEvent(sessionId, batchHash, fileHash));
     });
   }
 
@@ -1255,13 +1492,18 @@ class _FilesState extends State<Files> {
   Widget _buildVerifyButton(
       String batchHash, bool isVerified, String fileHash, String fileName) {
     print('bathash: $batchHash');
+
+    verificationStatus.putIfAbsent(fileHash, () => false);
     return BlocBuilder<FileBloc, FileState>(
       bloc: _fileBloc,
       builder: (context, filestate) {
         // return BlocBuilder<DownloadBloc, DownloadState>(
         //   bloc: _downloadBloc,
         //   builder: (context, downloadState) {
-        if (filestate is Fileverifying && filestate.batchhash == batchHash) {
+        if (filestate is Fileverifying &&
+            filestate.file_hash == fileHash &&
+            filestate.batchhash == batchHash) {
+          print('fileHash1: ${filestate.file_hash}');
           return Center(
             child: Loading(
                 Loadingcolor: Theme.of(context).primaryColor,
@@ -1269,25 +1511,37 @@ class _FilesState extends State<Files> {
           );
         }
         if (filestate is FileVerifyFailed) {
+          print('fileHash1: $fileHash');
           _showSnackbar(
               'Verify failed: ${filestate.message}', Colors.red, Icons.error);
         }
-        if (filestate is VerifySuccess && filestate.batchhash == batchHash) {
+        if (filestate is VerifySuccess &&
+            filestate.fileHash == fileHash &&
+            filestate.batchhash == batchHash) {
           final response = jsonEncode(filestate.response.claim?.toJson());
           print("response verify: $response");
-          _handleVerifyResponseSuccess(filestate, filestate.batchhash);
+          print('fileHash12: ${filestate.fileHash}');
+          _handleVerifyResponseSuccess(
+              filestate, filestate.batchhash, filestate.fileHash);
         }
         if (filestate is VerifyResponseloaded &&
+            filestate.fileHash == fileHash &&
             filestate.batchhash == batchHash) {
+          print('fileHash3: ${filestate.fileHash}');
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _handleVerified(filestate.iden3message, filestate.batchhash);
+            _handleVerified(filestate.iden3message, filestate.batchhash,
+                filestate.fileHash);
           });
         }
-        if (filestate is VerifiedClaims && filestate.batchhash == batchHash) {
+        if (filestate is VerifiedClaims &&
+            filestate.fileHash == fileHash &&
+            filestate.batchhash == batchHash) {
           // _showSnackbar('File is Verified successfully:',
           //     Theme.of(context).colorScheme.secondary);
           // _buildFileList(true);
           isVerified = true;
+          print('fileHash4: ${filestate.fileHash}');
+          print('isveri123:$isVerified');
         }
 
         return GestureDetector(
@@ -1297,12 +1551,13 @@ class _FilesState extends State<Files> {
             final walletAddress = storage.read('walletAddress');
             _fileBloc.add(VerifyUploadEvent(
               BatchHash: batchHash,
+              FileHash: fileHash,
               ownerDid: walletAddress,
               did: did,
             ));
           },
           child: Visibility(
-            visible: !isVerified, // If not verified, button is visible
+            visible: !isVerified,
             child: _buildButton(
               "Verify",
               Colors.redAccent[700],
@@ -1323,7 +1578,7 @@ class _FilesState extends State<Files> {
     return BlocBuilder<ShareBloc, ShareState>(
       bloc: _shareBloc,
       builder: (context, shareState) {
-        if (shareState is ShareVerifying && shareState.batchhash == batchHash) {
+        if (shareState is ShareVerifying && shareState.batchhash == batchHash && shareState.fileHash == fileHash) {
           return Center(
             child: Loading(
                 Loadingcolor: Theme.of(context).primaryColor,
@@ -1335,19 +1590,21 @@ class _FilesState extends State<Files> {
               'Verify failed: ${shareState.message}', Colors.red, Icons.error);
         }
         if (shareState is ShareVerifySuccess &&
-            shareState.batchhash == batchHash) {
+            shareState.fileHash == fileHash && shareState.batchhash == batchHash) {
           final response = jsonEncode(shareState.response);
           print("response share verify: $response");
-          _handleShareVerifyResponseSuccess(shareState, shareState.batchhash);
+          _handleShareVerifyResponseSuccess(
+              shareState, shareState.batchhash, shareState.fileHash);
         }
         if (shareState is ShareVerifyResponseloaded &&
-            shareState.batchhash == batchHash) {
+            shareState.fileHash == fileHash && shareState.batchhash == batchHash) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _handleShareVerified(shareState.iden3message, shareState.batchhash);
+            _handleShareVerified(shareState.iden3message, shareState.batchhash,
+                shareState.fileHash);
           });
         }
         if (shareState is ShareVerifiedClaims &&
-            shareState.batchhash == batchHash) {
+            shareState.fileHash == fileHash && shareState.batchhash == batchHash) {
           // _showSnackbar('File id Verified successfully:',
           //     Theme.of(context).colorScheme.secondary);
           // _buildFileList(true);
@@ -1422,8 +1679,11 @@ class _FilesState extends State<Files> {
     return BlocBuilder<DownloadBloc, DownloadState>(
       bloc: _downloadBloc,
       builder: (BuildContext context, DownloadState downloadState) {
+        print('fetch download');
         if (downloadState is Downloading &&
-            downloadState.batchhash == batchHash) {
+            downloadState.batchhash == batchHash &&
+            downloadState.fileHash == fileHash) {
+          print('fileHash11: ${downloadState.fileHash}');
           // Return CircularProgressIndicator when downloading
           return Center(
               child: Loading(
@@ -1432,7 +1692,12 @@ class _FilesState extends State<Files> {
         }
 
         if (downloadState is LoadingUrl &&
-            downloadState.batchhash == batchHash) {
+            downloadState.batchhash == batchHash &&
+            downloadState.fileHash == fileHash) {
+          print('fileHash1122: ${downloadState.fileHash}');
+
+          print('filehas:$fileHash');
+
           // Return CircularProgressIndicator when downloading
           return Center(
               child: Loading(
@@ -1441,9 +1706,13 @@ class _FilesState extends State<Files> {
         }
 
         if (downloadState is DownloadSuccess &&
-            downloadState.batchhash == batchHash) {
+            downloadState.batchhash == batchHash &&
+            downloadState.fileHash == fileHash) {
+          print('fileHash113: ${downloadState.fileHash}');
+
           print('downloadState batch:${downloadState.batchhash}');
-          _handleDownloadVerifyButton(downloadState, downloadState.batchhash);
+          _handleDownloadVerifyButton(
+              downloadState, downloadState.batchhash, downloadState.fileHash);
         }
         if (downloadState is DownloadFailed) {
           _showSnackbar('Download failed', Colors.red, Icons.error);
@@ -1453,7 +1722,10 @@ class _FilesState extends State<Files> {
         }
 
         if (downloadState is StatusLoaded &&
-            downloadState.batchhash == batchHash) {
+            downloadState.batchhash == batchHash &&
+            downloadState.fileHash == fileHash) {
+          print('fileHash116: ${downloadState.fileHash}');
+
           print('status loaded in download');
           print('downloadState batch1:${downloadState.batchhash}');
           // _showSnackbar(
@@ -1461,7 +1733,9 @@ class _FilesState extends State<Files> {
           _deployBatchFileContract(batchHash, fileHash);
         }
 
-        if (downloadState is CidsGot && downloadState.batchhash == batchHash) {
+        if (downloadState is CidsGot &&
+            downloadState.fileHAsh == fileHash &&
+            downloadState.batchhash == batchHash) {
           print('cids got');
           final cidString = downloadState.cids.cids;
           final cidList = jsonEncode(cidString);
@@ -1476,9 +1750,12 @@ class _FilesState extends State<Files> {
           print('download4 : $cidList');
           print('download5 : ${jsonDecode(widget.did.toString())}');
 
+          print('fileHash167: ${downloadState.fileHAsh}');
+
           _downloadBloc.add(onClickDownloadUrl(
               BatchHash: batchHash,
               FileHash: batchHash,
+              fileHash: fileHash,
               Odid: jsonDecode(widget.did.toString()),
               FileName: fileName.toString(),
               Cids: cidList));
@@ -1487,14 +1764,23 @@ class _FilesState extends State<Files> {
           //     'cids got', Theme.of(context).colorScheme.secondary);
         }
 
+        print('state124:${downloadState}');
+        print('fileHash168: ${batchHash}');
+        print('filehasss:$fileHash ');
+
+        print('Expected fileHash: $fileHash');
+        print('Expected batchHash: $batchHash');
+
         if (downloadState is DownloadUrlSuccess &&
+            downloadState.fileHash == fileHash &&
             downloadState.batchhash == batchHash) {
+          print('fetch success');
           // Timer(Duration(seconds: 30), () {
           //   _downloadBloc.add(ResetDownloadStateEvent());
           //   _fileBloc.add(ResetFileStateEvent());
           //   _showSnackbar('Time out', Colors.red);
           // });
-
+          print('fileHash1675: ${downloadState.fileHash}');
           final url = downloadState.response.uRL;
           final downloadLink = Uri.parse(url as String);
           // _showSnackbar('${downloadState.response.uRL}',
@@ -1521,6 +1807,7 @@ class _FilesState extends State<Files> {
             _downloadBloc.add(onClickDownload(
                 batch_hash: batchHash,
                 file_hash: batchHash,
+                fileHash: fileHash,
                 didU: jsonDecode(widget.did.toString())));
           },
           child: _buildIcon(
@@ -1643,104 +1930,31 @@ class _FilesState extends State<Files> {
     }
   }
 
-  // Widget _buildShareDownloadIcon(
-  //     String batchHash, String fileHash, String fileName) {
-  //   return BlocBuilder<DownloadBloc, DownloadState>(
-  //     bloc: _downloadBloc,
-  //     builder: (BuildContext context, DownloadState downloadState) {
-  //       if (downloadState is Downloading &&
-  //           downloadState.batchhash == batchHash) {
-  //         // Return CircularProgressIndicator when downloading
-  //         return Center(
-  //             child: Loading(
-  //                 Loadingcolor: Theme.of(context).primaryColor,
-  //                 color: Theme.of(context).colorScheme.secondary));
-  //       }
-
-  //       if (downloadState is DownloadSuccess &&
-  //           downloadState.batchhash == batchHash) {
-  //         print('downloadState batch:${downloadState.batchhash}');
-  //         _handleDownloadVerifyButton(downloadState, downloadState.batchhash);
-  //       }
-  //       if (downloadState is DownloadFailed) {
-  //         _showSnackbar('Download failed', Colors.red, Icons.error);
-  //         Future.delayed(const Duration(seconds: 10), () {
-  //           _downloadBloc.add(ResetDownloadStateEvent());
-  //         });
-  //       }
-
-  //       if (downloadState is StatusLoaded &&
-  //           downloadState.batchhash == batchHash) {
-  //         print('status loaded in download');
-  //         print('downloadState batch1:${downloadState.batchhash}');
-
-  //         _deploysharefileContract(batchHash, fileHash);
-  //       }
-
-  //       if (downloadState is CidsGot && downloadState.batchhash == batchHash) {
-  //         print('cids got');
-  //         final cidString = downloadState.cids.cids;
-  //         final cidList = jsonEncode(cidString);
-  //         final cidGot = jsonEncode(cidList);
-
-  //         print('responsse share cids got1: $cidGot');
-  //         print('responsse share cids got: $cidList');
-
-  //         print('download1 share: $batchHash');
-  //         print('download2 share: $batchHash');
-  //         print('download3 share: $fileName');
-  //         print('download4 share: $cidList');
-  //         print('download5 share: ${jsonDecode(widget.did.toString())}');
-
-  //         _downloadBloc.add(onClickDownloadUrl(
-  //             BatchHash: batchHash,
-  //             FileHash: batchHash,
-  //             Odid: jsonDecode(widget.did.toString()),
-  //             FileName: fileName.toString(),
-  //             Cids: cidList));
-  //       }
-
-  //       if (downloadState is DownloadUrlSuccess &&
-  //           downloadState.batchhash == batchHash) {
-  //         final url = downloadState.response.uRL;
-  //         final downloadLink = Uri.parse(url as String);
-
-  //         print('download url success: ${downloadState.response.uRL}');
-
-  //         Future.delayed(const Duration(seconds: 10), () {
-  //           _downloadBloc.add(ResetDownloadStateEvent());
-  //         });
-
-  //         WidgetsBinding.instance.addPostFrameCallback((_) async {
-  //           await _showDownloadUrl(context, downloadLink);
-  //         });
-  //       }
-
-  //       // Default return for other states
-  //       return GestureDetector(
-  //         onTap: () {
-  //           _downloadBloc.add(onClickDownload(
-  //               batch_hash: batchHash,
-  //               file_hash: batchHash,
-  //               didU: jsonDecode(widget.did.toString())));
-  //         },
-  //         child: _buildIcon(
-  //           Icons.download,
-  //           Theme.of(context).colorScheme.secondary,
-  //           Theme.of(context).colorScheme.secondary,
-  //           Colors.white,
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
-  Widget _buildShareDownloadIcon(
+ 
+ Widget _buildShareDownloadIcon(
       String batchHash, String fileHash, String fileName) {
     return BlocBuilder<DownloadBloc, DownloadState>(
       bloc: _downloadBloc,
       builder: (BuildContext context, DownloadState downloadState) {
+        print('fetch download');
         if (downloadState is Downloading &&
-            downloadState.batchhash == batchHash) {
+            downloadState.batchhash == batchHash &&
+            downloadState.fileHash == fileHash) {
+          print('fileHash11: ${downloadState.fileHash}');
+          // Return CircularProgressIndicator when downloading
+          return Center(
+              child: Loading(
+                  Loadingcolor: Theme.of(context).primaryColor,
+                  color: Theme.of(context).colorScheme.secondary));
+        }
+
+        if (downloadState is LoadingUrl &&
+            downloadState.batchhash == batchHash &&
+            downloadState.fileHash == fileHash) {
+          print('fileHash1122: ${downloadState.fileHash}');
+
+          print('filehas:$fileHash');
+
           // Return CircularProgressIndicator when downloading
           return Center(
               child: Loading(
@@ -1749,9 +1963,13 @@ class _FilesState extends State<Files> {
         }
 
         if (downloadState is DownloadSuccess &&
-            downloadState.batchhash == batchHash) {
+            downloadState.batchhash == batchHash &&
+            downloadState.fileHash == fileHash) {
+          print('fileHash113: ${downloadState.fileHash}');
+
           print('downloadState batch:${downloadState.batchhash}');
-          _handleDownloadVerifyButton(downloadState, downloadState.batchhash);
+          _handleDownloadVerifyButton(
+              downloadState, downloadState.batchhash, downloadState.fileHash);
         }
         if (downloadState is DownloadFailed) {
           _showSnackbar('Download failed', Colors.red, Icons.error);
@@ -1761,7 +1979,10 @@ class _FilesState extends State<Files> {
         }
 
         if (downloadState is StatusLoaded &&
-            downloadState.batchhash == batchHash) {
+            downloadState.batchhash == batchHash &&
+            downloadState.fileHash == fileHash) {
+          print('fileHash116: ${downloadState.fileHash}');
+
           print('status loaded in download');
           print('downloadState batch1:${downloadState.batchhash}');
           // _showSnackbar(
@@ -1769,7 +1990,9 @@ class _FilesState extends State<Files> {
           _deployBatchFileContract(batchHash, fileHash);
         }
 
-        if (downloadState is CidsGot && downloadState.batchhash == batchHash) {
+        if (downloadState is CidsGot &&
+            downloadState.fileHAsh == fileHash &&
+            downloadState.batchhash == batchHash) {
           print('cids got');
           final cidString = downloadState.cids.cids;
           final cidList = jsonEncode(cidString);
@@ -1784,9 +2007,12 @@ class _FilesState extends State<Files> {
           print('download4 : $cidList');
           print('download5 : ${jsonDecode(widget.did.toString())}');
 
+          print('fileHash167: ${downloadState.fileHAsh}');
+
           _downloadBloc.add(onClickDownloadUrl(
               BatchHash: batchHash,
               FileHash: batchHash,
+              fileHash: fileHash,
               Odid: jsonDecode(widget.did.toString()),
               FileName: fileName.toString(),
               Cids: cidList));
@@ -1795,14 +2021,23 @@ class _FilesState extends State<Files> {
           //     'cids got', Theme.of(context).colorScheme.secondary);
         }
 
+        print('state124:${downloadState}');
+        print('fileHash168: ${batchHash}');
+        print('filehasss:$fileHash ');
+
+        print('Expected fileHash: $fileHash');
+        print('Expected batchHash: $batchHash');
+
         if (downloadState is DownloadUrlSuccess &&
+            downloadState.fileHash == fileHash &&
             downloadState.batchhash == batchHash) {
+          print('fetch success');
           // Timer(Duration(seconds: 30), () {
           //   _downloadBloc.add(ResetDownloadStateEvent());
           //   _fileBloc.add(ResetFileStateEvent());
           //   _showSnackbar('Time out', Colors.red);
           // });
-
+          print('fileHash1675: ${downloadState.fileHash}');
           final url = downloadState.response.uRL;
           final downloadLink = Uri.parse(url as String);
           // _showSnackbar('${downloadState.response.uRL}',
@@ -1829,6 +2064,7 @@ class _FilesState extends State<Files> {
             _downloadBloc.add(onClickDownload(
                 batch_hash: batchHash,
                 file_hash: batchHash,
+                fileHash: fileHash,
                 didU: jsonDecode(widget.did.toString())));
           },
           child: _buildIcon(
@@ -1842,38 +2078,39 @@ class _FilesState extends State<Files> {
     );
   }
 
-  Future<void> _handleVerified(
-      Iden3MessageEntity iden3message, String batchHash) async {
+
+  Future<void> _handleVerified(Iden3MessageEntity iden3message,
+      String batchHash, String fileHash) async {
     debugPrint('File is verified');
     _fileBloc.add(fetchAndSaveUploadVerifyClaims(
-        iden3message: iden3message, batchHash: batchHash));
+        iden3message: iden3message, batchHash: batchHash, fileHash: fileHash));
   }
 
   void _handleVerifyResponseSuccess(
-      VerifySuccess state, String batchHash) async {
+      VerifySuccess state, String batchHash, String fileHash) async {
     final response = jsonEncode(state.response.claim?.toJson());
     final txhashResponse = state.response.txHash;
     await _checkUseSpaceTxHashStatus(txhashResponse!);
 
     print('get verify response: $response');
 
-    _fileBloc.add(onVerifyResponse(response, batchHash));
+    _fileBloc.add(onVerifyResponse(response, batchHash, fileHash));
   }
 
   void _handleShareVerifyResponseSuccess(
-      ShareVerifySuccess state, String batchHash) async {
+      ShareVerifySuccess state, String batchHash, String fileHAsh) async {
     final response = jsonEncode(state.response);
 
     print('get share verify response: $response');
 
-    _shareBloc.add(onShareVerifyResponse(response, batchHash));
+    _shareBloc.add(onShareVerifyResponse(response, batchHash, fileHAsh));
   }
 
-  Future<void> _handleShareVerified(
-      Iden3MessageEntity iden3message, String batchHash) async {
+  Future<void> _handleShareVerified(Iden3MessageEntity iden3message,
+      String batchHash, String fileHash) async {
     debugPrint('share File is verified');
     _shareBloc.add(fetchAndSaveShareVerifyClaims(
-        iden3message: iden3message, batchHash: batchHash));
+        iden3message: iden3message, batchHash: batchHash, fileHash: fileHash));
   }
 
   Widget _buildIcon(

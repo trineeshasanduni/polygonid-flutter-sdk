@@ -136,13 +136,12 @@ class _SetUpScreenState extends State<SetUpScreen>
       absorbing: !enabled,
       child: GestureDetector(
         onTap: () async {
-          
-            _bloc.add(const HomeEvent.createIdentity());
+          _bloc.add(const HomeEvent.createIdentity());
 
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const LoadingPage()),
-            );
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const LoadingPage()),
+          );
           // }
         },
         key: CustomWidgetsKeys.homeScreenButtonCreateIdentity, // Unique Key
@@ -279,39 +278,39 @@ class _SetUpScreenState extends State<SetUpScreen>
                 //   },
                 // ),
 
-                 GestureDetector(
+                GestureDetector(
                   onTap: () {
-                    Navigator.of(dialogContext)
-                        .pop(true); },// Close dialog and return true,
-                   child: FrostedGlassBox(
-                             // key: CustomWidgetsKeys.homeScreenButtonRemoveIdentity,
-                             theWidth: MediaQuery.of(context).size.width/4,
-                             theHeight: 50.0,
-                             theX: 4.0,
-                             theY: 4.0,
-                             theColor: Colors.white.withOpacity(0.13),
-                             theChild: ShaderMask(
-                               shaderCallback: (bounds) => LinearGradient(
-                                 colors: [
-                                   Theme.of(context).colorScheme.primary,
-                                   Theme.of(context).colorScheme.secondary
-                                 ], // Customize your gradient colors
-                                 begin: Alignment.topLeft,
-                                 end: Alignment.bottomRight,
-                               ).createShader(bounds),
-                               child: Text(
-                                 'Confirm',
-                                 style: TextStyle(
-                                   fontSize: 14.0,
-                                   color: Theme.of(context)
-                      .secondaryHeaderColor, // This will be overridden by the gradient
-                                   fontWeight: FontWeight.w500,
-                                   fontFamily: GoogleFonts.robotoMono().fontFamily,
-                                 ),
-                               ),
-                             ),
-                           ),
-                 ),
+                    Navigator.of(dialogContext).pop(true);
+                  }, // Close dialog and return true,
+                  child: FrostedGlassBox(
+                    // key: CustomWidgetsKeys.homeScreenButtonRemoveIdentity,
+                    theWidth: MediaQuery.of(context).size.width / 4,
+                    theHeight: 50.0,
+                    theX: 4.0,
+                    theY: 4.0,
+                    theColor: Colors.white.withOpacity(0.13),
+                    theChild: ShaderMask(
+                      shaderCallback: (bounds) => LinearGradient(
+                        colors: [
+                          Theme.of(context).colorScheme.primary,
+                          Theme.of(context).colorScheme.secondary
+                        ], // Customize your gradient colors
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ).createShader(bounds),
+                      child: Text(
+                        'Confirm',
+                        style: TextStyle(
+                          fontSize: 14.0,
+                          color: Theme.of(context)
+                              .secondaryHeaderColor, // This will be overridden by the gradient
+                          fontWeight: FontWeight.w500,
+                          fontFamily: GoogleFonts.robotoMono().fontFamily,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             );
           },
@@ -370,13 +369,30 @@ class _SetUpScreenState extends State<SetUpScreen>
     return AbsorbPointer(
       absorbing: !enabled,
       child: GestureDetector(
-        onTap: () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => const SetupPasswordScreen()));
-          // _bloc.add(const HomeEvent.removeIdentity());
-        },
+        // onTap: () {
+        //   Navigator.push(
+        //       context,
+        //       MaterialPageRoute(
+        //           builder: (context) => const SetupPasswordScreen()));
+        //   // _bloc.add(const HomeEvent.removeIdentity());
+        // },
+        onTap: () => Navigator.of(context).push(
+          PageRouteBuilder(
+              pageBuilder: (context, animation, secondAnimation) =>
+                  const SetupPasswordScreen(),
+              transitionsBuilder: (context, animation, secondAnimation, child) {
+                return SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(-1.0, 0.0),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                );
+              }),
+          // MaterialPageRoute(
+          //   builder: (context) => const SetupPasswordScreen(),
+          // ),
+        ),
         child: FrostedGlassBox(
           // key: CustomWidgetsKeys.homeScreenButtonRemoveIdentity,
           theWidth: MediaQuery.of(context).size.width,

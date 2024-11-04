@@ -18,7 +18,7 @@ import 'package:polygonid_flutter_sdk/file/domain/repositories/file_repo.dart';
 class UseCaseParams {
   final String did;
   final String ownerDid;
-  final File?
+  final List<File>
       fileData; // Made optional since it might not be needed in every use case.
   // Made optional since it might not be needed in every use case.
 
@@ -146,15 +146,16 @@ class FileUsecase implements UseCase<FileEntity, UseCaseParams> {
   const FileUsecase(this.fileRepository);
 
   @override
-  Future<Either<Failure, FileEntity>> call(UseCaseParams params) async {
-    print('registering12: ${params.did}');
+  Future<Either<Failure,FileEntity>> call(UseCaseParams params) async {
+    print('Uploading files for DID: ${params.did}');
     return await fileRepository.fileUpload(
       did: params.did,
       ownerDid: params.ownerDid,
-      fileData: params.fileData!,
+      files: params.fileData, // Pass the list of files
     );
   }
 }
+
 
 class UseSpaceUsecase implements UseCase<FileEntity, UseSpaceParam> {
   final FileRepository fileRepository;
@@ -176,12 +177,16 @@ class FileNameUsecase {
 
   FileNameUsecase(this.fileRepository);
 
-  Future<Either<Failure, FileNameEntity>> call(FileNameParam params) async {
-    print('fetching file name');
+  Future<Either<Failure, List<FileNameEntity>>> call(FileNameParam params) async {
+    print('Fetching file names');
 
-    return await fileRepository.getFileName(BatchHash: params.BatchHash,Verify: params.Verify);
+    return await fileRepository.getFileName(
+      BatchHash: params.BatchHash,
+      Verify: params.Verify,
+    );
   }
 }
+
 
 class VerifyUploadUsecase {
   final FileRepository fileRepository;
@@ -212,11 +217,14 @@ class DownloadVerifyUsecase
   @override
   Future<Either<Failure, DownloadVerifyEntity>> call(
       DownloadParams params) async {
-    // print('registering12: ${params.did}');
+        
+    print('registering128: ${params.batch_hash}');
     return await fileRepository.downloadVerify(
         batch_hash: params.batch_hash,
         file_hash: params.file_hash,
         didU: params.didU);
+
+      
   }
 }
 

@@ -12,7 +12,7 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/claims_
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/claims_event.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/claims_state.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/widgets/claims.dart';
-import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/widget/dashboard.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/widgets/claim.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/qrcode_scanner/widgets/qrcode_scanner.dart';
 import 'package:polygonid_flutter_sdk_example/utils/custom_button_style.dart';
@@ -52,13 +52,13 @@ class _CredencialsState extends State<Credencials> {
   final List<Map<String, dynamic>> menuItems = [
     {
       'title': 'User Authentications',
-      'subtitle': 'Issuer claims.',
+      'subtitle': 'Auth claims',
       'image': 'assets/images/bg.png',
       'category': 'User Authentication' // Added category key
     },
     {
       'title': 'File Credentials',
-      'subtitle': 'Issuer claims.',
+      'subtitle': 'File claims',
       'image': 'assets/images/bg.png',
       'category': 'File Credentials' // Added category key
     },
@@ -208,18 +208,20 @@ class _CredencialsState extends State<Credencials> {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style:  TextStyle(
                   color: Colors.white,
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
+                  fontFamily:  GoogleFonts.robotoMono().fontFamily,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: const TextStyle(
+                style:  TextStyle(
                   color: Colors.white70,
-                  fontSize: 16,
+                  fontSize: 14,
+                  fontFamily:  GoogleFonts.robotoMono().fontFamily,
                 ),
               ),
             ],
@@ -268,7 +270,7 @@ class _CredencialsState extends State<Credencials> {
                       :  Text(
                           CustomStrings.authButtonCTA,
                           // style: CustomTextStyles.primaryButtonTextStyle,
-                          style: TextStyle(color: Theme.of(context).primaryColor),
+                          style: TextStyle(color: Theme.of(context).primaryColor,fontFamily:  GoogleFonts.robotoMono().fontFamily,),
                         ),
                 ),
               ),

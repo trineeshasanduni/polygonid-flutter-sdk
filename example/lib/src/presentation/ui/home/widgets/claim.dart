@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/models/claim_model.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/widgets/claim_card.dart';
@@ -29,8 +30,19 @@ class _ClaimState extends State<Claim> {
                   mainAxisSize: MainAxisSize.min,
                   children: claimWidgetList,
                 )
-              : const Center(
-                  child: Text(CustomStrings.claimsListNoResult),
+              :  Center(
+                   child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                     Image.asset('assets/images/empty.png',
+                          width: 100, height: 100),
+                      const SizedBox(height: 20),
+                    Text(
+                      CustomStrings.claimsListNoResult,
+                      style: TextStyle(color: Theme.of(context).secondaryHeaderColor,fontFamily:  GoogleFonts.robotoMono().fontFamily,),
+                    ),
+                  ],
+                ),
                 );
         }
         return const SizedBox.shrink();

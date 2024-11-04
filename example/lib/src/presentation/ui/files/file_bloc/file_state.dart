@@ -46,7 +46,7 @@ final class FileNameFetchedFailed extends FileState {
 }
 
 final class FileNameLoaded extends FileState {
-  final FileNameEntity fileName;
+  final List<FileNameEntity> fileName;
 
   const FileNameLoaded(this.fileName);
 }
@@ -60,8 +60,9 @@ final class UploadVerified extends FileState {
 class Fileverifying extends FileState {
   final String message;
   final String batchhash;
+  final String file_hash;
   
-  Fileverifying(this.batchhash,this.message);
+  Fileverifying(this.batchhash,this.message,this.file_hash);
 }
 final class FileVerifyFailed extends FileState {
   final String message;
@@ -91,16 +92,18 @@ final class FileVerifyResponseSuccess extends FileState {
 final class VerifyResponseloaded extends FileState {
   final Iden3MessageEntity iden3message;
   final String batchhash; 
+  final String fileHash;
   
 
-  VerifyResponseloaded(this.iden3message,this.batchhash);
+  VerifyResponseloaded(this.iden3message,this.batchhash,this.fileHash);
 }
 
 final class VerifySuccess extends FileState {
   final VerifyUploadEntity response;
-  final String batchhash; 
+  final String batchhash;
+  final String fileHash; 
 
-  const VerifySuccess( this.response,this.batchhash);
+  const VerifySuccess( this.response,this.batchhash,this.fileHash);
 }
 
 
@@ -108,8 +111,9 @@ final class VerifySuccess extends FileState {
 final class VerifiedClaims extends FileState {
   final List<ClaimModel> claimList;
   final String batchhash; 
+  final String fileHash;
 
-  VerifiedClaims(this.claimList,this.batchhash);
+  VerifiedClaims(this.claimList,this.batchhash,this.fileHash);
 }
 
 

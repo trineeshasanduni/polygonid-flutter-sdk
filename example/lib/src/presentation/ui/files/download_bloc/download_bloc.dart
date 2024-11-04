@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:polygonid_flutter_sdk/common/domain/domain_constants.dart';
@@ -49,14 +51,18 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
 
   Future<void> _handleDownloadVerify(
       onClickDownload event, Emitter<DownloadState> emit) async {
-    emit(Downloading(event.batch_hash,0.1));
+    emit(Downloading(event.batch_hash, 0.1, event.file_hash));
+    print('downloading45:${event.batch_hash}....${event.fileHash}');
     final failureOrdownload = await downloadVerify(DownloadParams(
         batch_hash: event.batch_hash,
         file_hash: event.file_hash,
         didU: event.didU));
     failureOrdownload.fold(
         (failure) => emit(DownloadFailed(failure.toString())),
-        (download) => emit(DownloadSuccess(download, event.batch_hash)));
+        (download) =>
+            emit(DownloadSuccess(download, event.batch_hash, event.fileHash)));
+
+    print('download45:${event.batch_hash}');
   }
 
   Future<void> _handleDownloadResponse(
@@ -76,7 +82,6 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
       String? privateKey =
           await SecureStorage.read(key: SecureStorageKeys.privateKey);
 
-
       if (privateKey == null) {
         emit(DownloadFailed("no private key found"));
         return;
@@ -86,7 +91,8 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
           iden3message: iden3message,
           privateKey: privateKey,
           emit: emit,
-          batchHash: event.batchHash!);
+          batchHash: event.batchHash!,
+          fileHash: event.fileHash!);
     } catch (error) {
       emit(DownloadFailed("Download response is not valid"));
     }
@@ -96,9 +102,10 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     required Iden3MessageEntity iden3message,
     required String privateKey,
     required String batchHash,
+    required String fileHash,
     required Emitter<DownloadState> emit,
   }) async {
-    emit(Downloading(batchHash,0.5));
+    emit(Downloading(batchHash, 0.5, fileHash));
 
     final ChainConfigEntity currentChain =
         await _polygonIdSdk.getSelectedChain();
@@ -117,12 +124,10 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     );
 
     try {
-      
       final BigInt nonce = selectedProfile == SelectedProfile.public
           ? GENESIS_PROFILE_NONCE
           : await NonceUtils(getIt()).getPrivateProfileNonce(
               did: did, privateKey: privateKey, from: iden3message.from);
-     
 
       await _polygonIdSdk.iden3comm.authenticateV2(
         message: iden3message,
@@ -133,22 +138,21 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
         env: envEntity,
       );
 
-
       emit(const downlodVerified());
     } on OperatorException catch (error) {
       emit(DownloadFailed(error.errorMessage));
     } on PolygonIdSDKException catch (error) {
-
       emit(DownloadFailed(error.errorMessage));
     } catch (error) {
-
       emit(DownloadFailed(error.toString()));
     }
   }
 
   Future<void> _handleDownloadStatus(
       onGetDownloadStatusEvent event, Emitter<DownloadState> emit) async {
-    emit(Downloading(event.batch_hash,0.8));
+    emit(Downloading(event.batch_hash, 0.8, event.fileHash));
+
+    print('_handleDownloadStatus url :${event.fileHash}');
 
     final status =
         await statusUsecase(DownloadStatusParams(sessionId: event.sessionId));
@@ -158,7 +162,7 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
         emit(DownloadFailed(failure.toString()));
       },
       (did) {
-        emit(StatusLoaded(did, event.batch_hash));
+        emit(StatusLoaded(did, event.batch_hash, event.fileHash));
       },
     );
   }
@@ -175,26 +179,28 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
         emit(DownloadFailed(failure.toString()));
       },
       (cids) {
-        emit(CidsGot(cids, event.batch_hash));
+        emit(CidsGot(cids, event.batch_hash, event.fileHash));
       },
     );
   }
 
   Future<void> _handleDownloadUrl(
       onClickDownloadUrl event, Emitter<DownloadState> emit) async {
-    emit(LoadingUrl(event.BatchHash));
+    emit(LoadingUrl(event.BatchHash, event.fileHash));
+    print('loafing url :${event.FileHash}');
     final failureOrdownloadurl = await downloadUsecase(DownloadUrlParams(
         BatchHash: event.BatchHash,
         FileHash: event.FileHash,
         Odid: event.Odid,
         FileName: event.FileName,
         Cids: event.Cids));
+
+        print('failureOrdownloadurl:${failureOrdownloadurl}');
     failureOrdownloadurl.fold(
         (failure) => emit(DownloadFailed(failure.toString())),
-        (downloadurl) =>
-            emit(DownloadUrlSuccess(downloadurl, event.BatchHash)));
+        
+        (downloadurl) => emit(
+            DownloadUrlSuccess(downloadurl, event.BatchHash, event.fileHash)));
+    
   }
-
-
-
 }

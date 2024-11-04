@@ -23,51 +23,87 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
   static const BASE_URL = 'https://test.becx.io/api/v1';
   // static const BASE_URL = 'http://192.168.1.42:9000/api/v1';
 
-  @override
-  Future<FileModel> fileUpload(
-      {required String did,
-      required String ownerDid,
-      required File fileData}) async {
-    print('Uploading file');
-    try {
-      // Define the URI for the upload API endpoint
-      final uri = Uri.parse('$BASE_URL/upload');
 
-      // Create a MultipartRequest
-      var request = http.MultipartRequest('POST', uri)
-        ..fields['did'] = did
-        ..fields['owner'] = ownerDid
-        ..files
-            .add(await http.MultipartFile.fromPath('fileData', fileData.path));
-      print('did file: $did');
-      print('ownerDid file: $ownerDid');
-      print('fileData file: $fileData');
 
-      print('request: $request');
+Future<FileModel> fileUpload({
+  required String did,
+  required String ownerDid,
+  required List<File> files,
+}) async {
+  print('Starting file upload...');
+  try {
+    final uri = Uri.parse('$BASE_URL/upload');
+    var request = http.MultipartRequest('POST', uri)
+      ..fields['did'] = did
+      ..fields['owner'] = ownerDid;
 
-      // Send the request
-      var response = await request.send();
-      print('response uploaded: $response');
+    // Create a list to hold all the MultipartFile instances
+    List<http.MultipartFile> multipartFiles = [];
 
-      // Get the response
-      final responseBody = await response.stream.bytesToString();
-      print('Upload file status code: ${response.statusCode}');
-      print('Upload file response body: $responseBody');
-
-      if (response.statusCode == 201) {
-        print('successfully uploaded file');
-        final responseJson = jsonDecode(responseBody);
-        print('object responseJson: $responseJson');
-        return FileModel.fromJson(responseJson);
-      } else {
-        print('Failed to upload file');
-        throw Exception('Failed to upload file');
+    // Add each file to the list and log its details
+    for (var file in files) {
+      if (!await file.exists()) {
+        throw Exception('File not found: ${file.path}');
       }
-    } catch (error) {
-      print('Error during file upload: $error');
-      throw Exception('Failed to upload file');
+
+      var multipartFile = await http.MultipartFile.fromPath(
+        'fileData', // Adjust this to match the server's expected field name
+        file.path,
+      );
+
+      
+
+      multipartFiles.add(multipartFile);
+
+      // Log file information
+      print('Added file: ${file.path.split('/').last} - Size: ${await file.length()} bytes');
     }
+
+    // Add all files to the request at once using addAll
+    request.files.addAll(multipartFiles);
+
+    // Confirm that only one request will be sent with all files
+    print('Prepared single multipart request with ${request.files.length} file(s)');
+    print('Request content length: ${request.contentLength}');
+
+    // Send the request
+    var response = await request.send();
+
+    // Read the response
+    print('Response status: ${response.statusCode}');
+    final responseBody = await response.stream.bytesToString();
+    print('Response body: $responseBody');
+
+    if (response.statusCode == 201) {
+      print('Successfully uploaded files');
+
+      // Decode the response JSON
+      final decodedResponse = jsonDecode(responseBody);
+      print('Decoded response: $decodedResponse');
+
+      // Parse the response based on the expected format
+      if (decodedResponse is Map &&
+          decodedResponse.containsKey('Did') &&
+          decodedResponse.containsKey('TXHash') &&
+          decodedResponse.containsKey('FileCount')) {
+        return FileModel.fromJson(decodedResponse as Map<String, dynamic>);
+      } else {
+        throw Exception('Unexpected response format');
+      }
+    } else {
+      print('Failed to upload files. Status code: ${response.statusCode}');
+      print('Response body: $responseBody');
+      throw Exception('Failed to upload files');
+    }
+  } catch (error) {
+    print('Error during file upload: $error');
+    throw Exception('Failed to upload files');
   }
+}
+
+
+
+
 
   @override
   Future<FileModel> useSpace(
@@ -112,43 +148,44 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
   }
 
   @override
-  Future<FileNameModel> getFileName(String BatchHash, String Verify) async {
-    print('fetching file name');
-    try {
-      final response = await client
-          .get(Uri.parse('$BASE_URL/get-filename?BatchHash=$BatchHash'));
-      // print('file name status: ${response.body}');
+Future<List<FileNameModel>> getFileName(String BatchHash, String Verify) async {
+  print('Fetching file names');
+  try {
+    final response = await client.get(
+      Uri.parse('$BASE_URL/get-filename?BatchHash=$BatchHash'),
+    );
+    print('File name status: ${response.statusCode}');
 
-      print('file name status1: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      print('Fetch file name status code: ${response.statusCode}');
+      final List<dynamic> fileNameList = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
-        print('fetch file name status code: ${response.statusCode}');
-        final List<dynamic> fileNameList = jsonDecode(response.body);
-
-        // Assuming the response is a list of objects, use the first item
-        if (fileNameList.isNotEmpty) {
-          final fileNameJson = fileNameList[0] as Map<String, dynamic>;
-
-          final fileNameModel = FileNameModel.fromJson(fileNameJson);
-          final responsefileName = FileNameModel(
-            fileHash: fileNameModel.fileHash,
-            fileName: fileNameModel.fileName,
+      if (fileNameList.isNotEmpty) {
+        // Parse each entry in the response list to a FileNameModel
+        final List<FileNameModel> fileNames = fileNameList.map((fileJson) {
+          final fileNameJson = fileJson as Map<String, dynamic>;
+          return FileNameModel(
+            fileHash: fileNameJson['FileHash'],
+            fileName: fileNameJson['FileName'],
             batchHash: BatchHash,
-            isVerified: Verify == 'true' ? true : false,
+            isVerified: Verify == 'true',
           );
-          print("fileName response: $fileNameModel");
-          return responsefileName;
-        } else {
-          throw Exception('No data found in the response');
-        }
+        }).toList();
+
+        print("File names fetched: $fileNames");
+        return fileNames;
       } else {
-        throw Exception('Failed to load file name: ${response.statusCode}');
+        throw Exception('No data found in the response');
       }
-    } catch (e) {
-      print('Error fetching file name: $e');
-      throw Exception('Failed to fetch file name');
+    } else {
+      throw Exception('Failed to load file names: ${response.statusCode}');
     }
+  } catch (e) {
+    print('Error fetching file names: $e');
+    throw Exception('Failed to fetch file names');
   }
+}
+
 
   @override
   Future<VerifyUploadModel> verifyUpload({

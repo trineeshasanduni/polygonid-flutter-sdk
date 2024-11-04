@@ -1,4 +1,4 @@
-package io.iden3.polygonid_flutter_sdk
+package com.iden3.bethel
 
 import io.flutter.embedding.android.FlutterActivity
 

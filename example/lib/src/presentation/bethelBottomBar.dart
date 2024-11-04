@@ -626,7 +626,7 @@ class BethelBottomBarState extends State<BethelBottomBar> {
             _showaAddPlanAlert();
           }
 
-          if (!isConnected) {
+          if (isConnected==null || !isConnected) {
             _showMetamaskAlert(context); // Show the popup if not connected
           }
         },

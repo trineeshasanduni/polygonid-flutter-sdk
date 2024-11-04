@@ -58,7 +58,7 @@ class ShareBloc extends Bloc<ShareEvent, ShareState> {
 
   Future<void> _handleShareVerifyClick(
       ShareVerifyEvent event, Emitter<ShareState> emit) async {
-    emit(ShareVerifying(event.BatchHash));
+    emit(ShareVerifying(event.BatchHash,event.FileHash));
     final failureOrVerify = await shareVerifyUsecase(ShareVerifyParam(
         BatchHash: event.BatchHash,
         FileHash: event.FileHash,
@@ -67,13 +67,14 @@ class ShareBloc extends Bloc<ShareEvent, ShareState> {
 
     failureOrVerify.fold(
         (failure) => emit(ShareVerifyFailed(failure.toString())),
-        (response) => emit(ShareVerifySuccess(response, event.BatchHash)));
+        (response) => emit(ShareVerifySuccess(response, event.BatchHash, event.FileHash)));
   }
 
   Future<void> _handleShareVerifyUpload(
       onShareVerifyResponse event, Emitter<ShareState> emit) async {
     String? qrCodeResponse = event.verifyResponse;
     String? batchHash = event.batchHash;
+    String? fileHash = event.fileHash;
     if (qrCodeResponse == null || qrCodeResponse.isEmpty) {
       emit(ShareVerifyFailed("Scanned code is not valid"));
     }
@@ -81,7 +82,7 @@ class ShareBloc extends Bloc<ShareEvent, ShareState> {
     try {
       final Iden3MessageEntity iden3message =
           await _qrcodeParserUtils.getIden3MessageFromQrCode(qrCodeResponse!);
-      emit(ShareVerifyResponseloaded(iden3message, event.batchHash!));
+      emit(ShareVerifyResponseloaded(iden3message, event.batchHash!, event.fileHash!));
      
     } catch (error) {
       emit(ShareVerifyFailed("Scanned code is not valid"));
@@ -94,6 +95,7 @@ class ShareBloc extends Bloc<ShareEvent, ShareState> {
         await SecureStorage.read(key: SecureStorageKeys.privateKey);
 
         String batchHash = event.batchHash!;
+        String fileHash = event.fileHash!;
     
     if (privateKey == null) {
       emit(ShareVerifyFailed("Private key not found"));
@@ -110,7 +112,7 @@ class ShareBloc extends Bloc<ShareEvent, ShareState> {
 
     
 
-    emit(ShareVerifying(batchHash));
+    emit(ShareVerifying(batchHash,fileHash));
 
     Iden3MessageEntity iden3message = event.iden3message;
    
@@ -137,7 +139,7 @@ class ShareBloc extends Bloc<ShareEvent, ShareState> {
      
 
       if (claimList.isNotEmpty) {
-        add(getShareVerifyClaims(batchHash));
+        add(getShareVerifyClaims(batchHash,fileHash));
         // add(event)
       }
     } catch (exception) {
@@ -147,7 +149,8 @@ class ShareBloc extends Bloc<ShareEvent, ShareState> {
 
   Future<void> _getUploadVerifyClaims(getShareVerifyClaims event, Emitter<ShareState> emit) async {
 String batchHash = event.batchHash!;
-    emit(ShareVerifying(batchHash));
+String fileHash = event.fileHash!;
+    emit(ShareVerifying(batchHash,fileHash));
 
     List<FilterEntity>? filters = event.filters;
 
@@ -183,7 +186,7 @@ String batchHash = event.batchHash!;
 
       List<ClaimModel> claimModelList =
           claimList.map((claimEntity) => _mapper.mapFrom(claimEntity)).toList();
-      emit(ShareVerifiedClaims(claimModelList,batchHash));
+      emit(ShareVerifiedClaims(claimModelList,batchHash, fileHash));
      
     } on GetClaimsException catch (_) {
       emit(ShareVerifyFailed("error while retrieving claims"));

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -15,10 +16,12 @@ import 'package:polygonid_flutter_sdk_example/src/data/secure_storage.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/bethelBottomBar.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/navigations/bottom_bar_navigations/plan_navigation.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/common/widgets/circularProgress.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/create_wallet/loading.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/widget/bar.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/widget/customCurveEdge.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard_bloc/dashboard_bloc.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/files/file_bloc/file_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/home_state.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/widget/add_plans.dart';
@@ -33,6 +36,15 @@ import 'package:web3modal_flutter/widgets/w3m_network_select_button.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
+
+class FileName {
+  final String fileName;
+  final String batchHash;
+  final String fileHash;
+  bool isVerified;
+
+  FileName(this.fileName, this.batchHash, this.fileHash, this.isVerified);
+}
 
 class Dashboard extends StatefulWidget {
   final String? did;
@@ -50,11 +62,14 @@ class _DashboardState extends State<Dashboard> {
   var name;
   var httpClient = http.Client();
 
+  late final FileBloc _fileBloc;
+
   Web3Client? _web3Client;
   var rpcUrl =
       'https://polygon-mainnet.g.alchemy.com/v2/pHKWzuctaLCPxAKYc0c8bKQA8d85oPlk';
 
-  final _contractAddress = '0x665e346D9c68587Bd51C53eAd71e0F5367E7950C';
+  final _contractAddress =
+      EthereumAddress.fromHex('0x665e346D9c68587Bd51C53eAd71e0F5367E7950C');
 
   final _AbiPath = 'assets/abi/FileStorage.json';
   final _contractAddress1 =
@@ -62,22 +77,37 @@ class _DashboardState extends State<Dashboard> {
 
   final _ContractAddress = '0x665e346D9c68587Bd51C53eAd71e0F5367E7950C';
 
+  final _invoiceAbiPath = 'assets/abi/BethelInvoice.json';
+
+  final _InvoidContractAddress = '0xB05c8A8c54DDA3E4e785FD033AB63a50e09b9521';
+
   final storage = GetStorage();
   var _isUserAdded = false;
   var _isBlureffect = false;
   late final DashboardBloc _dashboardBloc;
 
   String _fileCount = '0';
-  String _fileUsage = '0MiB';
+  String _folderCount = '0';
+  String _fileUsage = '0 MB';
+  double _fileUsagePieChart = 0;
+  double _packageSpace = 0;
+  List<FileName> fileDataList = [];
+
+  List<dynamic> dataResult = [];
+  bool _isRequestInProgress = false;
 
   @override
   void initState() {
     super.initState();
+    _fileBloc = getIt<FileBloc>();
     _initW3MService();
     _initializeData();
     _deployGetUderDid();
     _dashboardBloc = getIt<DashboardBloc>();
     _initActivityLogs();
+    _deployFileCount();
+    _deployPackageSpace();
+    _deployBatchHash();
   }
 
   void _initW3MService() async {
@@ -98,7 +128,6 @@ class _DashboardState extends State<Dashboard> {
 
     final WalletAddress = _w3mService.session?.address;
     final topic = _w3mService.session?.topic;
-
 
     final storage = GetStorage();
     storage.write('walletAddress', WalletAddress);
@@ -151,9 +180,38 @@ class _DashboardState extends State<Dashboard> {
 
       setState(() {
         _fileCount = result![0].toString();
+        final fileUsage = '${fileSizeInMiB}';
         _fileUsage = '${fileSizeInMiB.toStringAsFixed(2)}' + 'MiB';
+        print('fileUsage pie: $fileUsage');
+        final doubleValue = (double.parse(fileUsage) / 1024);
+        print('fileUsage pie2: $doubleValue');
+        _fileUsagePieChart = double.parse(doubleValue.toStringAsFixed(4));
+        ;
+        print('fileUsage pie3: $_fileUsagePieChart');
       });
-    } catch (e) {    }
+    } catch (e) {}
+  }
+
+  Future<void> _deployPackageSpace() async {
+    final fileStorageService =
+        FileStorageService(rpcUrl, _InvoidContractAddress, _invoiceAbiPath);
+
+    try {
+      await fileStorageService.initializeWeb3Client();
+      final did = jsonDecode(widget.did.toString());
+      final contract = await fileStorageService.loadContract('BethelInvoice');
+      final result = await fileStorageService
+          .callContractFunction(contract, 'checkPackageSpace', [did]);
+
+      final fileSizeInBytes = (result![0] as BigInt).toInt();
+      final fileSizeInMiB = fileSizeInBytes / (1024 * 1024);
+
+      setState(() {
+        _packageSpace = fileSizeInBytes / (1024);
+      });
+
+      print('space: $fileSizeInMiB');
+    } catch (e) {}
   }
 
   Future<void> _deployContract() async {
@@ -169,7 +227,7 @@ class _DashboardState extends State<Dashboard> {
           ContractAbi.fromJson(jsonEncode(jsonAbi['abi']), 'FileStorage');
       final did = jsonDecode(widget.did.toString());
       final _contract = DeployedContract(_abiCode, _contractAddress1);
-      final _getAllBatchesFunction = _contract.function('getAdressList');
+      final _getAdressListFunction = _contract.function('getAdressList');
 
       final storage = GetStorage();
       final walletAddress1 = storage.read('walletAddress');
@@ -177,7 +235,7 @@ class _DashboardState extends State<Dashboard> {
       // Clear the current file list before fetching new data
       final result = await _web3Client?.call(
         contract: _contract,
-        function: _getAllBatchesFunction,
+        function: _getAdressListFunction,
         params: [did],
       );
 
@@ -205,9 +263,136 @@ class _DashboardState extends State<Dashboard> {
             // _showAddressDialog(innerList); // Pass the list of addresses
           }
         }
+      } else {}
+    } catch (e) {}
+  }
+
+  Future<void> _deployBatchHash() async {
+    try {
+      _web3Client = Web3Client(rpcUrl, httpClient);
+
+      final abiFile =
+          await rootBundle.loadString('assets/abi/FileStorage.json');
+      if (abiFile.isEmpty) throw FormatException('ABI file is empty');
+
+      final jsonAbi = jsonDecode(abiFile);
+      final _abiCode =
+          ContractAbi.fromJson(jsonEncode(jsonAbi['abi']), 'FileStorage');
+
+      final _contract = DeployedContract(_abiCode, _contractAddress);
+      final _getAllBatchesFunction = _contract.function('getAllBatches');
+
+      final storage = GetStorage();
+      final walletAddress1 = storage.read('walletAddress');
+
+      // ** Clear the current file list before fetching new data **
+      setState(() {
+        dataResult.clear(); // Clear the list to prevent duplication
+        fileDataList.clear(); // Also clear any fileDataList if used
+      });
+
+      final result = await _web3Client?.call(
+        contract: _contract,
+        function: _getAllBatchesFunction,
+        params: [],
+        sender: EthereumAddress.fromHex(walletAddress1),
+      );
+
+      if (result!.isNotEmpty && result?[0] is List) {
+        print('list result dash: ${result[0]}');
+        setState(() {
+          dataResult = List<dynamic>.from(result[0]);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            processFileNameResult(dataResult);
+          });
+        });
       } else {
+        print('No data returned from contract or result format is unexpected');
       }
     } catch (e) {
+      print('An error occurred: $e');
+    }
+  }
+
+  Future<void> processFileNameResult(List<dynamic> dataResult) async {
+    if (_isRequestInProgress) {
+      return;
+    }
+
+    setState(() {
+      _isRequestInProgress = true;
+      fileDataList.clear(); // Clear the list before adding new data
+    });
+
+    // Set to store unique batch hashes and avoid duplicate requests
+    Set<String> fetchedBatchHashes = {};
+
+    // Keep track of the number of files fetched
+    int filesFetched = 0;
+    final totalFiles = dataResult.length;
+
+    print('total files dash: $totalFiles');
+
+    // Cancel previous listeners and use StreamSubscription to properly manage the stream
+    StreamSubscription? fileBlocSubscription;
+
+    // Subscribe to the stream and process file names
+    fileBlocSubscription = _fileBloc.stream.listen((state) {
+      if (state is FileNameLoaded) {
+        for (var fileNameEntity in state.fileName) {
+          final batchHash = fileNameEntity.batchHash.toString();
+
+          // Check if the file has already been added based on batch hash
+          if (!fetchedBatchHashes.contains(batchHash)) {
+            setState(() {
+              fileDataList.add(FileName(
+                fileNameEntity.fileName.toString(),
+                batchHash,
+                fileNameEntity.fileHash.toString(),
+                fileNameEntity.isVerified!,
+              ));
+            });
+
+            // Mark this batch hash as fetched to prevent duplicates
+            fetchedBatchHashes.add(batchHash);
+            filesFetched++;
+            print('File data added: ${fileDataList.last}');
+          }
+
+          // Check if all files have been fetched
+          if (filesFetched >= totalFiles) {
+            print('All files fetched successfully.');
+            _isRequestInProgress = false;
+
+            // Cancel the stream subscription to avoid further unnecessary listening
+            fileBlocSubscription?.cancel();
+          }
+        }
+      }
+    });
+
+    try {
+      for (var batchDetails in dataResult) {
+        final batchHash = batchDetails[1].toString();
+        final verify = batchDetails[4].toString();
+        print('Requesting file for batchHash: $batchHash');
+        print('verify: $verify');
+
+        // Only fetch if this batchHash hasn't been fetched already
+        if (!fetchedBatchHashes.contains(batchHash) &&
+            filesFetched < totalFiles) {
+          await Future.delayed(const Duration(milliseconds: 500), () {
+            _fileBloc
+                .add(GetFileNameEvent(BatchHash: batchHash, Verify: verify));
+          });
+        }
+      }
+    } catch (e) {
+      print('Error processing contract result: $e');
+    } finally {
+      setState(() {
+        _isRequestInProgress = false;
+      });
     }
   }
 
@@ -311,8 +496,7 @@ class _DashboardState extends State<Dashboard> {
           ),
         );
       },
-    ).then((_) {
-    });
+    ).then((_) {});
   }
 
   Future<void> _deployGetUderDid() async {
@@ -529,6 +713,7 @@ class _DashboardState extends State<Dashboard> {
   Future<void> _initializeData() async {
     // Your initialization logic here (fetching data, etc.)
     String? walletAddress = _w3mService.session?.address;
+
     if (walletAddress != null && walletAddress.isNotEmpty) {
       await SecureStorage.write(
         key: SecureStorageKeys.owner,
@@ -544,6 +729,8 @@ class _DashboardState extends State<Dashboard> {
     _initW3MService();
     _deployGetUderDid();
     _deployFileCount();
+    _deployPackageSpace();
+    _deployBatchHash();
 
     // Any other initialization logic...
   }
@@ -564,48 +751,7 @@ class _DashboardState extends State<Dashboard> {
 
   @override
   Widget build(BuildContext context) {
-    // Safely assign WalletAddress, handling potential null values
-    String? walletAddress = _w3mService.session?.address;
-    String? account = _w3mService.session?.connectedWalletName;
-    String? account1 = _w3mService.session?.getAccounts()?.first;
-    print('account12: $account');
-    print('account123: $account1');
-
     final isFreePlan = storage.read('isFreePlanActivated');
-    print('isFreePlan dash: $isFreePlan');
-
-    if (walletAddress != null && walletAddress.isNotEmpty) {
-      // Write to SecureStorage, ensuring to await the async operation
-      SecureStorage.write(
-        key: SecureStorageKeys.owner,
-        value: walletAddress,
-      );
-
-      // Write to GetStorage
-      final storage = GetStorage();
-      storage.write('walletAddress', walletAddress);
-
-      print('Wallet address saved: $walletAddress');
-    } else {
-      print('Error: Wallet address is null or empty');
-    }
-
-    // final wA = storage.read(key: 'walletAddress');
-    
-    Map<String, double> dataMap = {
-      "Files": 5,
-      "Audio": 3,
-      "Video": 2,
-      "Images": 2,
-    };
-
-    final colorList = <Color>[
-      const Color(0xFFa3d902),
-      const Color.fromARGB(255, 95, 127, 0),
-      const Color.fromARGB(255, 17, 148, 98),
-      const Color(0xFF2CFFAE),
-    ];
-
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
       body: SafeArea(
@@ -614,6 +760,7 @@ class _DashboardState extends State<Dashboard> {
           onRefresh: _onRefresh,
           animSpeedFactor: 2.0,
           child: SingleChildScrollView(
+            physics: AlwaysScrollableScrollPhysics(),
             child: Column(
               children: [
                 ListTile(
@@ -622,170 +769,57 @@ class _DashboardState extends State<Dashboard> {
                       Image.asset('assets/images/launcher_icon.png',
                           width: 30, height: 30),
                       RichText(
-                          text: TextSpan(
-                              text: 'zkp',
-                              style: TextStyle(
-                                  color:
-                                      Theme.of(context).colorScheme.secondary,
-                                  fontSize: 20,
-                                  fontFamily:
-                                      GoogleFonts.robotoMono().fontFamily,
-                                  fontWeight: FontWeight.w300),
-                              children: [
+                        text: TextSpan(
+                          text: 'zkp',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.secondary,
+                            fontSize: 20,
+                            fontFamily: GoogleFonts.robotoMono().fontFamily,
+                            fontWeight: FontWeight.w300,
+                          ),
+                          children: [
                             TextSpan(
-                                text: 'STORAGE',
-                                style: TextStyle(
-                                    color:
-                                        Theme.of(context).secondaryHeaderColor,
-                                    fontSize: 20,
-                                    fontFamily:
-                                        GoogleFonts.robotoMono().fontFamily,
-                                    fontWeight: FontWeight.w300))
-                          ]))
+                              text: 'STORAGE',
+                              style: TextStyle(
+                                color: Theme.of(context).secondaryHeaderColor,
+                                fontSize: 20,
+                                fontFamily: GoogleFonts.robotoMono().fontFamily,
+                                fontWeight: FontWeight.w300,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
-                  trailing: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      // color: Theme.of(context).colorScheme.primary,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                          color: Theme.of(context).colorScheme.secondary,
-                          width: 1),
-                    ),
-                    child: GestureDetector(
-                      onTap: () {
-                        // _showWelcomeDialog();
-                        // _deployContract();
-                        // _showWelcomeBottomSheet();
-                        _showMetamaskBottomSheet();
-                      },
-                      child: name != null && name == "MetaMask Wallet"
-                          ? Image.asset('assets/images/metamaskImg.png')
-                          : Icon(Icons.wallet),
-                    ),
-                  ),
+                  trailing: _buildWalletIcon(),
                 ),
                 Stack(
                   children: [
                     Column(
                       children: [
                         ListTile(
-                          title: Text('My Storage',
-                              style: TextStyle(
-                                  color: Theme.of(context)
-                                      .appBarTheme
-                                      .titleTextStyle
-                                      ?.color,
-                                  fontSize: 12,
-                                  fontFamily:
-                                      GoogleFonts.robotoMono().fontFamily,
-                                  fontWeight: FontWeight.w300)),
-                          trailing: GestureDetector(
-                            onTap: () => {},
-                            child: Text('See all',
-                                style: TextStyle(
-                                    color: Theme.of(context)
-                                        .secondaryHeaderColor
-                                        .withOpacity(0.3),
-                                    fontSize: 10,
-                                    fontFamily:
-                                        GoogleFonts.robotoMono().fontFamily,
-                                    fontWeight: FontWeight.w300)),
+                          title: Text(
+                            'My Storage',
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .appBarTheme
+                                  .titleTextStyle
+                                  ?.color,
+                              fontSize: 16,
+                              fontFamily: GoogleFonts.robotoMono().fontFamily,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         _watchlist(),
                         SizedBox(height: 30),
-                        _barChart(),
-                        SizedBox(height: 30),
+                        _buildPieChart(),
                         _recentUploads(),
                         SizedBox(height: 30),
-                        // _pieChart(),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 20.0),
-                          child: PieChart(
-                            dataMap: dataMap,
-                            animationDuration: Duration(milliseconds: 800),
-                            chartLegendSpacing: 32,
-                            chartRadius:
-                                MediaQuery.of(context).size.width / 3.2,
-                            colorList: colorList,
-                            initialAngleInDegree: 0,
-                            chartType: ChartType.ring,
-                            ringStrokeWidth: 32,
-                            centerText: "Storage",
-                            legendOptions: LegendOptions(
-                              showLegendsInRow: false,
-                              legendPosition: LegendPosition.right,
-                              showLegends: true,
-                              // legendShape: _BoxShape.circle,
-                              legendTextStyle: TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            chartValuesOptions: ChartValuesOptions(
-                              showChartValueBackground: true,
-                              showChartValues: true,
-                              showChartValuesInPercentage: false,
-                              showChartValuesOutside: false,
-                              decimalPlaces: 1,
-                            ),
-                            // gradientList: ---To add gradient colors---
-                            // emptyColorGradient: ---Empty Color gradient---
-                          ),
-                        )
                       ],
                     ),
-                    if (isFreePlan == null ||
-                        !isFreePlan) // Replace with a condition when you want the blur effect
-                      BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                        child: Container(
-                          color: Colors.red
-                              .withOpacity(0.1), // Optional dark overlay
-                        ),
-                      ),
-                    if (isFreePlan == null || !isFreePlan)
-                      Column(
-                        children: [
-                          Positioned(
-                            // top: MediaQuery.of(context).size.height / 1.5,
-                            child: ListTile(
-                              trailing: Container(
-                                width: 50,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  // color: Theme.of(context).colorScheme.primary,
-                                  borderRadius: BorderRadius.circular(50),
-                                  border: Border.all(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .secondary,
-                                      width: 1),
-                                ),
-                                child: GestureDetector(
-                                  onTap: () {
-                                    // _showWelcomeDialog();
-                                    // _deployContract();
-                                    // _showWelcomeBottomSheet();
-                                    _showMetamaskBottomSheet();
-                                  },
-                                  child: name != null &&
-                                          name == "MetaMask Wallet"
-                                      ? Image.asset(
-                                          'assets/images/metamaskImg.png',
-                                          width: 30,
-                                          height: 30)
-                                      : Icon(Icons.wallet,
-                                          color: Theme.of(context)
-                                              .secondaryHeaderColor),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                    if (isFreePlan == null || !isFreePlan) _buildBlurEffect(),
                   ],
                 ),
               ],
@@ -796,144 +830,279 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
+  Widget _buildWalletIcon() {
+    return Container(
+      width: 30,
+      height: 30,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.secondary,
+          width: 1,
+        ),
+      ),
+      child: GestureDetector(
+        onTap: _showMetamaskBottomSheet,
+        child: name != null && name == "MetaMask Wallet"
+            ? Image.asset('assets/images/metamaskImg.png')
+            : Icon(Icons.wallet),
+      ),
+    );
+  }
+
+  Widget _buildPieChart() {
+    print('fileUsage pie4: $_fileUsagePieChart');
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20.0),
+      child: PieChart(
+        dataMap: {
+          "Used(GiB)": _fileUsagePieChart,
+          "Remains(GiB)": 1,
+        },
+        colorList: [
+          const Color(0xFFa3d902),
+          const Color(0xFF2CFFAE),
+        ],
+        animationDuration: Duration(milliseconds: 800),
+        chartLegendSpacing: 32,
+        chartRadius: MediaQuery.of(context).size.width / 2.5,
+        chartType: ChartType.ring,
+
+        ringStrokeWidth: 32,
+        // centerText: "StoshowChartValuesOutsiderage",
+        legendOptions: LegendOptions(
+          showLegends: true,
+          legendPosition: LegendPosition.right,
+        ),
+        chartValuesOptions: ChartValuesOptions(
+          showChartValueBackground: true,
+          showChartValuesInPercentage: true,
+          showChartValues: true,
+          decimalPlaces: 2,
+          showChartValuesOutside: false,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBlurEffect() {
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+      child: Container(
+        color: Colors.red.withOpacity(0.1),
+      ),
+    );
+  }
+
   Widget _watchlist() {
     final List<Map<String, dynamic>> items = [
-      // {'title': 'Folders', 'subtitle': 'Total', 'icon': Icons.folder, 'route': MyFiles()},
       {
         'title': 'Folders',
         'subtitle': 'Total',
         'icon': Icons.folder,
-        'route': (LoadingPage())
+        'data': _folderCount
       },
       {
         'title': 'Files',
         'subtitle': 'Total',
         'icon': Icons.file_open,
-        'route': ()
+        'data': _fileCount,
       },
       {
-        'title': 'Storage Plan',
+        'title': 'Storage',
         'subtitle': 'Status',
         'icon': Icons.storage,
-        'route': ()
+        'data': '$_fileUsage',
       },
     ];
+
     return SizedBox(
-      height: 120,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: () {
-              // Navigator.pushNamed(context, '/${items[index]['route']}');
-              Navigator.pop(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => items[index]['route']));
-            },
-            child: Container(
-              width: 115,
-              margin: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                // color: Theme.of(context).colorScheme.secondary,
-                color: Colors.green.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Stack(
-                children: [
-                  //blur effect ==> the third layer of stack
-                  BackdropFilter(
-                    filter: ImageFilter.blur(
-                      //sigmaX is the Horizontal blur
-                      sigmaX: 4.0,
-                      //sigmaY is the Vertical blur
-                      sigmaY: 4.0,
-                    ),
-                  ),
-                  //gradient effect ==> the second layer of stack
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.white.withOpacity(0.13)),
-                      gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            //begin color
-                            Colors.white.withOpacity(0.15),
-                            //end color
-                            Colors.white.withOpacity(0.05),
-                          ]),
-                    ),
-                  ),
+      height: MediaQuery.of(context).size.height / 4.5,
+      // Adjust height to fit two columns and one row
+      // width:  MediaQuery.of(context).size.width,
+      child: Row(
+        verticalDirection: VerticalDirection.down,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          // First two containers in a vertical column
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            // mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildItemContainer(items[0], isRow: true),
+              _buildItemContainer(items[1], isRow: true),
+            ],
+          ),
+          // Third container in a row
+          _buildItemContainer(items[2], isRow: false),
+        ],
+      ),
+    );
+  }
 
-                  Positioned(
-                    left: 2,
-                    top: 2,
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(50),
-                        border: Border.all(
-                            color: Theme.of(context).colorScheme.secondary,
-                            width: 1),
-                        color: Theme.of(context).primaryColor,
-                      ),
-                      child: Icon(
-                        items[index]['icon'],
-                        color: Theme.of(context).secondaryHeaderColor,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 0.0),
-                          child:
-                              // Row(
-                              //   children: [
-                              // Icon(
-                              //   items[index]['icon'],
-                              //   color: Theme.of(context).colorScheme.secondary,
-                              //   size: 15,
-                              // ),
-                              Text(' ${items[index]['title']}',
-                                  style: TextStyle(
-                                      color: Theme.of(context)
-                                          .appBarTheme
-                                          .titleTextStyle
-                                          ?.color,
-                                      fontSize: 10,
-                                      fontFamily:
-                                          GoogleFonts.robotoMono().fontFamily,
-                                      fontWeight: FontWeight.w300)),
-                          // ],
-                          // ),
-                        ),
-                        Text('${items[index]['subtitle']}',
-                            style: TextStyle(
-                                color: Theme.of(context)
-                                    .appBarTheme
-                                    .titleTextStyle!
-                                    .color
-                                    ?.withOpacity(0.5),
-                                fontSize: 8,
-                                fontFamily: GoogleFonts.robotoMono().fontFamily,
-                                fontWeight: FontWeight.w300)),
-                      ],
-                    ),
-                  ),
+// Helper method to build the item container
+  Widget _buildItemContainer(Map<String, dynamic> item, {required bool isRow}) {
+    return Container(
+      width: MediaQuery.of(context).size.width / 2.5,
+      height: isRow ? MediaQuery.of(context).size.height / 11.5 : null,
+      margin: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.green.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Stack(
+        children: [
+          // Blur effect
+          BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: 4.0,
+              sigmaY: 4.0,
+            ),
+          ),
+          // Gradient effect
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.white.withOpacity(0.13)),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.15),
+                  Colors.white.withOpacity(0.05),
                 ],
               ),
             ),
-          );
-        },
+          ),
+          Positioned(
+            left: 2,
+            top: 2,
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(50),
+                border: Border.all(
+                    color: Theme.of(context).colorScheme.secondary, width: 1),
+                color: Theme.of(context).primaryColor,
+              ),
+              child: Icon(
+                item['icon'],
+                color: Theme.of(context).secondaryHeaderColor,
+                size: 20,
+              ),
+            ),
+          ),
+          Center(
+            child: Column(
+              mainAxisAlignment: isRow
+                  ? MainAxisAlignment.center
+                  : MainAxisAlignment.spaceEvenly,
+              children: [
+                SizedBox(height: isRow ? 10 : 0),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 0.0),
+                  child: Text(
+                    ' ${item['title']}',
+                    style: TextStyle(
+                      color:
+                          Theme.of(context).appBarTheme.titleTextStyle?.color,
+                      fontSize: isRow ? 10 : 16,
+                      fontFamily: GoogleFonts.robotoMono().fontFamily,
+                      fontWeight: FontWeight.w300,
+                    ),
+                  ),
+                ),
+                isRow
+                    ? Text(
+                        '${item['subtitle']}',
+                        style: TextStyle(
+                          color: Theme.of(context)
+                              .appBarTheme
+                              .titleTextStyle!
+                              .color
+                              ?.withOpacity(0.5),
+                          fontSize: 8,
+                          fontFamily: GoogleFonts.robotoMono().fontFamily,
+                          fontWeight: FontWeight.w300,
+                        ),
+                      )
+                    : SizedBox(),
+                isRow
+                    ? Text(
+                        '${item['data']} ',
+                        style: TextStyle(
+                          color: Theme.of(context).secondaryHeaderColor,
+                          fontSize: isRow ? 9 : 12,
+                          fontFamily: GoogleFonts.robotoMono().fontFamily,
+                          fontWeight: FontWeight.w300,
+                        ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Column(
+                            children: [
+                              Text(
+                                'Total',
+                                style: TextStyle(
+                                  color: Theme.of(context)
+                                      .appBarTheme
+                                      .titleTextStyle!
+                                      .color
+                                      ?.withOpacity(0.5),
+                                  fontSize: 10,
+                                  fontFamily:
+                                      GoogleFonts.robotoMono().fontFamily,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                              Text(
+                                '1 GB ',
+                                style: TextStyle(
+                                  color: Theme.of(context).secondaryHeaderColor,
+                                  fontSize: 10,
+                                  fontFamily:
+                                      GoogleFonts.robotoMono().fontFamily,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              Text(
+                                'Used',
+                                style: TextStyle(
+                                  color: Theme.of(context)
+                                      .appBarTheme
+                                      .titleTextStyle!
+                                      .color
+                                      ?.withOpacity(0.5),
+                                  fontSize: 10,
+                                  fontFamily:
+                                      GoogleFonts.robotoMono().fontFamily,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                              Text(
+                                '${item['data']} ',
+                                style: TextStyle(
+                                  color: Theme.of(context).secondaryHeaderColor,
+                                  fontSize: 10,
+                                  fontFamily:
+                                      GoogleFonts.robotoMono().fontFamily,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -961,79 +1130,89 @@ class _DashboardState extends State<Dashboard> {
             ),
           ),
           LineChartSample2(did: widget.did),
-          
         ],
       ),
     );
   }
 
   Widget _recentUploads() {
-    return Column(
-      children: [
-        ListTile(
-          title: Text('Recent Uploads',
-              style: TextStyle(
-                  color: Theme.of(context).appBarTheme.titleTextStyle?.color,
-                  fontSize: 12,
-                  fontFamily: GoogleFonts.robotoMono().fontFamily,
-                  fontWeight: FontWeight.w300)),
-          trailing: GestureDetector(
-            onTap: () => Navigator.push(context,
-                MaterialPageRoute(builder: (context) => SetupPasswordScreen())),
-            child: Text('See all',
+    return Container(
+      height: 200,
+      child: Column(
+        children: [
+          ListTile(
+            title: Text('Recent Uploads',
                 style: TextStyle(
-                    color:
-                        Theme.of(context).secondaryHeaderColor.withOpacity(0.3),
-                    fontSize: 10,
+                    color: Theme.of(context).appBarTheme.titleTextStyle?.color,
+                    fontSize: 16,
                     fontFamily: GoogleFonts.robotoMono().fontFamily,
-                    fontWeight: FontWeight.w300)),
+                    fontWeight: FontWeight.bold)),
           ),
-        ),
-        _fileList(),
-        _fileList(),
-        // _fileList(),
-      ],
+          buildFileList()
+          // _fileList(),
+        ],
+      ),
     );
   }
 
-  Widget _fileList() {
-    return Container(
-      child: ListTile(
-        title: Row(
-          children: [
-            Icon(Icons.file_copy,
-                color: Theme.of(context).colorScheme.secondary, size: 20),
-            SizedBox(width: 10),
-            Text(
-              'File.png',
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
-        trailing: Container(
-          width: MediaQuery.of(context).size.width / 3,
-          // height: 50,
-          alignment: Alignment.bottomCenter,
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.secondary,
-            ),
+  // void _fileNameList() {
+  //   _fileBloc.add(GetFileNameOnlyEvent(BatchHash: ));
+  // }
+
+  Widget buildFileList() {
+    final startIndex = fileDataList.length > 2 ? fileDataList.length - 2 : 0;
+    // Determine the starting index to get the last two items
+    if (startIndex <= 0) {
+      return Center(
+        child: Text(
+          'No Recent Files',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontFamily: GoogleFonts.robotoMono().fontFamily,
           ),
-          child: Center(
-            child: Text(
-              'Download',
-              style: TextStyle(
+        ),
+        // child: Loading(
+        //     Loadingcolor: Theme.of(context).primaryColor,
+        //     color: Theme.of(context).colorScheme.secondary),
+      );
+    } else {
+      return Expanded(
+        child: ListView.builder(
+          itemCount: fileDataList.length >= 2 ? 2 : fileDataList.length,
+          itemBuilder: (context, index) {
+            // Access the last two items
+            final fileData = fileDataList[startIndex + (1 - index)];
+
+            print('batchHash dash: ${fileData.batchHash}');
+            print('fileHash dash: ${fileData.fileHash}');
+            print('fileName dash: ${fileData.fileName}');
+            print('isVerified dash: ${fileData.isVerified}');
+
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ListTile(
+                tileColor:
+                    Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                leading: Icon(
+                  Icons.file_copy,
                   color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                  fontFamily: GoogleFonts.robotoMono().fontFamily),
-            ),
-          ),
+                  size: 20,
+                ),
+                title: Text(
+                  fileData.fileName,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontFamily: GoogleFonts.robotoMono().fontFamily,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            );
+          },
         ),
-      ),
-    );
+      );
+    }
   }
 }

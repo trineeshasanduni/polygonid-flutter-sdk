@@ -271,9 +271,17 @@ class _ClaimsScreenState extends State<ClaimsScreen> {
                 }).toList(),
               )
             : Center(
-                child: Text(
-                  CustomStrings.claimsListNoResult,
-                  style: TextStyle(color: Theme.of(context).secondaryHeaderColor),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                     Image.asset('assets/images/empty.png',
+                          width: 100, height: 100),
+                      const SizedBox(height: 20),
+                    Text(
+                      CustomStrings.claimsListNoResult,
+                      style: TextStyle(color: Theme.of(context).secondaryHeaderColor),
+                    ),
+                  ],
                 ),
               );
       }

@@ -10,7 +10,7 @@ sealed class FileEvent extends Equatable {
 class FileuploadEvent extends FileEvent {
   final String did;
   final String ownerDid;
-  final File fileData;
+  final List<File> fileData;
   const FileuploadEvent( {required this.did,required this.ownerDid, required this.fileData});
 }
 
@@ -27,25 +27,34 @@ class GetFileNameEvent extends FileEvent {
   const GetFileNameEvent( {required this.BatchHash,required this.Verify});
 }
 
+class GetFileNameOnlyEvent extends FileEvent {
+  final String BatchHash;
+  const GetFileNameOnlyEvent( {required this.BatchHash});
+}
+
 class VerifyUploadEvent extends FileEvent {
   final String BatchHash;
   final String ownerDid;
   final String did;
-  const VerifyUploadEvent( {required this.BatchHash,required this.ownerDid, required this.did});
+  final String FileHash;
+  const VerifyUploadEvent( {required this.BatchHash,required this.ownerDid, required this.did,required this.FileHash});
 }
 
 class onVerifyResponse extends FileEvent {
   final String? verifyResponse;
   final String? batchHash;
+    final String? fileHash;
 
-  const onVerifyResponse(this.verifyResponse,this.batchHash);
+
+  const onVerifyResponse(this.verifyResponse,this.batchHash,this.fileHash);
 }
 
 final class fetchAndSaveUploadVerifyClaims extends FileEvent {
   final Iden3MessageEntity iden3message;
   final String? batchHash;
+  final String? fileHash;
 
-  const fetchAndSaveUploadVerifyClaims({required this.iden3message,required this.batchHash});
+  const fetchAndSaveUploadVerifyClaims({required this.iden3message,required this.batchHash,required this.fileHash});
 }
 
 class ResetFileStateEvent extends FileEvent {
@@ -57,8 +66,10 @@ class ResetFileStateEvent extends FileEvent {
 final class getUploadVerifyClaims extends FileEvent {
   final List<FilterEntity>? filters;
   final String? batchHash;
+  final String? fileHash;
 
-  getUploadVerifyClaims(this.batchHash, {this.filters});
+
+  getUploadVerifyClaims(this.batchHash,this.fileHash, {this.filters});
 }
 
 

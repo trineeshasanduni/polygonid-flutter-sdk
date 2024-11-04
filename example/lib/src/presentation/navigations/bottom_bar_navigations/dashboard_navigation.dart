@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard.dart';
+import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/widget/dashboard.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/widget/loadingDashboard.dart';
 
 class DashboardNav extends StatefulWidget {

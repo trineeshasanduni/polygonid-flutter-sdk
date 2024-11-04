@@ -14,10 +14,10 @@ import 'package:polygonid_flutter_sdk/file/domain/entities/verify_upload_entity.
 import 'package:polygonid_flutter_sdk/registers/domain/entities/register_entity.dart';
 
 abstract class FileRepository {
-  Future<Either<Failure, FileEntity>> fileUpload({
+  Future<Either<Failure,FileEntity>> fileUpload({
     required String did,
     required String ownerDid,
-    required File fileData,
+  required List<File> files,
   });
 
   Future<Either<Failure, FileEntity>> useSpace({
@@ -26,7 +26,7 @@ abstract class FileRepository {
     required int batchSize,
   });
 
-  Future<Either<Failure, FileNameEntity>> getFileName({
+  Future<Either<Failure, List<FileNameEntity>>> getFileName({
     required String BatchHash,
     required String Verify,
   });

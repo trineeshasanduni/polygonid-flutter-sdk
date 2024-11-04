@@ -36,22 +36,21 @@ class FileRepoImpl implements FileRepository {
   Future<Either<Failure, FileEntity>> fileUpload({
     required String did,
     required String ownerDid,
-    required File fileData,
+    required List<File> files,
   }) async {
     try {
-      FileModel fileModel = await fileRemoteDatasource.fileUpload(
+      // Upload all files at once
+      FileModel fileModels = await fileRemoteDatasource.fileUpload(
         did: did,
         ownerDid: ownerDid,
-        fileData: fileData,
+        files: files, // Pass the entire list of files
       );
-      // print('object234: ${registerModel.body?.credentials![0].description}');
-      return right(FileEntity(
-        TXHash: fileModel.TXHash,
-        Did: fileModel.Did,
-        FileCount: fileModel.FileCount,
-      ));
+
+  
+
+      return right(FileEntity(Did: fileModels.Did,TXHash: fileModels.TXHash,FileCount: fileModels.FileCount));
     } catch (error) {
-      return left(Failure('Failed to upload: $error'));
+      return left(Failure('Failed to upload files: $error'));
     }
   }
 
@@ -74,22 +73,33 @@ class FileRepoImpl implements FileRepository {
     }
   }
 
-  @override
-  Future<Either<Failure, FileNameEntity>> getFileName(
-      {required String BatchHash,required String Verify}) async {
-    try {
-      final FileNameModel fileNameModel =
-          await fileRemoteDatasource.getFileName(BatchHash, Verify);
-      return right(FileNameEntity(
+ @override
+Future<Either<Failure, List<FileNameEntity>>> getFileName({
+  required String BatchHash,
+  required String Verify,
+}) async {
+  try {
+    // Expecting a list of FileNameModel from fileRemoteDatasource
+    final List<FileNameModel> fileNameModels =
+        await fileRemoteDatasource.getFileName(BatchHash, Verify);
+
+    // Convert each FileNameModel to a FileNameEntity
+    final List<FileNameEntity> fileNameEntities = fileNameModels.map((fileNameModel) {
+      return FileNameEntity(
         fileName: fileNameModel.fileName,
         batchHash: fileNameModel.batchHash,
         fileHash: fileNameModel.fileHash,
         isVerified: fileNameModel.isVerified,
-      ));
-    } catch (e) {
-      return Left(Failure());
-    }
+      );
+    }).toList();
+    print('list: ${fileNameEntities}');
+
+    return right(fileNameEntities);
+  } catch (e) {
+    return left(Failure('Failed to fetch file names: $e'));
   }
+}
+
 
   @override
   Future<Either<Failure, VerifyUploadEntity>> verifyUpload(
@@ -223,10 +233,9 @@ class FileRepoImpl implements FileRepository {
     }
   }
 
-
   /////////////////share/////////////////
   ///
-   Future<Either<Failure, ShareEntity>> share(
+  Future<Either<Failure, ShareEntity>> share(
       {required String BatchHash,
       required String FileHash,
       required String OwnerDid,
@@ -235,40 +244,41 @@ class FileRepoImpl implements FileRepository {
       required String Owner}) async {
     try {
       ShareModel shareModel = await fileRemoteDatasource.share(
-        BatchHash: BatchHash,
-        FileHash:FileHash,
-        OwnerDid:OwnerDid,
-        ShareDid: ShareDid,
-        Owner: Owner,
-        FileName: FileName);
+          BatchHash: BatchHash,
+          FileHash: FileHash,
+          OwnerDid: OwnerDid,
+          ShareDid: ShareDid,
+          Owner: Owner,
+          FileName: FileName);
 
       return right(ShareEntity(
         tXHash: shareModel.tXHash,
         ownerDid: shareModel.ownerDid,
-
-        
       ));
     } catch (error) {
       return left(Failure('Failed to share: $error'));
     }
   }
 
-  Future<Either<Failure, VerifyShareEntity>> verifyShare(
-      {required String BatchHash,
+  Future<Either<Failure, VerifyShareEntity>> verifyShare({
+    required String BatchHash,
     required String FileHash,
     required String Did,
-    required String OwnerAddress,}) async {
+    required String OwnerAddress,
+  }) async {
     try {
       VerifyShareModel shareVerifyModel =
           await fileRemoteDatasource.shareVerifyUpload(
-              BatchHash: BatchHash, FileHash: FileHash, Did: Did, OwnerAddress: OwnerAddress);
+              BatchHash: BatchHash,
+              FileHash: FileHash,
+              Did: Did,
+              OwnerAddress: OwnerAddress);
       print('object234: ${shareVerifyModel.body?.credentials![0].description}');
       return right(VerifyShareEntity(
           body: BodyShare(
             credentials: [
               CredentialsShare(
-                description:
-                    shareVerifyModel.body?.credentials![0].description,
+                description: shareVerifyModel.body?.credentials![0].description,
                 id: shareVerifyModel.body?.credentials![0].id,
               ),
             ],
@@ -280,8 +290,6 @@ class FileRepoImpl implements FileRepository {
           thid: shareVerifyModel.thid,
           typ: shareVerifyModel.typ,
           to: shareVerifyModel.to));
-
-        
     } catch (error) {
       return left(Failure('Failed to Verify share: $error'));
     }

@@ -35,15 +35,17 @@ class ShareVerifyEvent extends ShareEvent {
 class onShareVerifyResponse extends ShareEvent {
   final String? verifyResponse;
   final String? batchHash;
+  final String? fileHash;
 
-  const onShareVerifyResponse(this.verifyResponse,this.batchHash);
+  const onShareVerifyResponse(this.verifyResponse,this.batchHash,this.fileHash );
 }
 
 final class fetchAndSaveShareVerifyClaims extends ShareEvent {
   final Iden3MessageEntity iden3message;
   final String? batchHash;
+  final String? fileHash;
 
-  const fetchAndSaveShareVerifyClaims({required this.iden3message,required this.batchHash});
+  const fetchAndSaveShareVerifyClaims({required this.iden3message,required this.batchHash,this.fileHash});
 }
 class ResetFileStateEvent extends ShareEvent {
   @override
@@ -54,8 +56,9 @@ class ResetFileStateEvent extends ShareEvent {
 final class getShareVerifyClaims extends ShareEvent {
   final List<FilterEntity>? filters;
   final String? batchHash;
+  final String? fileHash;
 
-  getShareVerifyClaims(this.batchHash, {this.filters});
+  getShareVerifyClaims(this.batchHash,this.fileHash, {this.filters});
 }
 
 

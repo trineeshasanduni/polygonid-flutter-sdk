@@ -26,7 +26,8 @@ final class ShareFailed extends ShareState {
 
 final class ShareVerifying extends ShareState{
   final String batchhash;
-  ShareVerifying(this.batchhash);
+   final String fileHash;
+  ShareVerifying(this.batchhash,this.fileHash);
 }
 
 final class ShareVerifyFailed extends ShareState {
@@ -38,20 +39,23 @@ final class ShareVerifyFailed extends ShareState {
 final class ShareVerifySuccess extends ShareState {
   final VerifyShareEntity response;
   final String batchhash; 
+  final String fileHash;
 
-  const ShareVerifySuccess( this.response,this.batchhash);
+  const ShareVerifySuccess( this.response,this.batchhash, this.fileHash);
 }
 final class ShareVerifyResponseloaded extends ShareState {
   final Iden3MessageEntity iden3message;
   final String batchhash; 
+   final String fileHash;
   
 
-  ShareVerifyResponseloaded(this.iden3message,this.batchhash);
+  ShareVerifyResponseloaded(this.iden3message,this.batchhash,this.fileHash);
 }
 
 final class ShareVerifiedClaims extends ShareState {
   final List<ClaimModel> claimList;
   final String batchhash; 
+   final String fileHash;
 
-  ShareVerifiedClaims(this.claimList,this.batchhash);
+  ShareVerifiedClaims(this.claimList,this.batchhash,this.fileHash);
 }

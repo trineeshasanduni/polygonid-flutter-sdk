@@ -6,7 +6,6 @@ import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claim_detail/w
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/models/claim_model.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/claims/widgets/claims.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/auth/widgets/auth.dart';
-import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/home/widgets/home.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/qrcode_scanner/widgets/qrcode_scanner.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/register/presentation/widgets/register.dart';

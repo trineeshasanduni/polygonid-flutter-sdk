@@ -15,7 +15,6 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:polygonid_flutter_sdk_example/src/data/secure_storage.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/common/widgets/circularProgress.dart';
-import 'package:polygonid_flutter_sdk_example/src/presentation/ui/dashboard/dashboard.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/bloc/add_plans_bloc.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/plans/widget/basicPlanButton.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/ui/profile/bloc/profile_bloc.dart';
@@ -123,8 +122,6 @@ class _AddPlansState extends State<AddPlans> {
     await _w3mService.init();
 
     final WalletAddress14 = _w3mService.session?.address;
-
-   
   }
 
 // For making API calls
@@ -147,8 +144,7 @@ class _AddPlansState extends State<AddPlans> {
       } else {
         storage.write('isFreePlanActivated', false);
       }
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   Future<bool> isTransactionSuccessful(String txHash) async {
@@ -549,8 +545,13 @@ class _AddPlansState extends State<AddPlans> {
               owner: owner1,
             ));
           } else {
-            return const Center(
-              child: Text('Error: Wallet address not found'),
+            
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please connect with the correct wallet address'),
+                backgroundColor: Colors.red,
+                duration: Duration(seconds: 2),
+              ),
             );
           }
         }
@@ -561,8 +562,6 @@ class _AddPlansState extends State<AddPlans> {
         }
 
         if (state is CreateProof) {
-       
-
           _addPlansBloc.add(verifyuserEvent(
             A: state.ProofResponse.a as List<String>,
             B: state.ProofResponse.b as List<List<String>>,
@@ -620,7 +619,6 @@ class _AddPlansState extends State<AddPlans> {
         }
 
         if (!_isVerified) {
-         
           return Center(
             child: TextButton(
               onPressed:
@@ -747,11 +745,8 @@ class _AddPlansState extends State<AddPlans> {
                 state.plan == plan) {
               final price = {jsonDecode(state.priceResponse.price.toString())};
 
-    
-
               transferToken(jsonDecode(state.priceResponse.price.toString()),
                   PackageType, month);
-           
             }
 
             if (state is PaidPlanActivated) {
@@ -830,14 +825,10 @@ class _AddPlansState extends State<AddPlans> {
           await getLatestTransactionHash(walletAddress!, apiKey);
 
       if (latestTxHash != null) {
-      } else {
-      }
-
+      } else {}
 
       bool isApprovalConfirmed = await _checkTxHash(latestTxHash!);
-      if (!isApprovalConfirmed) {
-      }
-
+      if (!isApprovalConfirmed) {}
 
       // Now execute the transfer function after approve is successful
       _w3mService.launchConnectedWallet();
@@ -868,12 +859,10 @@ class _AddPlansState extends State<AddPlans> {
           PackageType: PackageType,
           Duration: month,
         ));
-      } else {
-      }
+      } else {}
     } catch (e) {
       if (e.toString().contains('User denied transaction signature')) {
-      } else {
-      }
+      } else {}
     }
   }
 
@@ -895,10 +884,8 @@ class _AddPlansState extends State<AddPlans> {
             return latestTxHash;
           }
         }
-      } else {
-      }
-    } catch (e) {
-    }
+      } else {}
+    } catch (e) {}
     return null;
   }
 
