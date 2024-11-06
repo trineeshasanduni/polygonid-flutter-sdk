@@ -51,6 +51,14 @@ final class DownloadSuccess extends DownloadState {
 
   const DownloadSuccess(this.response,this.batchhash,this.fileHash);
 }
+
+final class DownloadZip extends DownloadState {
+  final DownloadZipEntity response;
+  final String batchhash;
+  final String fileHash;
+
+  const DownloadZip(this.response,this.batchhash,this.fileHash);
+}
 final class DownloadUrlSuccess extends DownloadState {
  
   final DownloadUrlEntity response;
@@ -78,6 +86,14 @@ final class CidsGot extends DownloadState {
   final String fileHAsh;
 
  const CidsGot(this.cids,this.batchhash,this.fileHAsh);
+}
+
+final class BatchCidsGot extends DownloadState {
+  final List<CidEntity> cids;
+  final String batchhash;
+  final String fileHAsh;
+
+ const BatchCidsGot(this.cids,this.batchhash,this.fileHAsh);
 }
 
 

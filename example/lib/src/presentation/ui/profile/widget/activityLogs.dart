@@ -263,7 +263,7 @@ class _NotificationPanelState extends State<NotificationPanel> {
                                                               .colorScheme
                                                               .secondary
                                                               .withOpacity(0.5)
-                                                          : Colors.redAccent,
+                                                          : Colors.redAccent[700],
                                                   // Icon background color
                                                   shape: BoxShape.circle,
                                                 ),

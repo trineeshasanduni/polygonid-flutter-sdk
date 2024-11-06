@@ -58,12 +58,10 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
   @override
   void dispose() {
     super.dispose();
-    // _controller.dispose();
   }
 
   void _initGetIdentifier() {
     _bloc.add(const GetIdentifierHomeEvent());
-    // _getdid();
   }
 
   @override
@@ -96,14 +94,11 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
           ),
           BackdropFilter(
             filter: ImageFilter.blur(
-              //sigmaX is the Horizontal blur
               sigmaX: 40.0,
-              //sigmaY is the Vertical blur
               sigmaY: 50.0,
             ),
             child: Container(),
           ),
-          // _header(state),
           _buildContent(context),
         ],
       ),
@@ -117,13 +112,6 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Column(
-            //   children: [
-
-            //     // _buildWelcome(),
-            //   ],
-            // ),
-
             Column(
               children: [
                 _buildLogo(),
@@ -131,28 +119,11 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
                 _buildTitle(),
                 const SizedBox(height: 4),
                 _buildTopic(),
-                // _buildSubtitle(),
               ],
             ),
-
             const SizedBox(height: 20),
-
             Column(
               children: [
-
-                // IconButton(
-                //   icon: const Icon(Icons.close, color: Colors.white),
-                //   onPressed: () {
-                //     // Navigator.of(context).pushReplacementNamed(Routes.homePath);
-                //     Navigator.push(
-                //       context,
-                //       MaterialPageRoute(
-                //         builder: (context) => const Signup(),
-                //       ),
-                //     );
-                //   },
-                // ),
-
                 SizedBox(
                   height: 40,
                 ),
@@ -162,15 +133,13 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
                   const SizedBox(height: 8),
                   Text(
                     _errorMessage!,
-                    style: const TextStyle(
-                      color: Colors.red,
+                    style:  TextStyle(
+                      color: Colors.redAccent[700],
                       fontSize: 12,
                     ),
                   ),
                 ],
                 _buildRegisterButton(),
-                // const SizedBox(height: 20),
-                // _buildDashboardButton(),
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -210,8 +179,6 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
                 _buildBlocListener(),
               ],
             ),
-
-            // _buildDashboardButton(),
           ],
         ),
       ),
@@ -235,7 +202,6 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
       bloc: _loginBloc,
       builder: (context, state) {
         if (state is LoginLoading) {
-          // return  CircularProgressIndicator(color: Theme.of(context).secondaryHeaderColor);
           return Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -255,9 +221,7 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
           );
         }
         if (state is LoginFailure) {
-           _showSnackbar(state.error, Colors.red,
-              Icons.error_outline);
-          // return Text(state.error, style: const TextStyle(color: Colors.red,),textAlign: TextAlign.center,);
+          _showSnackbar(state.error, Colors.redAccent[700], Icons.error_outline);
         }
         if (state is LoginSuccess) {
           _handleLoginSuccess(state);
@@ -409,7 +373,6 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
                   _registerBloc.add(clickRegisterScanQrCode());
                 }
               },
-              // style: CustomButtonStyle.primaryButtonStyle,
               child: loading
                   ? Loading(
                       Loadingcolor: Theme.of(context).primaryColor,
@@ -437,9 +400,6 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
           bloc: _registerBloc,
           builder: (BuildContext context, RegisterState state) {
             if (state is RegisterLoading) {
-              // return Loading(
-              //     Loadingcolor: Theme.of(context).primaryColor,
-              //     color: Theme.of(context).colorScheme.secondary);
               return Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -465,16 +425,13 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
               if (statusCode == 200 && _isFetching) {
                 _errorMessage = 'You are already registered Using this DID';
 
-                // Stop further fetching
                 _isFetching = false;
 
-                // Defer the state change until after the current frame
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  setState(() {}); // Update the UI to show the error message
+                  setState(() {});
                 });
               } else if (statusCode == 201) {
                 _errorMessage = null;
-                // Handle other status codes or responses
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   _registerBloc.add(onGetRegisterResponse(response));
                 });
@@ -486,22 +443,27 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
             } else if (state is Registered) {
               _errorMessage = null;
 
-              // Defer navigation until after the current frame
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _handleRegistered(state.iden3message);
-
-                // Navigate to the desired page (e.g., HomeScreen)
               });
             } else if (state is loadedClaims) {
               _errorMessage = null;
-              // Defer navigation until after the current frame
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SetupPasswordScreen(),
-                  ),
-                );
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(
+                //     builder: (context) => const SetupPasswordScreen(),
+                //   ),
+                // );
+
+                // ScaffoldMessenger.of(context).showSnackBar(
+                //           const SnackBar(
+                //             content: Text('Successfully Registered'),
+                //             backgroundColor: Colors.green,
+                //           ),
+                //         );
+
+                         _showSnackbar('Successfully Registered', Theme.of(context).colorScheme.secondary, Icons.done);
               });
             }
 
@@ -516,9 +478,7 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
                       email: "",
                     ),
                   );
-                } else {
-                  // Handle case when fetching is disabled
-                }
+                } else {}
               },
               child: _buildButton(
                   context,
@@ -533,6 +493,8 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
       },
     );
   }
+
+  
 
   Future<void> _handleRegistered(Iden3MessageEntity iden3message) async {
     debugPrint('User is registered');
@@ -573,13 +535,10 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             print('fetching qr registered');
             await _handleQrRegistered(state.iden3message);
-
-            // Navigate to the desired page (e.g., HomeScreen)
           });
         }
 
         if (state is loadedQrClaims) {
-          // Ensure async read and await before using the value
           print('qr code fetching');
 
           final storage = GetStorage();
@@ -593,7 +552,6 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
               print('qr code read: $storedQr');
               await _handleCallbackUrl(storedQr.toString());
 
-              // Navigate after handling callback URL
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -638,21 +596,6 @@ class _SetupPasswordScreenState extends State<SetupPasswordScreen> {
   }
 }
 
-// Widget _buildDashboardButton() {
-//   return GestureDetector(
-//     onTap: () {
-//       Navigator.push(
-//         context,
-//         MaterialPageRoute(
-//           builder: (context) => const BethelBottomBar( did: 'did'),
-//         ),
-//       );
-//     },
-//     child: _buildButton(context,'Dashboard', Colors.transparent,
-//         Theme.of(context).colorScheme.secondary,Theme.of(context).colorScheme.primary, Colors.white),
-//   );
-// }
-
 Widget _buildButton(BuildContext context, String text, dynamic colorScheme,
     dynamic colorScheme2, dynamic border, dynamic textColor) {
   return Container(
@@ -662,22 +605,19 @@ Widget _buildButton(BuildContext context, String text, dynamic colorScheme,
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      borderRadius: BorderRadius.circular(
-          30.0), // Optional: Add some rounding to the button
+      borderRadius: BorderRadius.circular(30.0),
     ),
     child: FrostedGlassBox(
       theWidth: MediaQuery.of(context).size.width,
       theHeight: 50.0,
       theX: 0.0,
       theY: 0.0,
-      theColor: Colors.white
-          .withOpacity(0.13), // This can remain for frosted glass effect
+      theColor: Colors.white.withOpacity(0.13),
       theChild: Text(
         text,
         style: TextStyle(
           fontSize: 12.0,
-          color:
-              textColor, // Keep the text color simple since the gradient is on the button
+          color: textColor,
           fontWeight: FontWeight.bold,
           fontFamily: GoogleFonts.robotoMono().fontFamily,
         ),

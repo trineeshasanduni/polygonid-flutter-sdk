@@ -18,6 +18,8 @@ class ProfileRemoteDatasourceImpl implements ProfileRemoteDatasource {
   ProfileRemoteDatasourceImpl({required this.client});
 
   static const BASE_URL = 'https://test.becx.io/api/v1';
+    // static const BASE_URL = 'http://192.168.1.218:9000/api/v1';
+
 
   @override
   Future<ActivityModel> activityLogs({

@@ -108,8 +108,11 @@ class _DashboardState extends State<Dashboard> {
     _deployFileCount();
     _deployPackageSpace();
     _deployBatchHash();
+    _deployPlans();
   }
 
+
+///interact with web3modal
   void _initW3MService() async {
     _w3mService = W3MService(
       projectId: 'fe65e1d4350f3699c3aa913768035e39',
@@ -164,6 +167,7 @@ class _DashboardState extends State<Dashboard> {
     // _loadButtons();
   }
 
+/// smart contract function 
   Future<void> _deployFileCount() async {
     final fileStorageService =
         FileStorageService(rpcUrl, _ContractAddress, _AbiPath);
@@ -180,6 +184,7 @@ class _DashboardState extends State<Dashboard> {
 
       setState(() {
         _fileCount = result![0].toString();
+        print('filecount:$_fileCount');
         final fileUsage = '${fileSizeInMiB}';
         _fileUsage = '${fileSizeInMiB.toStringAsFixed(2)}' + 'MiB';
         print('fileUsage pie: $fileUsage');
@@ -211,6 +216,29 @@ class _DashboardState extends State<Dashboard> {
       });
 
       print('space: $fileSizeInMiB');
+    } catch (e) {}
+  }
+
+  Future<void> _deployPlans() async {
+    final fileStorageService =
+        FileStorageService(rpcUrl, _InvoidContractAddress, _invoiceAbiPath);
+
+    try {
+      await fileStorageService.initializeWeb3Client();
+      final did = jsonDecode(widget.did.toString());
+      final contract = await fileStorageService.loadContract('BethelInvoice');
+      final freePlanActivate = await fileStorageService
+          .callContractFunction(contract, 'isActivatedFreePlan', [did]);
+
+      if (freePlanActivate![0] == true) {
+        setState(() {
+          storage.write('isFreePlanActivated', true);
+        });
+      } else {
+        storage.write('isFreePlanActivated', false);
+      }
+      final plan = storage.read('isFreePlanActivated');
+      print('plan1: $plan');
     } catch (e) {}
   }
 
@@ -314,6 +342,31 @@ class _DashboardState extends State<Dashboard> {
     }
   }
 
+  Future<void> _deployGetUderDid() async {
+    final fileStorageService =
+        FileStorageService(rpcUrl, _ContractAddress, _AbiPath);
+
+    try {
+      await fileStorageService.initializeWeb3Client();
+      final did = jsonDecode(widget.did.toString());
+      final contract = await fileStorageService.loadContract('FileStorage');
+      final results = await fileStorageService
+          .callContractFunction(contract, 'getUserDid', []);
+      print('result12:${results}');
+      if (results![0] == true) {
+        setState(() {
+          _isUserAdded = true;
+        });
+        print('getUserDid ');
+      } else {
+        _isUserAdded = false;
+        print('getUserDid not activated');
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+    }
+  }
+  
   Future<void> processFileNameResult(List<dynamic> dataResult) async {
     if (_isRequestInProgress) {
       return;
@@ -499,52 +552,6 @@ class _DashboardState extends State<Dashboard> {
     ).then((_) {});
   }
 
-  Future<void> _deployGetUderDid() async {
-    final fileStorageService =
-        FileStorageService(rpcUrl, _ContractAddress, _AbiPath);
-
-    try {
-      await fileStorageService.initializeWeb3Client();
-      final did = jsonDecode(widget.did.toString());
-      final contract = await fileStorageService.loadContract('FileStorage');
-      final results = await fileStorageService
-          .callContractFunction(contract, 'getUserDid', []);
-      print('result12:${results}');
-      if (results![0] == true) {
-        setState(() {
-          _isUserAdded = true;
-        });
-        print('getUserDid ');
-      } else {
-        _isUserAdded = false;
-        print('getUserDid not activated');
-      }
-    } catch (e) {
-      print('An error occurred: $e');
-    }
-  }
-
-  Widget _loadButtons() {
-    final iSConnect = storage.read('isConnected');
-    return Column(
-      children: !iSConnect
-          ? [
-              W3MNetworkSelectButton(
-                service: _w3mService,
-              ),
-              W3MConnectWalletButton(
-                service: _w3mService,
-              ),
-            ]
-          : [
-              W3MAccountButton(service: _w3mService),
-              W3MConnectWalletButton(service: _w3mService),
-
-              // Text(WalletAddress.toString()),
-            ],
-    );
-  }
-
   void _showWelcomeBottomSheet() {
     showModalBottomSheet(
       context: context,
@@ -626,6 +633,10 @@ class _DashboardState extends State<Dashboard> {
 
   void _showMetamaskBottomSheet() {
     final iSConnect = storage.read('isConnected');
+
+    if (iSConnect) {
+      _initializeData();
+    }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -702,6 +713,7 @@ class _DashboardState extends State<Dashboard> {
                         // Text(WalletAddress.toString()),
                       ],
               ),
+
               const SizedBox(height: 20),
             ],
           ),
@@ -731,6 +743,7 @@ class _DashboardState extends State<Dashboard> {
     _deployFileCount();
     _deployPackageSpace();
     _deployBatchHash();
+    _deployPlans();
 
     // Any other initialization logic...
   }
@@ -1155,34 +1168,32 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  // void _fileNameList() {
-  //   _fileBloc.add(GetFileNameOnlyEvent(BatchHash: ));
-  // }
+  
 
   Widget buildFileList() {
-    final startIndex = fileDataList.length > 2 ? fileDataList.length - 2 : 0;
-    // Determine the starting index to get the last two items
-    if (startIndex <= 0) {
+    if (fileDataList.isEmpty) {
+      // Show "No Recent Files" if the list is empty
       return Center(
         child: Text(
           'No Recent Files',
           style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
+            color: Colors.white.withOpacity(0.5),
+            fontSize: 12,
             fontFamily: GoogleFonts.robotoMono().fontFamily,
           ),
         ),
-        // child: Loading(
-        //     Loadingcolor: Theme.of(context).primaryColor,
-        //     color: Theme.of(context).colorScheme.secondary),
       );
     } else {
+      // Show last two files if the list has at least one file
+      final displayedFiles = fileDataList.length > 2
+          ? fileDataList.sublist(fileDataList.length - 2)
+          : fileDataList;
+
       return Expanded(
         child: ListView.builder(
-          itemCount: fileDataList.length >= 2 ? 2 : fileDataList.length,
+          itemCount: displayedFiles.length,
           itemBuilder: (context, index) {
-            // Access the last two items
-            final fileData = fileDataList[startIndex + (1 - index)];
+            final fileData = displayedFiles[displayedFiles.length - 1 - index];
 
             print('batchHash dash: ${fileData.batchHash}');
             print('fileHash dash: ${fileData.fileHash}');

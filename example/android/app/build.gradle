@@ -32,6 +32,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
+    namespace "com.iden3.bethel"
     compileSdkVersion 34
     ndkVersion = "26.3.11579264"
 
@@ -98,4 +99,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+    implementation 'androidx.multidex:multidex:2.0.1'
+
 }

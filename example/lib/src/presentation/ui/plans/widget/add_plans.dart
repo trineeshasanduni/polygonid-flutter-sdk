@@ -889,28 +889,55 @@ class _AddPlansState extends State<AddPlans> {
     return null;
   }
 
+  // Future<bool> _checkTxHash(String txHash) async {
+  //   bool isSuccess = false;
+
+  //   // Add logic to check the transaction status here.
+  //   // For example, calling a blockchain API to check the status of the txHash.
+
+  //   while (!isSuccess) {
+  //     // Call your blockchain transaction check method
+  //     // Example: checkTransaction(txHash) which returns true/false
+  //     isSuccess = await isTransactionSuccessful(txHash);
+
+  //     if (isSuccess) {
+  //       print('Transaction successful with hash: $txHash');
+  //       // Dispatch the event to create proof after the transaction is successful
+  //       return true;
+  //     } else {
+  //       print('Transaction is not yet successful. Retrying...');
+  //       await Future.delayed(Duration(seconds: 5));
+  //     }
+  //   }
+  //   return false; // Ensure a boolean value is always returned
+  // }
+
   Future<bool> _checkTxHash(String txHash) async {
-    bool isSuccess = false;
+  bool isSuccess = false;
+  const int maxDurationInSeconds = 120; // 2 minutes
+  const int intervalInSeconds = 5; // Retry every 5 seconds
+  int elapsedSeconds = 0;
 
-    // Add logic to check the transaction status here.
-    // For example, calling a blockchain API to check the status of the txHash.
+  while (!isSuccess && elapsedSeconds < maxDurationInSeconds) {
+    // Check transaction status
+    isSuccess = await isTransactionSuccessful(txHash);
 
-    while (!isSuccess) {
-      // Call your blockchain transaction check method
-      // Example: checkTransaction(txHash) which returns true/false
-      isSuccess = await isTransactionSuccessful(txHash);
-
-      if (isSuccess) {
-        print('Transaction successful with hash: $txHash');
-        // Dispatch the event to create proof after the transaction is successful
-        return true;
-      } else {
-        print('Transaction is not yet successful. Retrying...');
-        await Future.delayed(Duration(seconds: 5));
-      }
+    if (isSuccess) {
+      print('Transaction successful with hash: $txHash');
+      // Dispatch the event to create proof after the transaction is successful
+      return true;
+    } else {
+      print('Transaction is not yet successful. Retrying...');
+      await Future.delayed(Duration(seconds: intervalInSeconds));
+      elapsedSeconds += intervalInSeconds; // Update elapsed time
     }
-    return false; // Ensure a boolean value is always returned
   }
+
+  // Timeout after 2 minutes
+  print('Transaction check timed out after 2 minutes.');
+  return false;
+}
+
 
   // Async function to check if the transaction hash is successful
   Future<void> _checkTxHashStatus(String txHash, String owner) async {

@@ -3,10 +3,12 @@ import 'dart:io';
 import 'package:fpdart/fpdart.dart';
 import 'package:polygonid_flutter_sdk/common/errors/server_failure.dart';
 import 'package:polygonid_flutter_sdk/common/usecase/usecase.dart';
+import 'package:polygonid_flutter_sdk/file/data/dataSources/file_remote_dataSource.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/download_status_model.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/cid_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/downloadUrl_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/downloadVerify_entity.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/downloadZip_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/download_status_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/fileName_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/file_entity.dart';
@@ -42,6 +44,20 @@ class DownloadUrlParams {
       required this.Odid,
       required this.FileName,
       required this.Cids});
+}
+
+class DownloadZipParams {
+  final String BatchHash;
+  
+  final String Odid;
+  final List<BatchData> batchData;
+
+  DownloadZipParams(
+      {required this.BatchHash,
+     
+      required this.Odid,
+      required this.batchData,
+      });
 }
 
 class ShareUrlParams {
@@ -100,6 +116,20 @@ class CidsParams {
   final String BatchHash;
 
   CidsParams({
+    required this.index,
+    required this.did,
+    required this.owner,
+    required this.BatchHash,
+  });
+}
+
+class BatchCidsParams {
+  final dynamic index;
+  final String did;
+  final String owner;
+  final String BatchHash;
+
+  BatchCidsParams({
     required this.index,
     required this.did,
     required this.owner,
@@ -276,6 +306,41 @@ class DownloadUsecase
   }
 }
 
+@override
+class DownloadZipUsecase
+    implements UseCase<DownloadZipEntity, DownloadZipParams> {
+      
+  final FileRepository fileRepository;
+  const DownloadZipUsecase(this.fileRepository);
+
+  @override
+  Future<Either<Failure, DownloadZipEntity>> call(
+      DownloadZipParams params) async {
+    // print('registering12: ${params.did}');
+    return await fileRepository.downloadZip(
+        BatchHash: params.BatchHash,
+       
+        Odid: params.Odid,
+        batchData: params.batchData
+       );
+        
+  }
+}
+
+
+@override
+class BatchCidsUsecase {
+  final FileRepository fileRepository;
+
+  BatchCidsUsecase(this.fileRepository);
+
+  Future<Either<Failure, List<CidEntity>>> call(BatchCidsParams params) async {
+    print('fetching cids');
+
+    return await fileRepository.getBatchCids(
+         did: params.did, owner: params.owner, BatchHash: params.BatchHash,index: params.index);
+  }
+}
 
 ////////////////////////share//////////////////
 ///

@@ -4,6 +4,7 @@ import 'package:animated_background/animated_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:polygonid_flutter_sdk_example/src/presentation/dependency_injection/dependencies_provider.dart';
@@ -63,43 +64,6 @@ class _SetUpScreenState extends State<SetUpScreen>
         ),
         child: _buildContent(context),
       ),
-      //    Stack(
-      //     children: [
-      //       Positioned(
-      //         top: -150,
-      //         left: -50,
-      //         child: Container(
-      //           height: MediaQuery.of(context).size.height / 2.5,
-      //           width: MediaQuery.of(context).size.width / 2.4,
-      //           decoration: BoxDecoration(
-      //               color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-      //               shape: BoxShape.circle),
-      //         ),
-      //       ),
-      //       Positioned(
-      //         top: 200,
-      //         right: -60,
-      //         child: Container(
-      //           height: MediaQuery.of(context).size.height / 1.5,
-      //           width: MediaQuery.of(context).size.width / 1.5,
-      //           decoration: BoxDecoration(
-      //               color: Theme.of(context).colorScheme.secondary.withOpacity(0.15),
-      //               shape: BoxShape.circle),
-      //         ),
-      //       ),
-      //       BackdropFilter(
-      //         filter: ImageFilter.blur(
-      //           //sigmaX is the Horizontal blur
-      //           sigmaX: 40.0,
-      //           //sigmaY is the Vertical blur
-      //           sigmaY: 50.0,
-      //         ),
-      //         child: Container(),
-      //       ),
-      //       // _buildBackground(context),
-      //       _buildContent(context),
-      //     ],
-      //   ),
     );
   }
 
@@ -177,10 +141,8 @@ class _SetUpScreenState extends State<SetUpScreen>
       absorbing: !enabled,
       child: GestureDetector(
         onTap: () async {
-          // Show the confirmation dialog
           bool shouldProceed = await _showConfirmationDialog(context);
 
-          // If user confirms, proceed with the action
           if (shouldProceed) {
             _bloc.add(const HomeEvent.createIdentity());
 
@@ -222,22 +184,20 @@ class _SetUpScreenState extends State<SetUpScreen>
   Future<bool> _showConfirmationDialog(BuildContext context) async {
     return await showDialog<bool>(
           context: context,
-          barrierDismissible: false, // Prevents closing by tapping outside
+          barrierDismissible: false,
           builder: (BuildContext dialogContext) {
             return AlertDialog(
               backgroundColor: Color.fromARGB(255, 54, 72, 1),
-              titlePadding: EdgeInsets.all(0), // Remove default title padding
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 24.0), // Content padding
+              titlePadding: EdgeInsets.all(0),
+              contentPadding: EdgeInsets.symmetric(horizontal: 24.0),
               title: Column(
                 children: [
                   SizedBox(height: 10),
-                  // Image at the top
                   Image.asset(
-                    'assets/lottie/delete.gif', // Replace with your image asset
-                    height: 80, // Set the height of the image
+                    'assets/lottie/delete.gif',
+                    height: 80,
                   ),
-                  SizedBox(height: 10), // Spacing between image and text
+                  SizedBox(height: 10),
                   Text('Confirmation'),
                   SizedBox(height: 10),
                 ],
@@ -249,41 +209,17 @@ class _SetUpScreenState extends State<SetUpScreen>
                   child: Text('Cancel',
                       style: TextStyle(color: Colors.redAccent[700])),
                   onPressed: () {
-                    Navigator.of(dialogContext)
-                        .pop(false); // Close dialog and return false
+                    Navigator.of(dialogContext).pop(false);
                   },
                 ),
-                // OutlinedButton(
-                //   style: OutlinedButton.styleFrom(
-                //     side: BorderSide(
-                //         color: Theme.of(context).secondaryHeaderColor,
-                //         width: 2.0), // Outline color and width
-                //     shape: RoundedRectangleBorder(
-                //         borderRadius: BorderRadius.circular(
-                //             8.0)), // Optional: Rounded corners
-                //     padding: EdgeInsets.symmetric(
-                //         horizontal: 16.0, vertical: 8.0), // Adjust padding
-                //   ),
-                //   child: Text(
-                //     'Proceed',
-                //     style: TextStyle(
-                //       color:
-                //           Theme.of(context).secondaryHeaderColor, // Text color
-                //       fontWeight: FontWeight.bold, // Optional: Bold text
-                //     ),
-                //   ),
-                //   onPressed: () {
-                //     Navigator.of(dialogContext)
-                //         .pop(true); // Close dialog and return true
-                //   },
-                // ),
-
                 GestureDetector(
                   onTap: () {
                     Navigator.of(dialogContext).pop(true);
-                  }, // Close dialog and return true,
+                   
+                     final storage = GetStorage();
+                     storage.write('isConnected', false);
+                  },
                   child: FrostedGlassBox(
-                    // key: CustomWidgetsKeys.homeScreenButtonRemoveIdentity,
                     theWidth: MediaQuery.of(context).size.width / 4,
                     theHeight: 50.0,
                     theX: 4.0,
@@ -294,7 +230,7 @@ class _SetUpScreenState extends State<SetUpScreen>
                         colors: [
                           Theme.of(context).colorScheme.primary,
                           Theme.of(context).colorScheme.secondary
-                        ], // Customize your gradient colors
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ).createShader(bounds),
@@ -302,8 +238,7 @@ class _SetUpScreenState extends State<SetUpScreen>
                         'Confirm',
                         style: TextStyle(
                           fontSize: 14.0,
-                          color: Theme.of(context)
-                              .secondaryHeaderColor, // This will be overridden by the gradient
+                          color: Theme.of(context).secondaryHeaderColor,
                           fontWeight: FontWeight.w500,
                           fontFamily: GoogleFonts.robotoMono().fontFamily,
                         ),
@@ -315,7 +250,7 @@ class _SetUpScreenState extends State<SetUpScreen>
             );
           },
         ) ??
-        false; // Return false if dialog is dismissed without selection
+        false;
   }
 
   Widget _buildRemoveIdentityButton(bool enabled) {
@@ -357,8 +292,8 @@ class _SetUpScreenState extends State<SetUpScreen>
                 ),
               );
             },
-            buildWhen: (_, currentState) => currentState
-                is LoadedIdentifierHomeState, // Respond to this state
+            buildWhen: (_, currentState) =>
+                currentState is LoadedIdentifierHomeState,
           ),
         ),
       ),
@@ -369,13 +304,6 @@ class _SetUpScreenState extends State<SetUpScreen>
     return AbsorbPointer(
       absorbing: !enabled,
       child: GestureDetector(
-        // onTap: () {
-        //   Navigator.push(
-        //       context,
-        //       MaterialPageRoute(
-        //           builder: (context) => const SetupPasswordScreen()));
-        //   // _bloc.add(const HomeEvent.removeIdentity());
-        // },
         onTap: () => Navigator.of(context).push(
           PageRouteBuilder(
               pageBuilder: (context, animation, secondAnimation) =>
@@ -389,12 +317,8 @@ class _SetUpScreenState extends State<SetUpScreen>
                   child: child,
                 );
               }),
-          // MaterialPageRoute(
-          //   builder: (context) => const SetupPasswordScreen(),
-          // ),
         ),
         child: FrostedGlassBox(
-          // key: CustomWidgetsKeys.homeScreenButtonRemoveIdentity,
           theWidth: MediaQuery.of(context).size.width,
           theHeight: 50.0,
           theX: 4.0,
@@ -405,7 +329,7 @@ class _SetUpScreenState extends State<SetUpScreen>
               colors: [
                 Theme.of(context).colorScheme.primary,
                 Theme.of(context).colorScheme.secondary
-              ], // Customize your gradient colors
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ).createShader(bounds),
@@ -413,8 +337,7 @@ class _SetUpScreenState extends State<SetUpScreen>
               'Already have a DID',
               style: TextStyle(
                 fontSize: 14.0,
-                color: Theme.of(context)
-                    .secondaryHeaderColor, // This will be overridden by the gradient
+                color: Theme.of(context).secondaryHeaderColor,
                 fontWeight: FontWeight.w500,
                 fontFamily: GoogleFonts.robotoMono().fontFamily,
               ),
@@ -458,13 +381,10 @@ class _SetUpScreenState extends State<SetUpScreen>
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            // crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                // crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // _buildLottieAnimation(),
                   _buildHeader(),
                   _buildTitle(),
                 ],
@@ -473,8 +393,6 @@ class _SetUpScreenState extends State<SetUpScreen>
               Column(
                 children: [
                   _buildIdentityActionButton(),
-                  // SizedBox(height: 10),
-                  // _buildImportWalletButton(context),
                 ],
               ),
             ],
@@ -509,8 +427,7 @@ class _SetUpScreenState extends State<SetUpScreen>
             child: Text(
               "Welcome To",
               style: TextStyle(
-                color: Colors
-                    .white, // Set this to any color for the base, but it will be overridden by the gradient
+                color: Colors.white,
                 fontSize: 25,
                 fontWeight: FontWeight.bold,
                 fontFamily: GoogleFonts.robotoMono().fontFamily,
@@ -542,14 +459,9 @@ class _SetUpScreenState extends State<SetUpScreen>
     );
   }
 
-  // Widget _buildLottieAnimation() {
   Widget _buildImportWalletButton(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        // context.go(
-        //   '/inputPhrase',
-        // );
-      },
+      onTap: () {},
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -584,32 +496,4 @@ class _SetUpScreenState extends State<SetUpScreen>
       ),
     );
   }
-
-  // Widget _buildCreateWalletButton(BuildContext context, bool enabled) {
-  //   return GestureDetector(
-  //     // onTap: () {
-  //     //   Navigator.pushNamed(
-  //     //     context,
-  //     //     '/generatePhrase',
-  //     //   );
-  //     // },
-  //     // onTap: () => context.go('/generatePhrase'),
-  //     child: FrostedGlassBox(
-  //       theWidth: 10.0,
-  //       theHeight: 50.0,
-  //       theX: 4.0,
-  //       theY: 4.0,
-  //       theColor: Colors.white.withOpacity(0.13),
-  //       theChild: Text(
-  //         'Create Wallet',
-  //         style: TextStyle(
-  //           fontSize: 14.0,
-  //           color: Colors.white,
-  //           fontWeight: FontWeight.w500,
-  //           fontFamily: GoogleFonts.robotoMono().fontFamily,
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
 }

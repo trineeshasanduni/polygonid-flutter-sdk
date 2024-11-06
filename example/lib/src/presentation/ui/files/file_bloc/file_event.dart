@@ -23,6 +23,7 @@ class UseSpaceEvent extends FileEvent {
 
 class GetFileNameEvent extends FileEvent {
   final String BatchHash;
+  
   final String Verify;
   const GetFileNameEvent( {required this.BatchHash,required this.Verify});
 }

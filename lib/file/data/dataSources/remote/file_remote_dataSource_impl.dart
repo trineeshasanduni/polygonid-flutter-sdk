@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
@@ -6,6 +7,7 @@ import 'package:polygonid_flutter_sdk/file/data/dataSources/file_remote_dataSour
 import 'package:polygonid_flutter_sdk/file/data/model/cid_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/downloadUrl_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/downloadVerify_model.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/downloadZip_Model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/download_status_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/file_model.dart';
@@ -21,7 +23,8 @@ class FileRemoteDatasourceImpl implements FileRemoteDatasource {
   FileRemoteDatasourceImpl({required this.client});
 
   static const BASE_URL = 'https://test.becx.io/api/v1';
-  // static const BASE_URL = 'http://192.168.1.42:9000/api/v1';
+
+  // static const BASE_URL = 'http://192.168.1.218:9000/api/v1';
 
 
 
@@ -425,6 +428,129 @@ Future<List<FileNameModel>> getFileName(String BatchHash, String Verify) async {
       throw Exception('Failed to Download ');
     }
   }
+
+  //////////////////////batchDownload/////////////////////////////
+
+  @override
+    Future<DownloadZipModel> downloadZip({
+    required String batchHash,
+    required String odid,
+    required List<BatchData> batchData, // List of BatchData items
+  }) async {
+    print('Using space download');
+    try {
+      // Create the request object
+      // final downloadRequest = DownloadRequest(
+      //   batchHash: batchHash,
+      //   odid: odid,
+      //   batchData: batchData,
+      // );
+
+       Map<String, dynamic> data = {
+        "BatchHash": batchHash,
+        
+        "Odid": odid,
+        "BatchData": batchData
+      };
+
+      print('zip data:$data');
+
+      // Define the URI for the API endpoint
+      final uri = Uri.parse('$BASE_URL/download-batch');
+
+      // Make the POST request with the proper headers and body
+      final response = await client.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json', // Specify the content type
+        },
+        body: jsonEncode(data), // Convert the request to JSON
+      );
+
+      // print('Request Data: ${downloadRequest.toJson()}');
+      print('Download12 status code: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+        final downloadUrlModel = DownloadUrlModel.fromJson(jsonResponse);
+
+        return DownloadZipModel(
+          dID: downloadUrlModel.dID,
+          uRL: downloadUrlModel.uRL,
+        );
+      } else {
+        print('Failed to download12: ${response.statusCode}');
+        throw Exception('Failed to download: ${response.reasonPhrase}');
+      }
+    } catch (error) {
+      print('Error during download12: $error');
+      throw Exception('Failed to download: $error');
+    }
+  }
+
+
+  @override
+  Future<List<CidModel>> getBatchCids(
+      {required String Owner,
+      required String DID,
+      required List<int> Index,
+     required String BatchHash}) async {
+    print('Fetching CIDs');
+    try {
+      Map<String, dynamic> data = {
+        "DID": DID,
+        "Owner": Owner,
+        "Index": Index
+      };
+      // Define the URI for the use-space API endpoint
+      final uri = Uri.parse('$BASE_URL/get-batch-cids');
+
+      // Log the response body
+     // Make the POST request with the proper headers and body
+      final response = await client.post(
+        uri,
+        // headers: {"Content-Type": "application/json"},
+        body: jsonEncode(data),
+      );
+      print('data Download cid: $data');
+
+      // print('Download cid status code: ${response.statusCode}');
+
+      // Check if the response is successful
+      if (response.statusCode == 200) {
+        print('Fetch CIDs status code: ${response.statusCode}');
+
+        // Decode the response body (which should be a JSON string)
+        dynamic decodedResponse = await jsonDecode(response.body);
+
+        // If the decoded response is a string, decode it again
+        if (decodedResponse is String) {
+          print('Decoded response is a String, parsing again');
+          decodedResponse = await jsonDecode(decodedResponse);
+        }
+
+        // Ensure that `decodedResponse` is a List of dynamic objects
+        List<dynamic> data = decodedResponse as List<dynamic>;
+        print('Data: ${data.runtimeType}');
+
+        // Extract the 'Cid' field from each object and store them in a List<String>
+        List<String> cids = data.map((item) => item['Cid'].toString()).toList();
+
+        // Print the extracted CIDs
+        print('CIDs: $cids');
+
+        // Return a CidModel containing the list of CIDs
+        return [CidModel(cids: cids, batchhash: BatchHash)];
+      } else {
+        throw Exception('Failed to load CIDs: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching CIDs: $e');
+      throw Exception('Failed to fetch CIDs');
+    }
+  }
+
+
 
   ///////////////////////////////share////////////////////////////
   ///

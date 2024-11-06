@@ -12,6 +12,10 @@ class NetworkRemoteDatasourceImpl implements NetworkRemoteDatasource {
 
   static const BASE_URL = 'https://test.becx.io/api/v1';
 
+    // static const BASE_URL = 'http://192.168.1.218:9000/api/v1';
+
+  
+
   @override
   Future<List<NetworkUsageModel>> networkUsage({required String did}) async {
     print('Fetching network usage');

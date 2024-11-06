@@ -6,9 +6,11 @@ import 'package:polygonid_flutter_sdk/common/domain/domain_constants.dart';
 import 'package:polygonid_flutter_sdk/common/domain/entities/chain_config_entity.dart';
 import 'package:polygonid_flutter_sdk/common/domain/entities/env_entity.dart';
 import 'package:polygonid_flutter_sdk/common/domain/error_exception.dart';
+import 'package:polygonid_flutter_sdk/file/data/dataSources/file_remote_dataSource.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/cid_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/downloadUrl_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/downloadVerify_entity.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/downloadZip_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/download_status_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/usecases/file_usecase.dart';
 import 'package:polygonid_flutter_sdk/iden3comm/domain/entities/common/iden3_message_entity.dart';
@@ -32,18 +34,22 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
   final DownloadStatusUsecase statusUsecase;
   final CidsUsecase cidsUsecase;
   final DownloadUsecase downloadUsecase;
+  final DownloadZipUsecase downloadZipUsecase;
+  final BatchCidsUsecase batchCidsUsecase;
 
   static const SelectedProfile _defaultProfile = SelectedProfile.public;
   SelectedProfile selectedProfile = _defaultProfile;
 
   DownloadBloc(this.downloadVerify, this._qrcodeParserUtils, this._polygonIdSdk,
-      this.statusUsecase, this.cidsUsecase, this.downloadUsecase)
+      this.statusUsecase, this.cidsUsecase, this.downloadUsecase,this.downloadZipUsecase,this.batchCidsUsecase)
       : super(DownloadInitial()) {
     on<onClickDownload>(_handleDownloadVerify);
     on<onDownloadResponse>(_handleDownloadResponse);
     on<onGetDownloadStatusEvent>(_handleDownloadStatus);
     on<GetCidsEvent>(_handleGetCids);
     on<onClickDownloadUrl>(_handleDownloadUrl);
+     on<onClickDownloadZip>(_handleDownloadZip);
+     on<GetBatchCidsEvent>(_handleGetBatchCids);
     on<ResetDownloadStateEvent>((event, emit) {
       emit(DownloadInitial()); // Reset state to initial
     });
@@ -202,5 +208,48 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
         (downloadurl) => emit(
             DownloadUrlSuccess(downloadurl, event.BatchHash, event.fileHash)));
     
+  }
+
+  Future<void> _handleDownloadZip(
+      onClickDownloadZip event, Emitter<DownloadState> emit) async {
+    emit(Downloading(event.BatchHash,0.1,event.filehash));
+    // print('loafing url :${event.FileHash}');
+    final failureOrdownloadurl = await downloadZipUsecase(DownloadZipParams(
+        BatchHash: event.BatchHash,
+       
+        Odid: event.Odid,
+        batchData: event.batchData
+
+        ));
+
+        print('failureOrdownloadurl:${failureOrdownloadurl}');
+    failureOrdownloadurl.fold(
+        (failure) => emit(DownloadFailed(failure.toString())),
+        
+        (downloadurl) => emit(
+            DownloadZip(downloadurl, event.BatchHash, event.filehash)));
+    
+  }
+
+  void _handleGetBatchCids(GetBatchCidsEvent event, Emitter<DownloadState> emit) async {
+
+    print('fetching cids');
+    emit(GettingCids());
+    final fileNameResponse = await batchCidsUsecase(BatchCidsParams(
+        index: event.index,
+        did: event.did,
+        owner: event.owner,
+        BatchHash: event.batch_hash));
+        print('index:${event.index}');
+        print('did:${event.did}');
+        print('owner:${event.owner}');
+    fileNameResponse.fold(
+      (failure) {
+        emit(DownloadFailed(failure.toString()));
+      },
+      (cids) {
+        emit(BatchCidsGot(cids , event.batch_hash, event.fileHash));
+      },
+    );
   }
 }

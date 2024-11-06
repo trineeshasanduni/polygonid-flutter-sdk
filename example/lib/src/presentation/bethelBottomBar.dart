@@ -83,6 +83,7 @@ class BethelBottomBarState extends State<BethelBottomBar> {
   void _startMetaMaskConnectionCheck() {
     Timer.periodic(Duration(seconds: 10), (timer) async {
       bool isMetaMaskConnected = await _w3mService.isConnected;
+      print('isMetaMaskConnected: $isMetaMaskConnected');
       if (isMetaMaskConnected && !isConnected) {
         // MetaMask connected, update state and refresh
         setState(() {
@@ -121,20 +122,6 @@ class BethelBottomBarState extends State<BethelBottomBar> {
     // _showMetamaskAlert(context); // Optionally show MetaMask alert again
   }
 
-  void navigateToPlans() {
-    setState(() {
-      currentIndex = 2; // Assuming PlanNav is at index 2
-    });
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Ensure the frame has updated before pushing a new route
-      PlanNavKey.currentState?.push(
-        MaterialPageRoute(
-          builder: (context) => AddPlans(did: widget.did),
-        ),
-      );
-    });
-  }
 
   void _initW3MService() async {
     
@@ -174,24 +161,19 @@ class BethelBottomBarState extends State<BethelBottomBar> {
 
 
       setState(() {
-        // isConnected = isConnect;
                isConnected = storage.read('isConnected');
                name = storage.read('walletName');
 
       });
       if (isConnected == true) {
-        // _showWelcomeDialog();
+       
         _deployContract();
         _deployPlans();
-        //   storage.write('_isBlureffect', false);
-        // _isBlureffect = false;
+        
       } else {
-        // _showMetamaskAlert(context);
-        // _isBlureffect = true;
-        // _deployContract();
+        
       }
     });
-    // _loadButtons();
   }
 
 
@@ -260,7 +242,6 @@ class BethelBottomBarState extends State<BethelBottomBar> {
                           W3MConnectWalletButton(
                             service: _w3mService,
                           ),
-                          // Text(WalletAddress.toString()),
                         ],
                 ),
               ],
@@ -354,8 +335,6 @@ class BethelBottomBarState extends State<BethelBottomBar> {
   void _showaAddPlanAlert() {
     showDialog(
       context: context,
-      // barrierDismissible: false,
-
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Theme.of(context).primaryColor,
@@ -556,7 +535,7 @@ class BethelBottomBarState extends State<BethelBottomBar> {
           : [
               W3MAccountButton(service: _w3mService),
               W3MConnectWalletButton(service: _w3mService),
-              // Text(WalletAddress.toString()),
+             
             ],
     );
   }
@@ -627,7 +606,7 @@ class BethelBottomBarState extends State<BethelBottomBar> {
           }
 
           if (isConnected==null || !isConnected) {
-            _showMetamaskAlert(context); // Show the popup if not connected
+            _showMetamaskAlert(context); 
           }
         },
         height: 60,
@@ -646,17 +625,16 @@ class BethelBottomBarState extends State<BethelBottomBar> {
             ),
             FileNav(
               did: widget.did,
-              // isBlureffect: _isBlureffect,
             ),
             PlanNav(
               did: widget.did,
             ),
             ClaimsNav(
-              // isBlureffect: _isBlureffect,
+             
             ),
             ProfileNav(
               did: widget.did,
-              // isBlureffect: _isBlureffect,
+             
             ),
           ],
         ),

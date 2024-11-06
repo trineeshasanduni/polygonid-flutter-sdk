@@ -6,6 +6,7 @@ import 'package:polygonid_flutter_sdk/file/data/dataSources/file_remote_dataSour
 import 'package:polygonid_flutter_sdk/file/data/model/cid_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/downloadUrl_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/downloadVerify_model.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/downloadZip_Model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/download_status_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/file_model.dart';
@@ -15,6 +16,7 @@ import 'package:polygonid_flutter_sdk/file/data/model/verify_upload_model.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/cid_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/downloadUrl_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/downloadVerify_entity.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/downloadZip_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/download_status_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/fileName_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/file_entity.dart';
@@ -46,9 +48,10 @@ class FileRepoImpl implements FileRepository {
         files: files, // Pass the entire list of files
       );
 
-  
-
-      return right(FileEntity(Did: fileModels.Did,TXHash: fileModels.TXHash,FileCount: fileModels.FileCount));
+      return right(FileEntity(
+          Did: fileModels.Did,
+          TXHash: fileModels.TXHash,
+          FileCount: fileModels.FileCount));
     } catch (error) {
       return left(Failure('Failed to upload files: $error'));
     }
@@ -73,33 +76,33 @@ class FileRepoImpl implements FileRepository {
     }
   }
 
- @override
-Future<Either<Failure, List<FileNameEntity>>> getFileName({
-  required String BatchHash,
-  required String Verify,
-}) async {
-  try {
-    // Expecting a list of FileNameModel from fileRemoteDatasource
-    final List<FileNameModel> fileNameModels =
-        await fileRemoteDatasource.getFileName(BatchHash, Verify);
+  @override
+  Future<Either<Failure, List<FileNameEntity>>> getFileName({
+    required String BatchHash,
+    required String Verify,
+  }) async {
+    try {
+      // Expecting a list of FileNameModel from fileRemoteDatasource
+      final List<FileNameModel> fileNameModels =
+          await fileRemoteDatasource.getFileName(BatchHash, Verify);
 
-    // Convert each FileNameModel to a FileNameEntity
-    final List<FileNameEntity> fileNameEntities = fileNameModels.map((fileNameModel) {
-      return FileNameEntity(
-        fileName: fileNameModel.fileName,
-        batchHash: fileNameModel.batchHash,
-        fileHash: fileNameModel.fileHash,
-        isVerified: fileNameModel.isVerified,
-      );
-    }).toList();
-    print('list: ${fileNameEntities}');
+      // Convert each FileNameModel to a FileNameEntity
+      final List<FileNameEntity> fileNameEntities =
+          fileNameModels.map((fileNameModel) {
+        return FileNameEntity(
+          fileName: fileNameModel.fileName,
+          batchHash: fileNameModel.batchHash,
+          fileHash: fileNameModel.fileHash,
+          isVerified: fileNameModel.isVerified,
+        );
+      }).toList();
+      print('list: ${fileNameEntities}');
 
-    return right(fileNameEntities);
-  } catch (e) {
-    return left(Failure('Failed to fetch file names: $e'));
+      return right(fileNameEntities);
+    } catch (e) {
+      return left(Failure('Failed to fetch file names: $e'));
+    }
   }
-}
-
 
   @override
   Future<Either<Failure, VerifyUploadEntity>> verifyUpload(
@@ -230,6 +233,49 @@ Future<Either<Failure, List<FileNameEntity>>> getFileName({
       ));
     } catch (error) {
       return left(Failure('Failed to download: $error'));
+    }
+  }
+
+  Future<Either<Failure, DownloadZipEntity>> downloadZip(
+      {required String BatchHash,
+      required String Odid,
+      required List<BatchData> batchData}) async {
+    try {
+      
+      DownloadZipModel downloadModel = await fileRemoteDatasource.downloadZip(
+          batchData: batchData,
+         
+          odid: Odid,
+          batchHash: BatchHash
+         );
+         print('zip download:${downloadModel.uRL}');
+
+      return right(DownloadZipEntity(
+        dID: downloadModel.dID,
+        uRL: downloadModel.uRL,
+      ));
+    } catch (error) {
+      return left(Failure('Failed to download zip: $error'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<CidEntity>>> getBatchCids(
+      {required dynamic index,
+      required String did,
+      required String owner,
+      required String BatchHash}) async {
+    try {
+      final List<CidModel> cidModel =
+          await fileRemoteDatasource.getBatchCids( Owner: owner,DID: did,Index: index,BatchHash: BatchHash);
+      final List<CidEntity> cidEntities = cidModel.map((model) => CidEntity(
+        cids: model.cids,
+        batchhash: model.batchhash,
+      )).toList();
+
+      return right(cidEntities);
+    } catch (e) {
+      return Left(Failure());
     }
   }
 

@@ -45,14 +45,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
       bloc: _profileBloc,
       builder: (context, state) {
         if (state is ProfilePicUploaded) {
-          _showSnackbar('Profile Image Uploaded Successfully', Colors.green);
+          _showSnackbar('Profile Image Uploaded Successfully', Theme.of(context).colorScheme.secondary, Icons.check);
           final Uint8List bytes = jsonDecode(state.profile.profileImage!);
           File profileImageFile = File.fromRawPath(bytes);
             _imageFile = profileImageFile;
         }
         if (state is UpdateFailed) {
           _showSnackbar('Profile Image Upload Failed: ${state.message}',
-              Colors.red);
+              Colors.red, Icons.error);
         }
         return const SizedBox();
       },
@@ -118,10 +118,30 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.dispose();
   }
 
-  void _showSnackbar(String message, Color? backgroundColor) {
+  // void _showSnackbar(String message, Color? backgroundColor) {
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  //       content: Text(message),
+  //       duration: const Duration(seconds: 5),
+  //       behavior: SnackBarBehavior.floating,
+  //       backgroundColor: backgroundColor,
+  //     ));
+  //   });
+  // }
+  void _showSnackbar(
+    String message,
+    Color? backgroundColor,
+    IconData? ic,
+  ) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(message),
+        content: Row(
+          children: [
+            Icon(ic, color: Colors.white),
+            const SizedBox(width: 10),
+            Text(message, style: const TextStyle(color: Colors.white)),
+          ],
+        ),
         duration: const Duration(seconds: 5),
         behavior: SnackBarBehavior.floating,
         backgroundColor: backgroundColor,
@@ -347,7 +367,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                     if (state is OTPSend) {
                                       _showSnackbar(
                                           'OTP sent successfully!,\nCheck your Phone and enter OTP here',
-                                          Colors.green);
+                                          Theme.of(context).colorScheme.secondary,Icons.check);
                                     }
                                     return Text(
                                       'Verify Phone No',
@@ -462,7 +482,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
           // Handle successful profile update
           if (state is ProfileUpdated) {
-            _showSnackbar('Profile Updated Successfully', Colors.green);
+            _showSnackbar('Profile Updated Successfully', Theme.of(context).colorScheme.secondary, Icons.check);
 
             // Avoid re-triggering the event if not necessary
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -679,7 +699,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           if (state is EmailSend) {
                             _showSnackbar(
                                 'Email sent successfully!,\nCheck your Mail and enter verification code here',
-                                Colors.green);
+                                Theme.of(context).colorScheme.secondary, Icons.check);
                           }
                           if (state is Verifying) {
                             return Center(
@@ -693,11 +713,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           if (state is EmailSentFailed) {
                             _showSnackbar(
                                 'email Send Failed : ${state.message}',
-                                Colors.red);
+                                Colors.red,Icons.error);
                           }
                           if (state is EmailVerified) {
                             _showSnackbar(
-                                'Email Verified Successfully', Colors.green);
+                                'Email Verified Successfully', Theme.of(context).colorScheme.secondary, Icons.check);
                           }
                           return Center(
                             child: GestureDetector(
@@ -813,7 +833,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
                           if (state is Validate) {
                             _showSnackbar('Phone Number Verified successfully!',
-                                Colors.green);
+                                Theme.of(context).colorScheme.secondary, Icons.check);
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               setState(() {
                                 isTelVerified = state.otp.validate!;

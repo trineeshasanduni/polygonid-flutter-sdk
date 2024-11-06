@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:polygonid_flutter_sdk/file/data/model/cid_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/downloadUrl_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/downloadVerify_model.dart';
+import 'package:polygonid_flutter_sdk/file/data/model/downloadZip_Model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/download_status_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/fileName_model.dart';
 import 'package:polygonid_flutter_sdk/file/data/model/file_model.dart';
@@ -13,7 +15,7 @@ abstract class FileRemoteDatasource {
   Future<FileModel> fileUpload({
     required String did,
     required String ownerDid,
-   required List<File> files,
+    required List<File> files,
   });
 
   Future<FileModel> useSpace({
@@ -22,7 +24,7 @@ abstract class FileRemoteDatasource {
     required int batchSize,
   });
 
- Future<List<FileNameModel>> getFileName(String BatchHash, String Verify);
+  Future<List<FileNameModel>> getFileName(String BatchHash, String Verify);
 
   Future<VerifyUploadModel> verifyUpload({
     required String BatchHash,
@@ -47,6 +49,12 @@ abstract class FileRemoteDatasource {
       required String FileName,
       required String Cids});
 
+  Future<DownloadZipModel> downloadZip({
+    required String batchHash,
+    required String odid,
+    required List<BatchData> batchData, // List of BatchData items
+  });
+
   Future<ShareModel> share(
       {required String BatchHash,
       required String FileHash,
@@ -61,4 +69,29 @@ abstract class FileRemoteDatasource {
     required String Did,
     required String OwnerAddress,
   });
+
+
+  Future<List<CidModel>> getBatchCids(
+      {required String Owner,
+      required String DID,
+      required List<int> Index,
+     required String BatchHash});
 }
+
+class BatchData {
+  final String fileName;
+  final String fileHash;
+  final String cids;
+
+  BatchData({
+    required this.fileName,
+    required this.fileHash,
+    required this.cids,
+  });
+
+  
+
+}
+
+
+

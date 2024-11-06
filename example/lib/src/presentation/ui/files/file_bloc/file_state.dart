@@ -47,8 +47,11 @@ final class FileNameFetchedFailed extends FileState {
 
 final class FileNameLoaded extends FileState {
   final List<FileNameEntity> fileName;
+   final String batchhash;
+  // final String file_hash;
 
-  const FileNameLoaded(this.fileName);
+
+  const FileNameLoaded(this.fileName,this.batchhash);
 }
 
 final class UploadVerified extends FileState {

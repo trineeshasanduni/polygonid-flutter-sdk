@@ -97,6 +97,9 @@ class FileBloc extends Bloc<FileEvent, FileState> {
   void _handleGetFileName(
       GetFileNameEvent event, Emitter<FileState> emit) async {
     emit(FileUploading('Updating'));
+
+     String? batchHash = event.BatchHash;
+    
     final fileNameResponse =
         await getFileNameUsecase(FileNameParam(BatchHash: event.BatchHash,Verify: event.Verify));
     fileNameResponse.fold(
@@ -106,7 +109,7 @@ class FileBloc extends Bloc<FileEvent, FileState> {
       },
       (fileName) {
         ('Emitting StatusLoaded with DID12: $fileName');
-        emit(FileNameLoaded(fileName));
+        emit(FileNameLoaded(fileName,batchHash));
       },
     );
   }

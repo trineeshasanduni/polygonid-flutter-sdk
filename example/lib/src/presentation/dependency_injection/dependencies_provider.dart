@@ -185,13 +185,15 @@ void fileUploadDependencies() {
 
 void DownloadDependencies() {
   getIt.registerFactory(
-      () => DownloadBloc(getIt(), getIt(), getIt(), getIt(), getIt(), getIt()));
+      () => DownloadBloc(getIt(), getIt(), getIt(), getIt(), getIt(), getIt(),getIt(),getIt()));
 
   // Use cases
   getIt.registerLazySingleton(() => DownloadStatusUsecase(getIt()));
   getIt.registerLazySingleton(() => DownloadVerifyUsecase(getIt()));
   getIt.registerLazySingleton(() => CidsUsecase(getIt()));
   getIt.registerLazySingleton(() => DownloadUsecase(getIt()));
+  getIt.registerLazySingleton(() => DownloadZipUsecase(getIt()));
+  getIt.registerLazySingleton(()=>BatchCidsUsecase(getIt()));
 }
 
 // void HomeIdDependencies() {

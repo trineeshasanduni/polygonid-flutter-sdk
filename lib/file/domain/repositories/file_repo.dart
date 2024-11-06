@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:fpdart/fpdart.dart';
 import 'package:polygonid_flutter_sdk/common/errors/server_failure.dart';
+import 'package:polygonid_flutter_sdk/file/data/dataSources/file_remote_dataSource.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/cid_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/downloadUrl_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/downloadVerify_entity.dart';
+import 'package:polygonid_flutter_sdk/file/domain/entities/downloadZip_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/download_status_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/fileName_entity.dart';
 import 'package:polygonid_flutter_sdk/file/domain/entities/file_entity.dart';
@@ -55,6 +57,18 @@ abstract class FileRepository {
       required String Odid,
       required String FileName,
       required String Cids});
+
+     Future<Either<Failure, DownloadZipEntity>> downloadZip(
+      {required String BatchHash,
+      required String Odid,
+      required List<BatchData> batchData});
+
+      Future<Either<Failure, List<CidEntity>>> getBatchCids(
+      {
+       required dynamic index, 
+      required String did,
+      required String owner,
+      required String BatchHash});
 
   Future<Either<Failure, ShareEntity>> share(
       {required String BatchHash,
